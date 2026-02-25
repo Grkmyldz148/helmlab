@@ -4,7 +4,7 @@ A data-driven analytical color space for UI design systems.
 
 Helmlab is a 72-parameter color space optimized end-to-end against psychophysical data. It achieves STRESS 23.22 on COMBVD (3,813 color pairs) — a 20.4% improvement over CIEDE2000 — while maintaining a structurally guaranteed achromatic axis and reasonable hue alignment.
 
-**[Paper](new-paper/helmlab.tex)** | **[Interactive Demo](https://grkmyldz148.github.io/helmlab/)**
+**[Interactive Demo](https://grkmyldz148.github.io/helmlab/demo.html)** | **[Documentation](https://grkmyldz148.github.io/helmlab/)** | **[Paper](paper/helmlab.tex)**
 
 ## Key Features
 
@@ -36,44 +36,35 @@ print(f"L={lab[0]:.3f}, a={lab[1]:.3f}, b={lab[2]:.3f}")
 rgb = hl.to_srgb(lab)
 
 # Color difference between two sRGB colors
-dist = hl.distance_srgb([1, 0, 0], [0, 0.5, 0])
+dist = hl.delta_e("#ff0000", "#00ff00")
 
 # Ensure WCAG AA contrast (4.5:1)
-adjusted = hl.ensure_contrast([0.2, 0.5, 0.8], [1, 1, 1], min_ratio=4.5)
+adjusted = hl.ensure_contrast("#ffffff", "#3B82F6", min_ratio=4.5)
 
 # Generate a palette (Tailwind-style 50-950 scale)
-from colorspace.export import TokenExporter
-exporter = TokenExporter(hl)
-tokens = exporter.tailwind_scale("blue", [0.2, 0.5, 0.8])
+scale = hl.semantic_scale("#3B82F6")
 ```
 
 ## How It Works
 
-Helmlab maps CIE XYZ (D65) to a perceptually-organized Lab space through 11 stages:
+Helmlab maps CIE XYZ (D65) to a perceptually-organized Lab space through 13 stages:
 
 ```
-XYZ → M₁(9) → γᵢ(3) → M₂(9) → Hue corr.(8) → H-K(6) → L corr.(8)
-    → C proc.(18) → Hue-L(4) → NC → Rot φ → Lab
+XYZ → M₁(9) → γᵢ(3) → M₂(9) → Hue corr.(8) → H-K(6) → L corr.(5)
+    → Dark L(3) → C scale(8) → C power(4) → L×C(2) → HLC(4) → Hue-L(4)
+    → NC → Rot φ → Lab
 ```
 
-All 72 parameters (65 space + 7 distance metric) are jointly optimized against COMBVD using L-BFGS-B with 8 random restarts.
-
-### The Measurement-Generation Tradeoff
-
-Most color spaces optimize for either distance prediction or coordinate usability — not both. Without neutral correction, Helmlab's measurement-optimal configuration maps grays to chroma ~0.34 (unusable for gradients). The post-pipeline neutral correction resolves this at a cost of just +0.04 STRESS points.
+All 72 parameters (65 space + 7 distance metric) are jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. See the [documentation](https://grkmyldz148.github.io/helmlab/) for the full mathematical description of each stage.
 
 ## Benchmarks
 
-| Method | STRESS | vs CIEDE2000 |
-|--------|--------|-------------|
-| **Helmlab** | **23.22** | **-20.4%** |
+| Method | COMBVD STRESS | vs CIEDE2000 |
+|--------|--------------|-------------|
+| **Helmlab v19** | **23.22** | **-20.4%** |
+| Oklab | 27.50 | -5.8% |
 | CIEDE2000 | 29.18 | — |
-| Helmlab (Euclidean only) | ~30.2 | -3.6% |
-| CAM16-UCS (Euclidean) | 33.90 | +16.2% |
-| CIE76 | 42.80 | +46.7% |
-| Oklab (Euclidean) | 47.46 | +62.7% |
-
-Note: Baselines use plain Euclidean distance. Helmlab's full metric includes pair-dependent weighting and compression. The "Euclidean only" row shows the space transform's contribution alone.
+| CIE Lab ΔE76 | 30.30 | +3.8% |
 
 ## Project Structure
 
@@ -93,9 +84,10 @@ src/colorspace/
     ├── generator.py        # Bidirectional test pair generation
     └── collector.py        # Human feedback collection
 
+docs/                       # Documentation + interactive demo
+paper/                      # LaTeX paper + figures
 scripts/                    # Optimization scripts (v14→v19)
 tests/                      # 158 tests
-new-paper/                  # LaTeX paper + figures
 data/                       # COMBVD, He 2022, MacAdam 1974 datasets
 checkpoints/                # All optimization checkpoints (v1→v19)
 ```
