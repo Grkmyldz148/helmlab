@@ -77,25 +77,49 @@ STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. 
 ```
 src/colorspace/
 ├── helmlab.py              # Main API (Helmlab class)
+├── config.py               # Configuration and constants
+├── export.py               # Token export (CSS, Android, iOS, Tailwind)
 ├── spaces/
 │   ├── analytical.py       # Core 72-param transform
-│   └── registry.py         # Color space registry
+│   ├── base.py             # Abstract base class
+│   ├── registry.py         # Color space registry
+│   ├── cam16ucs.py         # CAM16-UCS baseline
+│   ├── ipt.py              # IPT baseline
+│   ├── jzczhz.py           # JzCzhz baseline
+│   ├── oklch.py            # Oklch baseline
+│   └── srgb.py             # sRGB baseline
+├── metrics/
+│   ├── delta_e.py          # Color difference formulas
+│   ├── stress.py           # STRESS computation
+│   └── benchmarks.py       # Cross-method benchmarking
 ├── utils/
 │   ├── srgb_convert.py     # sRGB/Display P3 conversions
-│   └── gamut.py            # Gamut mapping
-├── export.py               # Token export (CSS, Android, iOS, Tailwind)
+│   ├── gamut.py            # Gamut mapping (binary search)
+│   ├── conversions.py      # XYZ ↔ xyY, Lab ↔ LCh, etc.
+│   ├── io.py               # File I/O helpers
+│   └── visualization.py    # Plotting utilities
 ├── data/
-│   └── analytical_params.json  # Trained parameters (v19-NC)
+│   ├── analytical_params.json  # Trained parameters (v19-NC)
+│   ├── combvd.py           # COMBVD dataset loader
+│   ├── he2022.py           # He 2022 dataset loader
+│   ├── macadam1974.py      # MacAdam 1974 dataset loader
+│   ├── munsell.py          # Munsell dataset loader
+│   ├── hung_berns.py       # Hung & Berns hue data
+│   ├── dataset.py          # Unified dataset interface
+│   └── preprocessing.py    # Data preprocessing
+├── nn/
+│   ├── inn.py              # Invertible Neural Network (Phase 0)
+│   ├── mlp.py              # MLP baseline
+│   ├── training.py         # Training loop
+│   ├── losses.py           # Loss functions
+│   └── evaluate.py         # Evaluation utilities
 └── feedback/
     ├── generator.py        # Bidirectional test pair generation
     └── collector.py        # Human feedback collection
 
 docs/                       # Documentation + interactive demo
 paper/                      # LaTeX paper + figures
-scripts/                    # Optimization scripts (v14→v19)
-tests/                      # 158 tests
-data/                       # COMBVD, He 2022, MacAdam 1974 datasets
-checkpoints/                # All optimization checkpoints (v1→v19)
+tests/                      # 214 tests
 ```
 
 ## Tests
