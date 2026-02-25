@@ -1,0 +1,57 @@
+{
+  "name": "helmlab",
+  "version": "0.1.0",
+  "description": "Perceptual color space for UI design — human-tuned Lab with WCAG contrast, gamut mapping, and palette generation",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "size": "tsup && gzip -c dist/index.js | wc -c",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "color",
+    "color-space",
+    "perceptual",
+    "lab",
+    "wcag",
+    "contrast",
+    "gamut",
+    "design-system",
+    "palette"
+  ],
+  "author": "Görkem Yıldız (https://github.com/gorkemyildiz)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Grkmyldz148/helmlab",
+    "directory": "packages/helmlab-js"
+  },
+  "homepage": "https://github.com/Grkmyldz148/helmlab#readme",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}
