@@ -1,0 +1,13 @@
+numpy>=1.24
+scipy>=1.10
+colour-science>=0.4.4
+colour-datasets>=0.2.4
+torch>=2.0
+FrEIA>=0.2
+pandas>=2.0
+openpyxl>=3.1
+matplotlib>=3.7
+rich>=13.0
+tqdm>=4.65
+pytest>=7.4
+pytest-cov>=4.1
