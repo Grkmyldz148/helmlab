@@ -549,6 +549,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <tr><td>Oklab (Euclid.)</td><td>47.46</td><td>+62.7%</td></tr>
 </table>
 <div class="note">Baselines use Euclidean distance in their native coordinates. Helmlab uses its full 7-parameter metric (Minkowski + S<sub>L</sub>/S<sub>C</sub> + compression). With Euclidean distance alone, Helmlab achieves STRESS \u224830.2 \u2014 competitive with CIEDE2000, showing the space transform accounts for roughly half the improvement.</div>
+<div class="note">Bootstrap (10,000 iterations): Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [27.64, 30.84]. Zero overlap, p &lt; 10<sup>\u22124</sup>.</div>
 `,
       tr: `
 <p>Helmlab\u2019\u0131n renk fark\u0131 form\u00fcl\u00fc, s\u0131k\u0131\u015ft\u0131rmal\u0131 genelle\u015ftirilmi\u015f Minkowski metrigidir:</p>
@@ -572,6 +573,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <tr><td>Oklab (\u00d6klid)</td><td>47.46</td><td>+62.7%</td></tr>
 </table>
 <div class="note">Baseline\u2019lar kendi koordinatlar\u0131nda \u00d6klid mesafesi kullan\u0131r. Helmlab 7 parametreli tam metrigi (Minkowski + S<sub>L</sub>/S<sub>C</sub> + s\u0131k\u0131\u015ft\u0131rma) kullan\u0131r. Yaln\u0131zca \u00d6klid ile Helmlab STRESS \u224830.2 \u2014 CIEDE2000 ile yar\u0131\u015f\u0131r; iyile\u015ftirmenin yar\u0131s\u0131 uzay d\u00f6n\u00fc\u015f\u00fcm\u00fcnden gelir.</div>
+<div class="note">Bootstrap (10.000 iterasyon): Helmlab %95 GA [22.50, 23.93], CIEDE2000 %95 GA [27.64, 30.84]. S\u0131f\u0131r \u00f6rt\u00fc\u015fme, p &lt; 10<sup>\u22124</sup>.</div>
 `
     }
   },

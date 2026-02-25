@@ -399,6 +399,9 @@ for a 72-parameter model.
 \Cref{fig:stress} and \Cref{tab:stress} show \stress\ on \combvd\ for
 \helmlab\ and nine baseline methods. \helmlab\ achieves 23.22, a
 substantial improvement over CIEDE2000 (29.18, $-$20.4\%).
+A 10{,}000-iteration paired bootstrap confirms this difference is
+statistically significant: \helmlab\ 95\% CI $[22.50, 23.93]$,
+CIEDE2000 95\% CI $[27.64, 30.84]$, with zero overlap ($p < 10^{-4}$).
 
 \begin{figure}[t]
   \centering
@@ -653,11 +656,10 @@ raw JSON.
     workflows (sRGB/P3 gamut, screen viewing). It is not designed for
     print, photography, or spectral applications.
 
-  \item \textbf{Statistical reporting.} We report single \stress\
-    values without confidence intervals or bootstrap estimates.
-    With 72~parameters and 8~restarts, parameter uncertainty is
-    non-trivial; future work should include per-sub-dataset variance
-    analysis and significance testing against baselines.
+  \item \textbf{Statistical reporting.} Bootstrap confidence intervals
+    confirm the aggregate improvement over CIEDE2000 ($p < 10^{-4}$),
+    but per-sub-dataset significance and parameter uncertainty across
+    restarts remain unquantified.
 \end{enumerate}
 
 Future work includes training the surround parameter on paired

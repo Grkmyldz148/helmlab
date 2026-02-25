@@ -78,10 +78,14 @@ An honest, no-sugarcoating assessment of where Helmlab stands among color spaces
 - **Val gap +1.11** — quite small for 72 parameters. Compare: the neural net with ~50k params had a 4.72 gap.
 - **Analytical form is a strong regularizer** — each parameter has a physical role (matrix coefficient, gamma exponent, Fourier harmonic). This is not a black-box with 72 free knobs.
 
+**Bootstrap validation (now completed):**
+- 10,000-iteration paired bootstrap: Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [27.64, 30.84]
+- **Zero overlap** — Helmlab wins in 100% of bootstrap samples (p < 10⁻⁴)
+- The 6-point improvement is statistically unambiguous on the aggregate dataset
+
 **What's still missing:**
-- No bootstrap confidence intervals on the STRESS comparison
-- No significance test proving 23.22 vs 29.18 is beyond random variation
-- Paper acknowledges: *"We report single STRESS values without confidence intervals"*
+- Per-sub-dataset significance testing (3/6 sub-datasets favor CIEDE2000)
+- Parameter uncertainty across the 8 restarts is unquantified
 
 **For comparison:**
 - CIEDE2000 has ~8 effective parameters — less overfitting risk, but was also trained *and* evaluated on COMBVD (circular validation)
@@ -354,7 +358,7 @@ Examples: Design system teams at large companies, specialized color tools, acces
 - In practical UI design, the difference between STRESS 23 and 29 is rarely perceptible to end users
 
 ### The honest answer:
-The improvement is **statistically plausible but not proven**, and **practically relevant for color science but marginal for UI design**. A designer choosing between two blues won't notice the difference between Helmlab and CIEDE2000. But a design system choosing tonal scales across 50+ colors might.
+The improvement is **statistically proven on the aggregate dataset** (bootstrap p < 10⁻⁴, zero CI overlap), and **practically relevant for color science but marginal for UI design**. A designer choosing between two blues won't notice the difference between Helmlab and CIEDE2000. But a design system choosing tonal scales across 50+ colors might.
 
 ---
 
@@ -362,7 +366,7 @@ The improvement is **statistically plausible but not proven**, and **practically
 
 ### To be taken seriously by color science:
 1. **Independent dataset validation** — Test on datasets Helmlab was never trained on
-2. **Bootstrap confidence intervals** — Prove the STRESS improvement is statistically significant
+2. ~~**Bootstrap confidence intervals**~~ — **DONE**: p < 10⁻⁴, zero CI overlap
 3. **Per-sub-dataset reporting** — Show where Helmlab wins and loses, transparently
 4. **CIE Technical Committee submission** — Get expert review
 

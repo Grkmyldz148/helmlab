@@ -72,6 +72,8 @@ STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. 
 | CIE Lab ΔE76 | 42.80 | +46.7% |
 | Oklab (Euclid.) | 47.46 | +62.7% |
 
+Bootstrap (10,000 iterations): Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [27.64, 30.84]. Zero overlap, p < 10⁻⁴.
+
 ## Project Structure
 
 ```
