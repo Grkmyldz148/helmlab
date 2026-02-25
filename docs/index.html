@@ -537,14 +537,18 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <p>The compression term <code>1/(1+c\u00b7\u0394E)</code> models the diminishing sensitivity to large color differences \u2014 doubling \u0394E doesn\u2019t double perceived difference.</p>
 
 <h3>Benchmarks</h3>
+<p>STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. Lower is better.</p>
 <table>
 <tr><th>Method</th><th>COMBVD STRESS</th><th>vs CIEDE2000</th></tr>
 <tr><td><strong>Helmlab v19</strong></td><td><strong>23.22</strong></td><td><strong>-20.4%</strong></td></tr>
-<tr><td>Oklab</td><td>27.50</td><td>-5.8%</td></tr>
 <tr><td>CIEDE2000</td><td>29.18</td><td>\u2014</td></tr>
-<tr><td>CIE Lab \u0394E76</td><td>30.30</td><td>+3.8%</td></tr>
+<tr><td>CIE94</td><td>33.59</td><td>+15.1%</td></tr>
+<tr><td>CAM16-UCS (Euclid.)</td><td>33.90</td><td>+16.2%</td></tr>
+<tr><td>\u0394E CMC</td><td>34.04</td><td>+16.6%</td></tr>
+<tr><td>CIE Lab \u0394E76</td><td>42.80</td><td>+46.7%</td></tr>
+<tr><td>Oklab (Euclid.)</td><td>47.46</td><td>+62.7%</td></tr>
 </table>
-<div class="note">Oklab and CIE Lab rows use Helmlab\u2019s distance metric (Minkowski + compression) applied to their coordinates \u2014 not plain Euclidean. This isolates the space transform contribution.</div>
+<div class="note">Baselines use Euclidean distance in their native coordinates. Helmlab uses its full 7-parameter metric (Minkowski + S<sub>L</sub>/S<sub>C</sub> + compression). With Euclidean distance alone, Helmlab achieves STRESS \u224830.2 \u2014 competitive with CIEDE2000, showing the space transform accounts for roughly half the improvement.</div>
 `,
       tr: `
 <p>Helmlab\u2019\u0131n renk fark\u0131 form\u00fcl\u00fc, s\u0131k\u0131\u015ft\u0131rmal\u0131 genelle\u015ftirilmi\u015f Minkowski metrigidir:</p>
@@ -556,14 +560,18 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <p>S\u0131k\u0131\u015ft\u0131rma terimi <code>1/(1+c\u00b7\u0394E)</code>, b\u00fcy\u00fck renk farklar\u0131na azalan duyarl\u0131l\u0131\u011f\u0131 modeller \u2014 \u0394E\u2019yi ikiye katlamak alg\u0131lanan fark\u0131 ikiye katlamaz.</p>
 
 <h3>Benchmark</h3>
+<p>COMBVD (3.813 \u00e7ift) \u00fczerinde STRESS. Her y\u00f6ntem kendi standart mesafe form\u00fcl\u00fcn\u00fc kullan\u0131r. D\u00fc\u015f\u00fck = iyi.</p>
 <table>
 <tr><th>Y\u00f6ntem</th><th>COMBVD STRESS</th><th>vs CIEDE2000</th></tr>
 <tr><td><strong>Helmlab v19</strong></td><td><strong>23.22</strong></td><td><strong>-20.4%</strong></td></tr>
-<tr><td>Oklab</td><td>27.50</td><td>-5.8%</td></tr>
 <tr><td>CIEDE2000</td><td>29.18</td><td>\u2014</td></tr>
-<tr><td>CIE Lab \u0394E76</td><td>30.30</td><td>+3.8%</td></tr>
+<tr><td>CIE94</td><td>33.59</td><td>+15.1%</td></tr>
+<tr><td>CAM16-UCS (\u00d6klid)</td><td>33.90</td><td>+16.2%</td></tr>
+<tr><td>\u0394E CMC</td><td>34.04</td><td>+16.6%</td></tr>
+<tr><td>CIE Lab \u0394E76</td><td>42.80</td><td>+46.7%</td></tr>
+<tr><td>Oklab (\u00d6klid)</td><td>47.46</td><td>+62.7%</td></tr>
 </table>
-<div class="note">Oklab ve CIE Lab sat\u0131rlar\u0131 d\u00fcz \u00d6klid de\u011fil, Helmlab\u2019\u0131n mesafe metrigi (Minkowski + s\u0131k\u0131\u015ft\u0131rma) ile hesaplanm\u0131\u015ft\u0131r. Bu, uzay d\u00f6n\u00fc\u015f\u00fcm\u00fcn\u00fcn katk\u0131s\u0131n\u0131 izole eder.</div>
+<div class="note">Baseline\u2019lar kendi koordinatlar\u0131nda \u00d6klid mesafesi kullan\u0131r. Helmlab 7 parametreli tam metrigi (Minkowski + S<sub>L</sub>/S<sub>C</sub> + s\u0131k\u0131\u015ft\u0131rma) kullan\u0131r. Yaln\u0131zca \u00d6klid ile Helmlab STRESS \u224830.2 \u2014 CIEDE2000 ile yar\u0131\u015f\u0131r; iyile\u015ftirmenin yar\u0131s\u0131 uzay d\u00f6n\u00fc\u015f\u00fcm\u00fcnden gelir.</div>
 `
     }
   },

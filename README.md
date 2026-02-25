@@ -59,12 +59,18 @@ All 72 parameters (65 space + 7 distance metric) are jointly optimized against C
 
 ## Benchmarks
 
+STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. Lower is better.
+
 | Method | COMBVD STRESS | vs CIEDE2000 |
 |--------|--------------|-------------|
 | **Helmlab v19** | **23.22** | **-20.4%** |
-| Oklab | 27.50 | -5.8% |
 | CIEDE2000 | 29.18 | — |
-| CIE Lab ΔE76 | 30.30 | +3.8% |
+| CIE94 | 33.59 | +15.1% |
+| CAM16-UCS (Euclid.) | 33.90 | +16.2% |
+| ΔE CMC | 34.04 | +16.6% |
+| IPT (Euclid.) | 41.21 | +41.3% |
+| CIE Lab ΔE76 | 42.80 | +46.7% |
+| Oklab (Euclid.) | 47.46 | +62.7% |
 
 ## Project Structure
 
