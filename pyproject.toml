@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "helmlab"
+version = "0.1.0"
+description = "A data-driven analytical color space for UI design systems"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Görkem Yıldız"}]
+
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "colour-science>=0.4.4",
+    "colour-datasets>=0.2.4",
+    "torch>=2.0",
+    "FrEIA>=0.2",
+    "pandas>=2.0",
+    "openpyxl>=3.1",
+    "matplotlib>=3.7",
+    "rich>=13.0",
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ipykernel>=6.25",
+    "jupyter>=1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

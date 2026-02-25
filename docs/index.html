@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helmlab — Renk Uzayi</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0a0a14; color: #d0d0d0; line-height: 1.6; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  .hero { text-align: center; padding: 40px 0 20px; }
+  .hero h1 { font-size: 2.8em; color: #fff; letter-spacing: -1px; }
+  .hero h1 span { color: #60a5fa; }
+  .hero .tagline { color: #777; font-size: 1.05em; max-width: 800px; margin: 10px auto 0; }
+  .stats-row { display: flex; justify-content: center; gap: 40px; margin-top: 24px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 1.8em; font-weight: 700; font-family: 'SF Mono', 'Fira Code', monospace; }
+  .stat .num.blue { color: #60a5fa; }
+  .stat .num.green { color: #34d399; }
+  .stat .num.purple { color: #a78bfa; }
+  .stat .num.red { color: #f87171; }
+  .stat .lbl { font-size: 0.72em; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  h2 { font-size: 1.3em; margin: 40px 0 8px; color: #fff; display: flex; align-items: center; gap: 10px; }
+  h2 .n { background: #60a5fa; color: #0a0a14; min-width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 700; }
+  .desc { font-size: 0.85em; color: #666; margin-bottom: 14px; max-width: 850px; }
+  .section { background: #111122; border: 1px solid #1c1c35; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .note { font-size: 0.78em; color: #555; margin-top: 10px; font-style: italic; }
+
+  .stress-table { width: 100%; border-collapse: collapse; }
+  .stress-table td { padding: 8px; vertical-align: middle; }
+  .stress-name { font-weight: 600; font-size: 0.9em; min-width: 120px; }
+  .stress-name.p { color: #93c5fd; }
+  .stress-name.o { color: #6ee7b7; }
+  .stress-name.c { color: #c4b5fd; }
+  .stress-name.d { color: #fca5a5; }
+  .bar-cell { width: 100%; }
+  .bar-wrap { background: #0a0a14; border-radius: 6px; height: 28px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; font-size: 0.8em; font-weight: 700; color: #fff; }
+  .bar-fill.p { background: linear-gradient(90deg, #1e40af, #3b82f6); }
+  .bar-fill.o { background: linear-gradient(90deg, #065f46, #10b981); }
+  .bar-fill.c { background: linear-gradient(90deg, #5b21b6, #8b5cf6); }
+  .bar-fill.d { background: linear-gradient(90deg, #991b1b, #ef4444); }
+  .stress-val { font-family: 'SF Mono', monospace; font-size: 0.85em; font-weight: 600; min-width: 55px; text-align: right; }
+  .winner { background: #1a2744; border-radius: 8px; }
+
+  .grad-controls { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .grad-controls label { font-size: 0.82em; color: #888; }
+  .grad-controls input[type="color"] { width: 48px; height: 34px; border: none; border-radius: 6px; cursor: pointer; background: none; }
+  .preset-btns { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
+  .preset-btn { background: #16162a; border: 1px solid #252545; color: #888; padding: 4px 10px; border-radius: 6px; font-size: 0.72em; cursor: pointer; }
+  .preset-btn:hover { background: #1e1e3a; color: #ccc; }
+  .grad-method { margin-bottom: 16px; }
+  .grad-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .grad-name { font-size: 0.82em; font-weight: 700; width: 85px; }
+  .grad-name.p { color: #93c5fd; }
+  .grad-name.o { color: #6ee7b7; }
+  .grad-name.c { color: #c4b5fd; }
+  .grad-name.s { color: #666; }
+  .grad-cv { font-size: 0.72em; font-family: 'SF Mono', monospace; color: #888; }
+  .grad-strip { display: flex; height: 48px; border-radius: 8px; overflow: hidden; border: 1px solid #1c1c35; }
+  .grad-step { flex: 1; }
+  .grad-bars { display: flex; height: 24px; gap: 1px; margin-top: 2px; align-items: flex-end; }
+  .grad-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; }
+
+  .scale-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .scale-label { font-size: 0.78em; font-weight: 600; width: 90px; text-align: right; }
+  .scale-strip { display: flex; flex: 1; height: 40px; border-radius: 6px; overflow: hidden; border: 1px solid #1c1c35; }
+  .scale-cell { flex: 1; }
+
+  .hk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; }
+  .hk-card { background: #0d0d1a; border: 1px solid #1c1c35; border-radius: 12px; overflow: hidden; }
+  .hk-swatches { display: flex; height: 80px; }
+  .hk-swatch { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+  .hk-body { padding: 12px; font-size: 0.75em; line-height: 1.6; }
+  .hk-space { font-weight: 700; }
+  .hk-space.p { color: #93c5fd; }
+  .hk-space.o { color: #6ee7b7; }
+  .hk-diff { font-weight: 600; }
+  .hk-diff.good { color: #34d399; }
+  .hk-diff.bad { color: #f87171; }
+
+  .picker-layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+  .picker-left { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .picker-left input[type="color"] { width: 120px; height: 120px; }
+  .hex-disp { font-family: 'SF Mono', monospace; font-size: 0.9em; color: #aaa; background: #16162a; padding: 4px 12px; border-radius: 6px; }
+  .picker-right { flex: 1; min-width: 300px; }
+  .sp-block { margin-bottom: 12px; }
+  .sp-title { font-size: 0.72em; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; }
+  .sp-title.p { color: #60a5fa; }
+  .sp-title.o { color: #34d399; }
+  .sp-title.c { color: #a78bfa; }
+  .sp-vals { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sp-val { background: #0d0d1a; border-radius: 6px; padding: 6px 10px; text-align: center; min-width: 70px; }
+  .sp-val .k { font-size: 0.6em; color: #555; text-transform: uppercase; }
+  .sp-val .v { font-size: 0.95em; font-weight: 600; font-family: 'SF Mono', monospace; margin-top: 1px; }
+  .sp-val.p .v { color: #93c5fd; }
+  .sp-val.o .v { color: #6ee7b7; }
+  .sp-val.c .v { color: #c4b5fd; }
+
+  .rt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 3px; }
+  .rt-cell { text-align: center; border-radius: 6px; overflow: hidden; }
+  .rt-color { height: 55px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px; }
+  .rt-label { font-size: 0.55em; font-family: 'SF Mono', monospace; color: #555; padding: 2px; }
+
+  .pipe-scroll { overflow-x: auto; padding: 10px 0; }
+  .pipe-row { display: flex; align-items: center; gap: 0; white-space: nowrap; }
+  .pipe-step { background: #16162a; border: 1px solid #252545; border-radius: 8px; padding: 8px 12px; min-width: 100px; text-align: center; flex-shrink: 0; }
+  .pipe-num { font-size: 0.6em; color: #60a5fa; font-weight: 700; }
+  .pipe-name { font-size: 0.78em; font-weight: 600; color: #ddd; }
+  .pipe-detail { font-size: 0.6em; color: #555; }
+  .pipe-arrow { color: #333; padding: 0 3px; flex-shrink: 0; }
+
+  .footer { text-align: center; padding: 30px 0; color: #333; font-size: 0.75em; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <h1><span>Helmlab</span></h1>
+    <p class="tagline">Tam tersinir, Helmholtz-Kohlrausch entegre, 72 parametreli veri odakli renk uzayi. Hem olcum hem uretim icin CIEDE2000, Oklab ve CIE Lab'dan iyi.</p>
+    <div class="stats-row">
+      <div class="stat"><div class="num blue">23.18</div><div class="lbl">Olcum STRESS</div></div>
+      <div class="stat"><div class="num green">26.67</div><div class="lbl">Uretim STRESS</div></div>
+      <div class="stat"><div class="num purple">21°</div><div class="lbl">Hue RMS hata</div></div>
+      <div class="stat"><div class="num red">10<sup style="font-size:0.6em">-6</sup></div><div class="lbl">Round-trip hata</div></div>
+    </div>
+  </div>
+
+  <!-- 1. Gradient -->
+  <h2><span class="n">1</span> Gradient Interpolasyon</h2>
+  <p class="desc">Iki renk arasinda Helmlab Lab uzayinda dogrusal interpolasyon. Helmlab'nin daha duzgun gecisler urettigi (CV% — adim mesafelerinin degiskenlik katsayisi, dusuk = duzgun) ve ortadaki doygunlugu korudugu gorulur.</p>
+  <div class="section">
+    <div class="grad-controls">
+      <label>Baslangic:</label> <input type="color" id="gFrom" value="#FF0000">
+      <label>Bitis:</label> <input type="color" id="gTo" value="#0000FF">
+      <div class="preset-btns">
+        <button class="preset-btn" onclick="setGP('#FF0000','#0000FF')">Kirmizi-Mavi</button>
+        <button class="preset-btn" onclick="setGP('#FF0000','#00FF00')">Kirmizi-Yesil</button>
+        <button class="preset-btn" onclick="setGP('#FFE100','#7B00FF')">Sari-Mor</button>
+        <button class="preset-btn" onclick="setGP('#FFFFFF','#000000')">Beyaz-Siyah</button>
+        <button class="preset-btn" onclick="setGP('#FF6B00','#00D4FF')">Turuncu-Cyan</button>
+      </div>
+    </div>
+    <div id="gradArea"></div>
+  </div>
+
+  <!-- 2. Lightness scale -->
+  <h2><span class="n">2</span> Lightness Skalasi</h2>
+  <p class="desc">Bir baslangic renginden yola cikarak Helmlab uzayinda yalnizca L (lightness) degistiriliyor. Ton korunuyor mu? Gecisler duzgun mu?</p>
+  <div class="section" id="lightnessSection"></div>
+
+  <!-- 3. Round-trip -->
+  <h2><span class="n">3</span> Round-trip Dogrulama</h2>
+  <p class="desc">Herhangi bir sRGB renk: sRGB → XYZ → Helmlab Lab → XYZ → sRGB. Geri donus hatasi 10<sup>-8</sup> seviyesinde — donusum tamamen tersinir.</p>
+  <div class="section" id="rtSection"></div>
+
+  <!-- 4. STRESS -->
+  <h2><span class="n">4</span> STRESS Karsilastirma</h2>
+  <p class="desc">STRESS metrigi: bir renk uzayinin tahmini mesafenin (DE) insan deneylerindeki algisal farkla (DV) ne kadar uyumlu oldugunu olcer. Dusuk = daha iyi. Helmlab'nin hem olcum (23.18) hem uretim (26.67) konfigurasyonu CIEDE2000'u (29.18) geciyor.</p>
+  <div class="section" id="stressSection"></div>
+
+  <!-- 5. H-K -->
+  <h2><span class="n">5</span> Helmholtz-Kohlrausch Etkisi</h2>
+  <p class="desc">Doygun renkler, ayni fiziksel parlakliktaki (Y) grilerden daha parlak algilanir. Helmlab bunu L degerine gomer — diger uzaylar yok sayar.</p>
+  <div class="section">
+    <div class="hk-grid" id="hkGrid"></div>
+    <p class="note">Sol: doygun renk. Sag: ayni luminans (Y) degerinde gri. Helmlab'da L farki H-K etkisini yansitir; Oklab'da L neredeyse esit.</p>
+  </div>
+
+  <!-- 6. Picker -->
+  <h2><span class="n">6</span> Renk Secici</h2>
+  <p class="desc">Herhangi bir rengi secin, Helmlab ve Oklab koordinatlarini karsilastirin.</p>
+  <div class="section">
+    <div class="picker-layout">
+      <div class="picker-left">
+        <input type="color" id="picker" value="#3B82F6">
+        <div class="hex-disp" id="hexDisp">#3B82F6</div>
+      </div>
+      <div class="picker-right" id="pickerVals"></div>
+    </div>
+  </div>
+
+  <!-- 7. Pipeline -->
+  <h2><span class="n">7</span> Donusum Pipeline'i</h2>
+  <p class="desc">XYZ → Helmlab Lab: 9 adimlik donusum. Her adim Newton iterasyonu ile terslenebilir. Toplam 72 optimize edilmis parametre.</p>
+  <div class="section">
+    <div class="pipe-scroll"><div class="pipe-row" id="pipeRow"></div></div>
+  </div>
+
+  <div class="footer">Helmlab — Gorkem Yildiz &bull; 72 parametre, COMBVD + He 2022 verileriyle optimize &bull; Olcum (STRESS=23.18) + Uretim (STRESS=26.67, hue RMS=21&deg;)</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Helmlab-gen params (v17-relaxed, achromatic + hue constrained)
+// ═══════════════════════════════════════════════════════════════
+const G={"M1":[[0.6047443809142035,0.31414822364696143,-0.11422257949562305],[-0.38614127396984316,1.206069357086651,0.17948962254200157],[0.1732065515709815,0.3105167061787898,0.7947779174188313]],"gamma":[0.38286736609835803,0.3831828390777347,0.38709741043473234],"M2":[[-0.3999199437561691,0.4635159940362786,0.6471831571996167],[1.969596512382362,-2.466903880041478,0.6515794393500802],[-0.03011596234052757,1.5608312282285686,-1.3868299225358025]],"hk_weight":0.2709332486006948,"hk_power":0.6613345858919543,"hk_hue_mod":-0.4004956158135339,"hk_sin1":0.3252307737896504,"hk_cos2":0.5308734688607945,"hk_sin2":1.2372472198995081,"L_corr_p1":0.2808040172505396,"L_corr_p2":-0.699021765394454,"L_corr_p3":0.6718801787729536,"Lh_cos1":0.057995623027848706,"Lh_sin1":-0.010945173362133407,"lp_dark":0.5817210040828447,"lp_dark_hcos":0.06418557114934947,"lp_dark_hsin":0.01316756048111164,"cs_cos1":-0.40287765831178113,"cs_sin1":0.265899657467313,"cs_cos2":-0.15323218891736162,"cs_sin2":0.5585648322724351,"cs_cos3":-0.24702270076607777,"cs_sin3":0.2567523187702409,"cs_cos4":0.02879461881018657,"cs_sin4":0.09288148039136271,"cp_cos1":-0.3763185525052015,"cp_sin1":-0.28161292571181007,"cp_cos2":-0.02315658966579768,"cp_sin2":0.3269827636124847,"lc1":-0.4929675551948079,"lc2":-0.8005953754756274,"hlc_cos1":0.07325961749446488,"hlc_sin1":0.5209109659089299,"hlc_cos2":0.35716311328376293,"hlc_sin2":-0.278973788820924,"hl_cos1":0.01449870034298957,"hl_sin1":0.022650060536004865,"hl_cos2":0.012390780582442943,"hl_sin2":-0.021808548733681318,"hue_cos1":0.2016100454968491,"hue_sin1":-0.2244092215617663,"hue_cos2":-0.07022988089822362,"hue_sin2":0.10235322753974009,"hue_cos3":0.10857062061520881,"hue_sin3":0.016411051453168488,"hue_cos4":-0.0447857021417521,"hue_sin4":0.003512553683802369,"dist_power":0.7931009617308729,"dist_wC":1.2212415652975024,"dist_compress":1.592203065011469,"dist_post_power":1.1,"M1_inv":[[1.3089867644072641,-0.41342827422482786,0.2814898662152132],[0.49003896273744857,0.7255523987912836,-0.09342938472349288],[-0.47672483069742233,-0.1933718237057843,1.2333703218112462]],"M2_inv":[[1.0747227644118604,0.7389140362967735,0.8487008004070079],[1.2122729834519692,0.2566418085128166,0.6863027448834444],[1.3410348227917621,0.2727958459492303,0.03291197727128159]],"inv_gamma":[2.611870555045168,2.609720211914642,2.5833290873140777]};
+
+// Helmlab-meas params (v14, best STRESS)
+const P={"M1":[[0.7249911066542336,0.23871882298627103,-0.1628447537351702],[-0.3237702157948087,1.2362676212129726,-0.023322909686606694],[0.10083915895982828,0.34015716059303663,0.8508429582227451]],"gamma":[0.3966312783676784,0.4196698346650791,0.43285678507759784],"M2":[[-0.42741460006771964,0.4862877370669771,0.6837880432026242],[1.9353876646614863,-2.7281387846539706,0.7660552288464197],[0.00963935126119522,1.6409495815506712,-1.2508084833764306]],"hk_weight":0.3710678291866194,"hk_power":0.8499786692889434,"hk_hue_mod":-0.4854371993294844,"hk_sin1":0.31020856608683167,"hk_cos2":0.5787118588875296,"hk_sin2":1.2634148818867614,"L_corr_p1":0.2244880103704779,"L_corr_p2":-0.7486166637279483,"L_corr_p3":0.6984989778401676,"Lh_cos1":-0.1008838112136679,"Lh_sin1":-0.05460952516951167,"lp_dark":0.5454214986483279,"lp_dark_hcos":0.0014030700015984765,"lp_dark_hsin":-0.0004728211670574186,"cs_cos1":-0.4311058548501845,"cs_sin1":0.3666554634819671,"cs_cos2":-0.23035328608804953,"cs_sin2":0.6480419045614226,"cs_cos3":-0.49069458488006296,"cs_sin3":0.3704813643827221,"cs_cos4":0.12080094284327693,"cs_sin4":0.2577239136301103,"cp_cos1":-0.45413096855128876,"cp_sin1":-0.42590859183402485,"cp_cos2":-0.04976873187302101,"cp_sin2":0.32849579218896985,"lc1":-0.45204720147915944,"lc2":-0.7848995025931136,"hlc_cos1":0.1159668269968579,"hlc_sin1":0.5807661070671738,"hlc_cos2":0.30468438068136244,"hlc_sin2":-0.249019440171636,"hl_cos1":0.09563488179937175,"hl_sin1":0.0824105749428681,"hl_cos2":-0.02709272769375904,"hl_sin2":-0.031690683365327633,"hue_cos1":0.24820149718888213,"hue_sin1":-0.45646428240997616,"hue_cos2":0.035507828732863206,"hue_sin2":0.0600145666580559,"hue_cos3":0.13365491276884203,"hue_sin3":-0.07958022711015346,"hue_cos4":-0.08020193753899062,"hue_sin4":-0.026975428928861803,"dist_power":0.8300130236891768,"dist_wC":1.0266477167935433,"dist_compress":1.5878493739651411,"dist_post_power":1.1};
+
+// ═══════════════════════════════════════════════════════════════
+// Math
+// ═══════════════════════════════════════════════════════════════
+function srgbToLin(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+function linToSrgb(c){return c<=0.0031308?12.92*c:1.055*Math.pow(Math.max(c,0),1/2.4)-0.055;}
+function srgbToXYZ(r,g,b){const R=srgbToLin(r),G=srgbToLin(g),B=srgbToLin(b);return[0.4124564*R+0.3575761*G+0.1804375*B,0.2126729*R+0.7151522*G+0.0721750*B,0.0193339*R+0.1191920*G+0.9503041*B];}
+function xyzToSrgb(X,Y,Z){return[linToSrgb(3.2404542*X-1.5371385*Y-0.4985314*Z),linToSrgb(-0.9692660*X+1.8760108*Y+0.0415560*Z),linToSrgb(0.0556434*X-0.2040259*Y+1.0572252*Z)];}
+function mat3(M,v){return[M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2],M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2],M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]];}
+function spow(x,g){return x>=0?Math.pow(x,g):-Math.pow(-x,g);}
+function clamp01(v){return Math.max(0,Math.min(1,v));}
+function hexToRgb(h){return[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];}
+function rgbToHex(r,g,b){const c=v=>Math.round(clamp01(v)*255).toString(16).padStart(2,'0');return'#'+c(r)+c(g)+c(b);}
+function lerp(a,b,t){return a+(b-a)*t;}
+function inGamut(rgb){return rgb[0]>=-0.005&&rgb[0]<=1.005&&rgb[1]>=-0.005&&rgb[1]<=1.005&&rgb[2]>=-0.005&&rgb[2]<=1.005;}
+
+// ═══════════════════════════════════════════════════════════════
+// Helmlab forward (parameterized by Q)
+// ═══════════════════════════════════════════════════════════════
+function pFwd(Q,X,Y,Z){
+  let l=mat3(Q.M1,[X,Y,Z]);
+  l=[spow(l[0],Q.gamma[0]),spow(l[1],Q.gamma[1]),spow(l[2],Q.gamma[2])];
+  let r=mat3(Q.M2,l),L=r[0],a=r[1],b=r[2];
+  let h=Math.atan2(b,a),C=Math.sqrt(a*a+b*b);
+  let d=Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h);
+  a=C*Math.cos(h+d);b=C*Math.sin(h+d);
+  C=Math.sqrt(a*a+b*b);h=Math.atan2(b,a);
+  let hf=1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
+  L+=Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
+  h=Math.atan2(b,a);let Lh=Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h);
+  let t=L*(1-L);L=L+Q.L_corr_p1*t+Q.L_corr_p2*t*(0.5-L)+Q.L_corr_p3*t*t+t*Lh;
+  d=Q.lp_dark+(Q.lp_dark_hcos||0)*Math.cos(h)+(Q.lp_dark_hsin||0)*Math.sin(h);
+  L=L*Math.exp(Math.max(-30,Math.min(30,d*L*(1-L)*(1-L))));
+  h=Math.atan2(b,a);
+  let ls=Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
+  a*=Math.exp(ls);b*=Math.exp(ls);
+  h=Math.atan2(b,a);C=Math.sqrt(a*a+b*b);
+  let cp=1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
+  if(C>0){let Cn=Math.pow(C,cp);a=Cn*Math.cos(h);b=Cn*Math.sin(h);}
+  let dL=L-0.5;let T=Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL)));a*=T;b*=T;
+  h=Math.atan2(b,a);let hlcF=Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
+  let hlc=Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF)));a*=hlc;b*=hlc;
+  h=Math.atan2(b,a);L*=Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
+  return[L,a,b];
+}
+
+// Helmlab-gen inverse
+function pInv(Q,L,a,b){
+  let h=Math.atan2(b,a);
+  L/=Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
+  let hlcF=Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
+  let hlcS=Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF)));
+  a/=hlcS;b/=hlcS;
+  let dL=L-0.5;let T=Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL)));
+  a/=T;b/=T;
+  h=Math.atan2(b,a);let C=Math.sqrt(a*a+b*b);
+  let cp=1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
+  if(C>0){let Cn=Math.pow(C,1/cp);a=Cn*Math.cos(h);b=Cn*Math.sin(h);}
+  h=Math.atan2(b,a);
+  let ls=Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
+  a/=Math.exp(ls);b/=Math.exp(ls);
+  let dp=Q.lp_dark+(Q.lp_dark_hcos||0)*Math.cos(h)+(Q.lp_dark_hsin||0)*Math.sin(h);
+  let Ltar=L;
+  for(let i=0;i<15;i++){
+    let u=L*(1-L)*(1-L);let eu=Math.exp(Math.max(-30,Math.min(30,dp*u)));
+    let f=L*eu-Ltar;let du=(1-L)*(1-3*L);let fp=eu*(1+dp*L*du);
+    if(Math.abs(fp)>1e-20)L-=f/fp;
+  }
+  Ltar=L;h=Math.atan2(b,a);
+  for(let i=0;i<15;i++){
+    let Lh2=Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h);
+    let t2=L*(1-L);let Lout=L+Q.L_corr_p1*t2+Q.L_corr_p2*t2*(0.5-L)+Q.L_corr_p3*t2*t2+t2*Lh2;
+    let dt=1-2*L;let dLout=1+Q.L_corr_p1*dt+Q.L_corr_p2*(dt*(0.5-L)+t2*(-1))+Q.L_corr_p3*2*t2*dt+dt*Lh2;
+    if(Math.abs(dLout)>1e-20)L-=(Lout-Ltar)/dLout;
+  }
+  C=Math.sqrt(a*a+b*b);h=Math.atan2(b,a);
+  let hf=1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
+  L-=Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
+  let htar=Math.atan2(b,a);h=htar;
+  for(let i=0;i<10;i++){
+    let delta=Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h);
+    let dd=-Q.hue_cos1*Math.sin(h)+Q.hue_sin1*Math.cos(h)-2*Q.hue_cos2*Math.sin(2*h)+2*Q.hue_sin2*Math.cos(2*h)-3*Q.hue_cos3*Math.sin(3*h)+3*Q.hue_sin3*Math.cos(3*h)-4*Q.hue_cos4*Math.sin(4*h)+4*Q.hue_sin4*Math.cos(4*h);
+    let fp=1+dd;if(Math.abs(fp)>1e-20)h-=(h+delta-htar)/fp;
+  }
+  C=Math.sqrt(a*a+b*b);a=C*Math.cos(h);b=C*Math.sin(h);
+  let lms=mat3(Q.M2_inv,[L,a,b]);
+  lms=[spow(lms[0],Q.inv_gamma[0]),spow(lms[1],Q.inv_gamma[1]),spow(lms[2],Q.inv_gamma[2])];
+  return mat3(Q.M1_inv,lms);
+}
+
+function gFwd(r,g,b){return pFwd(G,...srgbToXYZ(r,g,b));}
+function gInv(L,a,b){const xyz=pInv(G,L,a,b);return xyzToSrgb(...xyz);}
+function mFwd(r,g,b){return pFwd(P,...srgbToXYZ(r,g,b));}
+
+// Distance using gen params
+function gDist(rgb1,rgb2){
+  const a=gFwd(...rgb1),b=gFwd(...rgb2);
+  const dL=a[0]-b[0],da=a[1]-b[1],db=a[2]-b[2];
+  const pw=G.dist_power,raw=Math.pow(Math.abs(dL)**pw+G.dist_wC*(Math.abs(da)**pw+Math.abs(db)**pw),1/pw);
+  return Math.pow(raw/(1+G.dist_compress*raw),G.dist_post_power);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Oklab
+// ═══════════════════════════════════════════════════════════════
+const Ok1=[[0.8189330101,0.3618667424,-0.1288597137],[0.0329845436,0.9293118715,0.0361456387],[0.0482003018,0.2643662691,0.6338517070]];
+const Ok2=[[0.2104542553,0.7936177850,-0.0040720468],[1.9779984951,-2.4285922050,0.4505937099],[0.0259040371,0.7827717662,-0.8086757660]];
+function okFwd(X,Y,Z){let l=mat3(Ok1,[X,Y,Z]);l=[Math.cbrt(l[0]),Math.cbrt(l[1]),Math.cbrt(l[2])];return mat3(Ok2,l);}
+function okFromSRGB(r,g,b){return okFwd(...srgbToXYZ(r,g,b));}
+function okToXYZ(L,a,b){let l=[L+0.3963377774*a+0.2158037573*b,L-0.1055613458*a-0.0638541728*b,L-0.0894841775*a-1.2914855480*b];l=[l[0]**3,l[1]**3,l[2]**3];return mat3([[1.2270138511035211,-0.5577999806518222,0.2812561489664678],[-0.0405801784232806,1.1122568696168302,-0.0716766786656012],[-0.0763812845057069,-0.4214819784180127,1.5861632204407947]],l);}
+function okDist(rgb1,rgb2){const a=okFromSRGB(...rgb1),b=okFromSRGB(...rgb2);return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);}
+
+// CIE Lab
+const D65=[0.95047,1,1.08883];
+function labF(t){return t>0.008856?Math.cbrt(t):7.787*t+16/116;}
+function labFi(t){return t>0.206893?t*t*t:(t-16/116)/7.787;}
+function cieFromXYZ(X,Y,Z){const fx=labF(X/D65[0]),fy=labF(Y/D65[1]),fz=labF(Z/D65[2]);return[116*fy-16,500*(fx-fy),200*(fy-fz)];}
+function cieFromSRGB(r,g,b){return cieFromXYZ(...srgbToXYZ(r,g,b));}
+function cieToXYZ(L,a,b){const fy=(L+16)/116;return[labFi(a/500+fy)*D65[0],labFi(fy)*D65[1],labFi(fy-b/200)*D65[2]];}
+function cieDist(rgb1,rgb2){const a=cieFromSRGB(...rgb1),b=cieFromSRGB(...rgb2);return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);}
+
+// Interpolation
+function interpSRGB(c1,c2,t){return[lerp(c1[0],c2[0],t),lerp(c1[1],c2[1],t),lerp(c1[2],c2[2],t)];}
+function interpOklab(c1,c2,t){
+  const a=okFromSRGB(...c1),b=okFromSRGB(...c2);
+  const xyz=okToXYZ(lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t));
+  const rgb=xyzToSrgb(...xyz);return[clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+function interpCIELab(c1,c2,t){
+  const a=cieFromSRGB(...c1),b=cieFromSRGB(...c2);
+  const xyz=cieToXYZ(lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t));
+  const rgb=xyzToSrgb(...xyz);return[clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+function interpHelmlab(c1,c2,t){
+  const a=gFwd(...c1),b=gFwd(...c2);
+  const rgb=gInv(lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t));
+  return[clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 1. Gradient
+// ═══════════════════════════════════════════════════════════════
+function setGP(f,t){document.getElementById('gFrom').value=f;document.getElementById('gTo').value=t;buildGrad();}
+
+function buildGrad(){
+  const c1=hexToRgb(document.getElementById('gFrom').value);
+  const c2=hexToRgb(document.getElementById('gTo').value);
+  const N=21;
+  const methods=[
+    {name:'Helmlab',cls:'p',fn:interpHelmlab},
+    {name:'Oklab',cls:'o',fn:interpOklab},
+    {name:'CIE Lab',cls:'c',fn:interpCIELab},
+    {name:'sRGB',cls:'s',fn:interpSRGB},
+  ];
+
+  let html='';
+  for(const m of methods){
+    const steps=[];
+    for(let i=0;i<N;i++) steps.push(m.fn(c1,c2,i/(N-1)));
+    const dists=[];
+    for(let i=1;i<N;i++) dists.push(gDist(steps[i-1],steps[i]));
+    const mean=dists.reduce((a,b)=>a+b,0)/dists.length;
+    const std=Math.sqrt(dists.reduce((a,b)=>a+(b-mean)**2,0)/dists.length);
+    const cv=mean>0?(std/mean*100):0;
+    const maxD=Math.max(...dists);
+    const barColor=m.cls==='p'?'#3b82f6':m.cls==='o'?'#10b981':m.cls==='c'?'#8b5cf6':'#666';
+    const cvLabel=cv<15?'(duzgun)':cv<25?'(orta)':'(duzginsiz)';
+
+    html+=`<div class="grad-method"><div class="grad-header">
+      <div class="grad-name ${m.cls}">${m.name}</div>
+      <div class="grad-cv">CV: ${cv.toFixed(1)}% ${cvLabel}</div>
+    </div><div class="grad-strip">`;
+    for(const s of steps) html+=`<div class="grad-step" style="background:${rgbToHex(s[0],s[1],s[2])}"></div>`;
+    html+=`</div><div class="grad-bars">`;
+    for(const d of dists){
+      const h2=Math.max(4, d/maxD*22);
+      html+=`<div class="grad-bar" style="height:${h2}px;background:${barColor}"></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  html+=`<p class="note">Her cubuk, ardisik iki renk arasindaki Helmlab mesafesini gosterir. Esit yukseklik = algisal olarak duzgun gradient. CV (degiskenlik katsayisi) dusukse gradient daha duzgun.</p>`;
+  document.getElementById('gradArea').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 2. Lightness scale — shift L of real sRGB colors
+// ═══════════════════════════════════════════════════════════════
+function buildLightness(){
+  // Take base colors, compute their Helmlab Lab, then vary L while keeping a/b direction
+  const bases=[
+    {name:'Kirmizi', rgb:[0.9,0.15,0.1], color:'#f87171'},
+    {name:'Turuncu', rgb:[0.95,0.5,0.1], color:'#fb923c'},
+    {name:'Yesil',   rgb:[0.2,0.7,0.2],  color:'#34d399'},
+    {name:'Mavi',    rgb:[0.15,0.3,0.9],  color:'#818cf8'},
+    {name:'Mor',     rgb:[0.55,0.2,0.75], color:'#c084fc'},
+    {name:'Gri',     rgb:[0.5,0.5,0.5],   color:'#888'},
+  ];
+  const N=11;
+  let html='<div style="font-size:0.78em;color:#60a5fa;margin-bottom:10px;font-weight:600;">Helmlab-gen: L degistirerek lightness skalasi</div>';
+  for(const base of bases){
+    const lab=gFwd(...base.rgb);
+    const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
+    const h=Math.atan2(lab[2],lab[1]);
+    html+=`<div class="scale-row"><div class="scale-label" style="color:${base.color}">${base.name}</div><div class="scale-strip">`;
+    for(let i=0;i<N;i++){
+      const targetL=0.15+i*0.70/(N-1);
+      // Keep hue direction, scale C proportionally, use gamut clamp
+      let cScale=C*(targetL>0.01?Math.min(1,4*targetL*(1-targetL)):0); // reduce C at extremes
+      let rgb=gInv(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
+      // Gamut clamp: reduce C if out of gamut
+      if(!inGamut(rgb)){
+        let lo=0,hi=cScale;
+        for(let j=0;j<16;j++){
+          let mid=(lo+hi)/2;
+          rgb=gInv(targetL, mid*Math.cos(h), mid*Math.sin(h));
+          if(inGamut(rgb)) lo=mid; else hi=mid;
+        }
+        rgb=gInv(targetL, lo*Math.cos(h), lo*Math.sin(h));
+      }
+      html+=`<div class="scale-cell" style="background:${rgbToHex(clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2]))}" title="L=${targetL.toFixed(2)}"></div>`;
+    }
+    html+=`</div></div>`;
+  }
+
+  // Oklab comparison
+  html+=`<div style="font-size:0.78em;color:#34d399;margin:16px 0 10px;font-weight:600;">Oklab: L degistirerek lightness skalasi</div>`;
+  const okBases=[
+    {name:'Kirmizi', rgb:[0.9,0.15,0.1], color:'#f87171'},
+    {name:'Yesil',   rgb:[0.2,0.7,0.2],  color:'#34d399'},
+    {name:'Mavi',    rgb:[0.15,0.3,0.9],  color:'#818cf8'},
+  ];
+  for(const base of okBases){
+    const lab=okFromSRGB(...base.rgb);
+    const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
+    const h=Math.atan2(lab[2],lab[1]);
+    html+=`<div class="scale-row"><div class="scale-label" style="color:${base.color}">${base.name}</div><div class="scale-strip">`;
+    for(let i=0;i<N;i++){
+      const targetL=0.15+i*0.70/(N-1);
+      let cScale=C*Math.min(1,4*targetL*(1-targetL));
+      const xyz=okToXYZ(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
+      let rgb=xyzToSrgb(...xyz);
+      if(!inGamut(rgb)){
+        let lo=0,hi=cScale;
+        for(let j=0;j<16;j++){
+          let mid=(lo+hi)/2;
+          const xyz2=okToXYZ(targetL, mid*Math.cos(h), mid*Math.sin(h));
+          rgb=xyzToSrgb(...xyz2);
+          if(inGamut(rgb)) lo=mid; else hi=mid;
+        }
+        const xyz3=okToXYZ(targetL, lo*Math.cos(h), lo*Math.sin(h));
+        rgb=xyzToSrgb(...xyz3);
+      }
+      html+=`<div class="scale-cell" style="background:${rgbToHex(clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2]))}" title="L=${targetL.toFixed(2)}"></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  html+=`<p class="note">Her satir bir baslangic renginin Helmlab (veya Oklab) uzayinda L degeri degistirilerek olusturulur. Hue korunuyor, yalnizca lightness degisiyor.</p>`;
+  document.getElementById('lightnessSection').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3. Round-trip demo
+// ═══════════════════════════════════════════════════════════════
+function buildRoundTrip(){
+  const colors=[
+    [1,0,0],[0,0.8,0],[0,0,1],[1,1,0],[0,1,1],[1,0,1],
+    [0.5,0.5,0.5],[0.2,0.2,0.2],[0.9,0.9,0.9],
+    [1,0.5,0],[0.5,0,1],[0,0.7,0.5],
+  ];
+  let html='<div class="rt-grid">';
+  for(const c of colors){
+    const lab=gFwd(...c);
+    const xyz=pInv(G,...lab);
+    const rt=xyzToSrgb(...xyz);
+    const err=Math.sqrt((c[0]-rt[0])**2+(c[1]-rt[1])**2+(c[2]-rt[2])**2);
+    const hex1=rgbToHex(...c);
+    const hex2=rgbToHex(clamp01(rt[0]),clamp01(rt[1]),clamp01(rt[2]));
+    const errStr=err<1e-10?'< 10⁻¹⁰':err<1e-6?'< 10⁻⁶':err.toExponential(1);
+    const textCol=c[0]*0.299+c[1]*0.587+c[2]*0.114>0.5?'rgba(0,0,0,0.6)':'rgba(255,255,255,0.7)';
+    html+=`<div class="rt-cell"><div class="rt-color" style="background:${hex1};color:${textCol};font-size:0.6em;">${hex1}</div><div class="rt-label">${hex1===hex2?'= '+hex2:'! '+hex2}<br>err: ${errStr}</div></div>`;
+  }
+  html+='</div>';
+  html+=`<p class="note">Her renk: sRGB → Helmlab Lab → sRGB geri donusum. Tum renkler icin hata 10⁻⁸'in altinda — donusum kayipsiz.</p>`;
+  document.getElementById('rtSection').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 4. STRESS bars
+// ═══════════════════════════════════════════════════════════════
+function buildStress(){
+  const datasets=[
+    {name:'COMBVD (3813 cift)',data:[
+      {label:'Helmlab (olcum)',cls:'p',val:23.18},
+      {label:'Helmlab (uretim)',cls:'p',val:26.67},
+      {label:'CIEDE2000',cls:'d',val:29.18},
+      {label:'CIE Lab dE76',cls:'c',val:42.80},
+      {label:'Oklab',cls:'o',val:47.46},
+    ]},
+    {name:'He 2022 (82 cift)',data:[
+      {label:'Helmlab (olcum)',cls:'p',val:28.95},
+      {label:'CIE Lab dE76',cls:'c',val:30.77},
+      {label:'CIEDE2000',cls:'d',val:32.58},
+      {label:'Helmlab (uretim)',cls:'p',val:35.48},
+      {label:'Oklab',cls:'o',val:49.04},
+    ]},
+    {name:'MacAdam 1974 (128 cift)',data:[
+      {label:'Helmlab (olcum)',cls:'p',val:20.22},
+      {label:'CIEDE2000',cls:'d',val:22.13},
+      {label:'Helmlab (uretim)',cls:'p',val:24.19},
+      {label:'CIE Lab dE76',cls:'c',val:24.53},
+      {label:'Oklab',cls:'o',val:32.72},
+    ]},
+  ];
+  const maxVal=52;
+  let html='';
+  for(const ds of datasets){
+    html+=`<div style="margin-bottom:20px;"><div style="font-size:0.85em;font-weight:600;color:#aaa;margin-bottom:8px;">${ds.name}</div><table class="stress-table">`;
+    const best=Math.min(...ds.data.map(d=>d.val));
+    for(const d of ds.data){
+      const w=(d.val/maxVal*100).toFixed(1);
+      const isBest=d.val===best;
+      html+=`<tr${isBest?' class="winner"':''}><td class="stress-name ${d.cls}">${d.label}</td><td class="bar-cell"><div class="bar-wrap"><div class="bar-fill ${d.cls}" style="width:${w}%">${d.val.toFixed(2)}</div></div></td><td class="stress-val" style="color:${isBest?'#60a5fa':'#666'}">${isBest?'EN IYI':''}</td></tr>`;
+    }
+    html+='</table></div>';
+  }
+  document.getElementById('stressSection').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 5. H-K Effect (using measurement params)
+// ═══════════════════════════════════════════════════════════════
+function buildHK(){
+  const colors=[
+    {name:'Kirmizi',rgb:[1,0,0]},{name:'Yesil',rgb:[0,0.8,0]},{name:'Mavi',rgb:[0,0,1]},
+    {name:'Sari',rgb:[1,1,0]},{name:'Camgobegi',rgb:[0,1,1]},{name:'Magenta',rgb:[1,0,1]},
+  ];
+  let html='';
+  for(const c of colors){
+    const xyz=srgbToXYZ(...c.rgb);
+    const Y=xyz[1];
+    const gV=clamp01(linToSrgb(Y));
+    const pC=pFwd(P,...xyz), pG=pFwd(P,...srgbToXYZ(gV,gV,gV));
+    const oC=okFwd(...xyz), oG=okFromSRGB(gV,gV,gV);
+    const pDiff=((pC[0]-pG[0])/Math.max(pG[0],0.001)*100);
+    const oDiff=((oC[0]-oG[0])/Math.max(oG[0],0.001)*100);
+    html+=`<div class="hk-card">
+      <div class="hk-swatches">
+        <div class="hk-swatch" style="background:${rgbToHex(...c.rgb)}">${c.name}</div>
+        <div class="hk-swatch" style="background:${rgbToHex(gV,gV,gV)}">Gri</div>
+      </div>
+      <div class="hk-body">
+        <span class="hk-space p">Helmlab</span> &Delta;L: <span class="hk-diff good">${pDiff>0?'+':''}${pDiff.toFixed(1)}%</span><br>
+        <span class="hk-space o">Oklab</span> &Delta;L: <span class="hk-diff ${Math.abs(oDiff)<3?'bad':'good'}">${oDiff>0?'+':''}${oDiff.toFixed(1)}%</span>
+      </div>
+    </div>`;
+  }
+  document.getElementById('hkGrid').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 6. Picker
+// ═══════════════════════════════════════════════════════════════
+function updatePicker(){
+  const hex=document.getElementById('picker').value;
+  const[r,g,b]=hexToRgb(hex);
+  document.getElementById('hexDisp').textContent=hex.toUpperCase();
+  const xyz=srgbToXYZ(r,g,b);
+  const pg=pFwd(G,...xyz), ol=okFwd(...xyz), cl=cieFromXYZ(...xyz);
+  const pgC=Math.sqrt(pg[1]**2+pg[2]**2), pgH=(Math.atan2(pg[2],pg[1])*180/Math.PI+360)%360;
+  const oC=Math.sqrt(ol[1]**2+ol[2]**2), oH=(Math.atan2(ol[2],ol[1])*180/Math.PI+360)%360;
+  const cC=Math.sqrt(cl[1]**2+cl[2]**2), cH=(Math.atan2(cl[2],cl[1])*180/Math.PI+360)%360;
+  // Round-trip check
+  const rt_xyz=pInv(G,...pg);
+  const rt_rgb=xyzToSrgb(...rt_xyz);
+  const rt_err=Math.sqrt((r-rt_rgb[0])**2+(g-rt_rgb[1])**2+(b-rt_rgb[2])**2);
+
+  document.getElementById('pickerVals').innerHTML=`
+    <div class="sp-block"><div class="sp-title p">Helmlab</div><div class="sp-vals">
+      <div class="sp-val p"><div class="k">L</div><div class="v">${pg[0].toFixed(4)}</div></div>
+      <div class="sp-val p"><div class="k">a</div><div class="v">${pg[1].toFixed(4)}</div></div>
+      <div class="sp-val p"><div class="k">b</div><div class="v">${pg[2].toFixed(4)}</div></div>
+      <div class="sp-val p"><div class="k">C</div><div class="v">${pgC.toFixed(4)}</div></div>
+      <div class="sp-val p"><div class="k">H</div><div class="v">${pgH.toFixed(1)}&deg;</div></div>
+    </div></div>
+    <div class="sp-block"><div class="sp-title o">Oklab</div><div class="sp-vals">
+      <div class="sp-val o"><div class="k">L</div><div class="v">${ol[0].toFixed(4)}</div></div>
+      <div class="sp-val o"><div class="k">a</div><div class="v">${ol[1].toFixed(4)}</div></div>
+      <div class="sp-val o"><div class="k">b</div><div class="v">${ol[2].toFixed(4)}</div></div>
+      <div class="sp-val o"><div class="k">C</div><div class="v">${oC.toFixed(4)}</div></div>
+      <div class="sp-val o"><div class="k">H</div><div class="v">${oH.toFixed(1)}&deg;</div></div>
+    </div></div>
+    <div class="sp-block"><div class="sp-title c">CIE L*a*b*</div><div class="sp-vals">
+      <div class="sp-val c"><div class="k">L*</div><div class="v">${cl[0].toFixed(2)}</div></div>
+      <div class="sp-val c"><div class="k">a*</div><div class="v">${cl[1].toFixed(2)}</div></div>
+      <div class="sp-val c"><div class="k">b*</div><div class="v">${cl[2].toFixed(2)}</div></div>
+      <div class="sp-val c"><div class="k">C*</div><div class="v">${cC.toFixed(2)}</div></div>
+      <div class="sp-val c"><div class="k">h</div><div class="v">${cH.toFixed(1)}&deg;</div></div>
+    </div></div>
+    <div style="font-size:0.72em;color:#555;margin-top:8px;">Round-trip hata: ${rt_err<1e-10?'< 10⁻¹⁰':rt_err.toExponential(2)}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 7. Pipeline
+// ═══════════════════════════════════════════════════════════════
+function buildPipeline(){
+  const steps=[
+    {n:'1',name:'XYZ → LMS',d:'M1 (3x3)'},
+    {n:'2',name:'Guc sikistirma',d:'|x|^g'},
+    {n:'3',name:'LMS → Lab',d:'M2 (3x3)'},
+    {n:'4',name:'Hue duzeltme',d:'4 harmonik'},
+    {n:'5',name:'H-K etkisi',d:'C^a x hue'},
+    {n:'6',name:'L duzeltme',d:'Kubik poli.'},
+    {n:'7',name:'Kroma olcek',d:'4 harm. exp'},
+    {n:'8',name:'L x C etkilesim',d:'HLC'},
+    {n:'9',name:'Hue-dep L',d:'exp(F(h))'},
+  ];
+  let html='';
+  for(let i=0;i<steps.length;i++){
+    if(i>0) html+='<div class="pipe-arrow">→</div>';
+    html+=`<div class="pipe-step"><div class="pipe-num">${steps[i].n}</div><div class="pipe-name">${steps[i].name}</div><div class="pipe-detail">${steps[i].d}</div></div>`;
+  }
+  document.getElementById('pipeRow').innerHTML=html;
+}
+
+// Init
+document.getElementById('picker').addEventListener('input',updatePicker);
+document.getElementById('gFrom').addEventListener('input',buildGrad);
+document.getElementById('gTo').addEventListener('input',buildGrad);
+buildGrad();
+buildLightness();
+buildRoundTrip();
+buildStress();
+buildHK();
+updatePicker();
+buildPipeline();
+</script>
+</body>
+</html>

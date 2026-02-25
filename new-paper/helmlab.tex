@@ -1,0 +1,803 @@
+\documentclass[11pt, twocolumn]{article}
+
+% ── Packages ──────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage[margin=2cm]{geometry}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\hypersetup{colorlinks=true, linkcolor=blue!60!black, citecolor=blue!60!black, urlcolor=blue!60!black}
+
+\graphicspath{{figures/}}
+
+% ── Shortcuts ─────────────────────────────────────────────────────
+\newcommand{\helmlab}{\textsc{Helmlab}}
+\newcommand{\stress}{\textsc{stress}}
+\newcommand{\combvd}{\textsc{combvd}}
+\newcommand{\ie}{i.e.,\,}
+\newcommand{\eg}{e.g.,\,}
+\newcommand{\etal}{\textit{et al.}}
+
+% ══════════════════════════════════════════════════════════════════
+\title{\helmlab: A Data-Driven Analytical Color Space\\for UI Design Systems}
+
+\author{
+  G\"orkem Y{\i}ld{\i}z\\
+  \textit{Independent Researcher}\\
+  \texttt{author@gorkemyildiz.com}
+}
+
+\date{}
+
+% ══════════════════════════════════════════════════════════════════
+\begin{document}
+\maketitle
+
+% ── Abstract ─────────────────────────────────────────────────────
+\begin{abstract}
+We present \helmlab, a 72-parameter analytical color space designed for
+UI design systems. The forward transform maps CIE~XYZ to a
+perceptually-organized Lab representation through learned matrices,
+per-channel power compression, Fourier hue correction, embedded
+Helmholtz--Kohlrausch lightness adjustment, and a post-pipeline neutral
+correction that structurally guarantees achromatic colors map to
+$a\!=\!b\!=\!0$ (chroma $<10^{-6}$). A rigid rotation of the
+chromatic plane improves hue-angle alignment at zero cost to the
+distance metric, which is invariant under isometries. On the
+\combvd\ dataset (3{,}813 color pairs), \helmlab\ achieves a
+\stress\ of 23.22---a 20.4\% reduction over CIEDE2000 (29.18). Cross-validation on He~\etal\
+2022 and MacAdam~1974 shows competitive cross-dataset performance. The transform is
+invertible with round-trip errors below $10^{-14}$.
+We provide gamut mapping, design-token export, and dark/light mode
+adaptation for practical adoption in web and mobile design systems.
+\end{abstract}
+
+\textbf{Keywords:} color space, color difference, perceptual uniformity, STRESS, Helmholtz--Kohlrausch, UI design systems
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Introduction}
+\label{sec:intro}
+
+Color management in UI design systems requires three capabilities that
+no existing color space provides simultaneously: (1)~accurate perceptual
+distance prediction for contrast checking and palette generation,
+(2)~an achromatic axis where grays map to zero chroma for clean gradient
+interpolation, and (3)~reasonable hue-angle alignment so that
+programmatic color manipulation produces predictable results.
+
+CIE~Lab~\cite{cie1976} and CIEDE2000~\cite{luo2001} remain the
+industry standard for color-difference evaluation, but their
+\stress\ on \combvd\ (29.18) leaves room for improvement.
+Oklab~\cite{ottosson2020} offers computational simplicity and CSS
+integration but was optimized for hue uniformity, not color-difference
+prediction (\stress\ 47.5 Euclidean on \combvd). CAM16-UCS~\cite{li2017} derives from
+a color appearance model but is computationally heavy and exhibits
+achromatic chroma leakage ($\bar{C}=1.42$). IPT~\cite{ebner1998}
+optimized for hue linearity at the expense of lightness accuracy.
+$J_z a_z b_z$~\cite{safdar2017} targets HDR via the PQ curve but
+is complex and not CSS-native.
+
+None of these spaces were designed with UI workflows in mind. None
+jointly optimize the color-space transform and distance metric
+end-to-end against psychophysical data.
+
+\helmlab\ takes a different approach: we treat the entire
+XYZ-to-distance pipeline as a single system with 72~learnable
+parameters and optimize all of them jointly against the largest
+available color-difference dataset. The result is:
+
+\begin{enumerate}
+  \item A 72-parameter analytical color space achieving \stress\
+    23.22 on \combvd\ ($-$20.4\% vs CIEDE2000).
+  \item Structural achromatic guarantee: grays map to
+    $C < 10^{-6}$ via neutral correction, with no sacrifice in
+    color-difference accuracy.
+  \item A rigid-rotation post-processing step that improves
+    hue-angle alignment (RMS~16.1\textdegree) at exactly zero cost
+    to the distance metric (isometry invariance).
+  \item Embedded Helmholtz--Kohlrausch correction: lightness is
+    explicitly chroma-dependent, learned from data rather than
+    hand-tuned.
+  \item Practical tooling: gamut mapping, CSS/Android/iOS token
+    export, and surround-aware dark/light mode adaptation.
+\end{enumerate}
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Design Goals and Metrics}
+\label{sec:goals}
+
+\helmlab\ is optimized for UI design systems operating in sRGB and
+Display~P3 gamuts under typical viewing conditions (D65 illuminant,
+average surround). We define five quantitative targets:
+
+\paragraph{Color-difference accuracy (\stress).}
+The STRESS metric~\cite{luo2006} measures agreement between predicted
+distances $\Delta E_i$ and visual differences $DV_i$:
+\begin{equation}
+  \mathrm{STRESS} = 100\sqrt{\frac{\sum_i(DV_i - F \cdot \Delta E_i)^2}{\sum_i DV_i^2}}
+  \label{eq:stress}
+\end{equation}
+where $F = \sum DV_i \Delta E_i / \sum \Delta E_i^2$. Lower is better.
+We train on \combvd\ (3{,}813 pairs from six experiments~\cite{luo2006})
+and cross-validate on He~\etal\ 2022~\cite{he2022} (82~pairs) and
+MacAdam~1974~\cite{macadam1974} (128~pairs).
+
+\paragraph{Achromatic integrity.}
+Neutral colors (D65-adapted grays, \ie\ stimuli on the achromatic axis
+proportional to the D65 white point) must map to $a = b = 0$. We
+measure maximum chroma $C_{\max}$ over 256 gray levels spanning
+$Y \in [0.001, 2.0]$.
+
+\paragraph{Hue-angle alignment.}
+sRGB primaries and secondaries should land at conventional hue angles.
+We report RMS and maximum hue error across
+$\{$R, Y, G, C, B, M$\}$.
+
+\paragraph{Round-trip accuracy.}
+For any sRGB color, $\|T^{-1}(T(\mathbf{x})) - \mathbf{x}\|_\infty$
+should be below $10^{-8}$.
+
+\paragraph{Munsell uniformity.}
+Coefficient of variation (CV) of neighbor-pair distances along
+Munsell constant-hue, constant-value lines (3{,}590 pairs). Lower CV
+indicates more uniform spacing.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{The Helmlab Color Space}
+\label{sec:space}
+
+\subsection{Forward Transform}
+
+The forward transform maps CIE~XYZ (D65) to Lab through eleven stages
+(\Cref{fig:pipeline}).
+All parameters are jointly optimized (\Cref{sec:optimization}).
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{fig4_pipeline.pdf}
+  \caption{The \helmlab\ forward transform pipeline. Blue: linear operations; yellow: nonlinear corrections; green: structural guarantees (NC, rotation). All 72~parameters are jointly optimized.}
+  \label{fig:pipeline}
+\end{figure*}
+
+\paragraph{Stage 1: Cone response (9 params).}
+A learned $3\!\times\!3$ matrix $\mathbf{M}_1$ maps XYZ to
+cone-response-like signals:
+\begin{equation}
+  \mathbf{c} = \mathbf{M}_1 \begin{bmatrix} X \\ Y \\ Z \end{bmatrix}
+\end{equation}
+Unlike fixed matrices (Hunt--Pointer--Est\'evez, Bradford),
+$\mathbf{M}_1$ is freely optimized.
+
+\paragraph{Stage 2: Power compression (3 params).}
+Each channel undergoes signed power compression:
+\begin{equation}
+  c_i' = \mathrm{sign}(c_i)\,|c_i|^{\gamma_i}, \quad i \in \{0,1,2\}
+\end{equation}
+The exponents $\gamma_i$ generalize the cube-root of CIE~Lab
+($\gamma = 1/3$). Optimized values cluster near 0.4, suggesting a
+slightly different nonlinearity than traditionally assumed.
+
+\paragraph{Stage 3: Lab projection (9 params).}
+A second matrix $\mathbf{M}_2$ projects compressed signals to
+opponent channels:
+\begin{equation}
+  \begin{bmatrix} L_\mathrm{raw} \\ a_\mathrm{raw} \\ b_\mathrm{raw} \end{bmatrix} = \mathbf{M}_2 \, \mathbf{c}'
+\end{equation}
+
+\paragraph{Stage 4: Hue correction (8 params).}
+A 4-harmonic Fourier rotation corrects systematic hue distortions:
+\begin{equation}
+  \delta(h) = \sum_{k=1}^{4}\!\bigl[\alpha_k\cos(kh) + \beta_k\sin(kh)\bigr]
+\end{equation}
+where $h = \mathrm{atan2}(b, a)$. The chromatic vector $(a,b)$ is
+rotated by $\delta(h)$, preserving chroma while redistributing
+hue angles.
+
+\paragraph{Stage 5: Helmholtz--Kohlrausch embedding (6 params).}
+Saturated colors appear brighter than achromatic stimuli of equal
+luminance. Rather than a post-hoc correction, we embed this directly:
+\begin{equation}
+  L \mathrel{+}= w_\mathrm{HK} \cdot C^{p_\mathrm{HK}} \cdot \bigl[1 + f_\mathrm{HK}(h)\bigr]
+  \label{eq:hk}
+\end{equation}
+where $C = \sqrt{a^2+b^2}$ and $f_\mathrm{HK}(h)$ is a 2-harmonic
+hue modulation. The learned weight $w_\mathrm{HK} = 0.37$ and power
+$p_\mathrm{HK} = 0.85$ make lightness explicitly chroma-dependent---a
+departure from the conventional independence assumption.
+
+\paragraph{Stage 6: Lightness refinement (8 params).}
+A cubic polynomial (3~params) with hue-dependent additive term
+(2~params), followed by dark-region exponential compression (3~params):
+\begin{align}
+  L_1 &= p_1 L^3 + p_2 L^2 + p_3 L + t \cdot f_\mathrm{Lh}(h) \\
+  L_2 &= L_1 \cdot \exp\!\bigl[\lambda_d(h) \cdot L_1(1-L_1)^2\bigr]
+\end{align}
+where $t = L(1-L)$ and $f_\mathrm{Lh}(h)$ is a 1-harmonic Fourier
+correction targeting the hue--lightness interaction sign flip (dark
+cyans vs mid cyans). The dark compression coefficient $\lambda_d$
+includes hue modulation to handle the known difference in dark-blue
+vs dark-yellow perception.
+
+\paragraph{Stages 7--8: Chroma processing (18 params).}
+Chroma processing proceeds in four interleaved sub-stages:
+(a)~hue-dependent scaling (4~harmonics, 8~params):
+\begin{equation}
+  (a,b) \mathrel{*}= \exp\!\Bigl[\sum_{k=1}^{4}\!\bigl[\alpha'_k\cos(kh) + \beta'_k\sin(kh)\bigr]\Bigr]
+\end{equation}
+(b)~nonlinear chroma power (4~params): $C \to C^{1+\varepsilon(h)}$
+where $\varepsilon(h)$ is a 2-harmonic Fourier series, separating
+high-chroma from low-chroma discrimination;
+(c)~L-dependent scaling (2~params):
+$(a,b) \mathrel{*}= \exp[l_1(L-0.5) + l_2(L-0.5)^2]$; and
+(d)~hue$\times$lightness interaction (4~params, 2-harmonic Fourier
+modulated by $L-0.5$). The interleaving order matters: the nonlinear
+power is applied between hue-dependent and L-dependent scaling to
+allow each sub-stage to correct for the others' distortions.
+
+\paragraph{Stage 9: Hue-dependent lightness (4 params).}
+A final $L \mathrel{*}= \exp[g(h)]$ captures residual hue--lightness
+interactions (\eg\ blue appears darker, yellow lighter at equal
+luminance).
+
+\paragraph{Stage 10: Neutral correction.}
+With independent $\gamma_i$ per channel, the D65 achromatic axis
+(stimuli proportional to $[X_{D65}, Y_{D65}, Z_{D65}]$) generally
+does not map to $a\!=\!b\!=\!0$ after
+the enrichment stages. We correct this by running 256 gray levels
+($Y \in [0.001, 2.0]$) through stages~1--9, recording the
+achromatic error $a_\mathrm{err}(L)$, $b_\mathrm{err}(L)$, and
+fitting PCHIP interpolants. At runtime:
+\begin{equation}
+  a \leftarrow a - a_\mathrm{err}(L), \quad b \leftarrow b - b_\mathrm{err}(L)
+  \label{eq:nc}
+\end{equation}
+Because the correction is applied \emph{after} all nonlinear stages,
+it accounts for every distortion in the pipeline. The resulting
+maximum chroma for grays is $< 10^{-6}$, limited only by PCHIP
+interpolation error on the 256-point LUT (the underlying achromatic
+curve is smooth, so interpolation error is negligible).
+
+\paragraph{Stage 11: Rigid rotation ($\varphi$).}
+A uniform rotation of the $(a,b)$ plane by angle $\varphi$:
+\begin{equation}
+  \begin{bmatrix} a' \\ b' \end{bmatrix} = \begin{bmatrix} \cos\varphi & -\sin\varphi \\ \sin\varphi & \cos\varphi \end{bmatrix} \begin{bmatrix} a \\ b \end{bmatrix}
+  \label{eq:rotation}
+\end{equation}
+This is an isometry: it preserves $\Delta a^2 + \Delta b^2$ for any
+pair, and therefore preserves the distance metric exactly
+(\Cref{sec:rotation-proof}). The rotation angle
+$\varphi = -28.2$\textdegree\ is chosen to minimize the maximum
+hue-angle error across sRGB primaries and secondaries.
+
+\subsection{Rotation Invariance}
+\label{sec:rotation-proof}
+
+The distance metric (\Cref{sec:distance}) depends on
+$\Delta L$, $\Delta a^2 + \Delta b^2$, $\bar{L}$, and
+$\bar{C} = \sqrt{\bar{a}^2 + \bar{b}^2}$. A rigid rotation of the
+$(a,b)$ plane preserves each of these quantities:
+$\Delta a'^2 + \Delta b'^2 = \Delta a^2 + \Delta b^2$ and
+$\bar{a}'^2 + \bar{b}'^2 = \bar{a}^2 + \bar{b}^2$. Therefore
+the distance is exactly invariant, and we verified this empirically:
+the COMBVD \stress\ difference before and after rotation is
+$0.0000000000$.
+
+This means any hue-angle improvement from the rotation is obtained
+at zero cost to color-difference prediction.
+
+\subsection{Surround Parameter}
+\label{sec:surround}
+
+\helmlab\ includes provisions for a surround luminance parameter
+$S \in [0, 1]$ (0=dark, 0.5=average, 1=bright) that modulates
+several pipeline stages: H-K weight, dark compression, chroma
+scaling, and L-dependent chroma. In the current release, the
+surround parameters are set to zero (trained on average-surround
+data only). The architecture is ready for future training on
+viewing-condition-dependent datasets. The UI layer uses $S$ for
+heuristic dark/light mode adaptation via soft L-inversion.
+
+\subsection{Inverse Transform}
+
+Each stage has an explicit inverse. Matrix stages invert via
+$\mathbf{M}_1^{-1}$, $\mathbf{M}_2^{-1}$; power compression
+via $c_i = \mathrm{sign}(c_i')|c_i'|^{1/\gamma_i}$ (closed form).
+Hue corrections and lightness corrections are inverted via Newton
+iteration (3--5 iterations, converging to machine precision). The
+neutral correction inverts by adding back the PCHIP-interpolated
+error. Round-trip accuracy across the full sRGB gamut is
+$< 10^{-14}$.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Distance Metric}
+\label{sec:distance}
+
+Given two colors with coordinates $(L_1, a_1, b_1)$ and
+$(L_2, a_2, b_2)$, we compute:
+\begin{align}
+  S_L &= 1 + s_L(\bar{L} - 0.5)^2 \label{eq:sl} \\
+  S_C &= 1 + s_C \bar{C} \label{eq:sc}
+\end{align}
+where $\bar{L}$, $\bar{C}$ are pair averages. The raw distance is:
+\begin{equation}
+  d = \left[\left(\frac{\Delta L}{S_L}\right)^{\!2} + w_C \frac{\Delta a^2 + \Delta b^2}{S_C^2}\right]^{p/2}
+  \label{eq:dist_raw}
+\end{equation}
+followed by monotonic compression and post-power:
+\begin{equation}
+  \Delta E = \left[\frac{d}{1 + c \cdot d}\right]^q
+  \label{eq:dist_final}
+\end{equation}
+
+The pair-dependent weights $S_L$ and $S_C$ are inspired by
+CIEDE2000 but learned from data (optimized values: $s_L \approx 10^{-4}$,
+$s_C \approx 0.0045$). The Minkowski exponent $p = 0.83$ and
+chroma weight $w_C = 1.03$ slightly favor chroma differences over
+lightness. The compression $c = 1.59$ and post-power $q = 1.1$
+reduce systematic bias for large color differences.
+
+The distance metric contributes 7~parameters. Total system:
+9+3+9+8+6+8+18+4 = 65~space + 7~metric = 72~parameters.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Optimization}
+\label{sec:optimization}
+
+All 72 parameters are jointly optimized by minimizing:
+\begin{equation}
+  \mathcal{L} = \mathrm{STRESS}_\combvd + 0.05 \cdot \mathrm{STRESS}_\mathrm{He}
+  \label{eq:loss}
+\end{equation}
+using L-BFGS-B~\cite{byrd1995} with box constraints. We perform
+8~random restarts (each 5{,}000 iterations) and keep the best. The
+He~\etal\ term ($\lambda = 0.05$) acts as a mild regularizer against
+overfitting to \combvd.
+
+\paragraph{Training data.}
+\combvd\ comprises 3{,}813 color pairs from six psychophysical
+experiments: BFD-P(D65) (2{,}028), BFD-P(M) (548), BFD-P(C) (200),
+Witt (418), RIT-DuPont (312), Leeds (307). All pairs have visual-difference
+values on a common scale. We train on the full dataset (no
+train/val split for the final model), monitoring a held-out 20\% split
+(seed=42) during development to check for overfitting.
+
+\paragraph{Cross-validation data.}
+He~\etal\ 2022 (82~pairs, 10\textdegree\ observer) enters the loss as
+a regularizer ($\lambda\!=\!0.05$) and is therefore not fully
+independent; its \stress\ is reported for transparency but should be
+interpreted as a semi-held-out metric. MacAdam~1974 (128~pairs,
+10\textdegree) is held out entirely and never seen during
+optimization.
+
+\paragraph{Convergence.}
+The optimizer typically converges within 3{,}000--5{,}000 function
+evaluations per restart. The validation gap (train--val \stress\
+difference) is +1.11, indicating moderate but controlled overfitting
+for a 72-parameter model.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Evaluation}
+\label{sec:eval}
+
+\subsection{Color-Difference Prediction}
+
+\Cref{fig:stress} and \Cref{tab:stress} show \stress\ on \combvd\ for
+\helmlab\ and nine baseline methods. \helmlab\ achieves 23.22, a
+substantial improvement over CIEDE2000 (29.18, $-$20.4\%).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig1_stress.pdf}
+  \caption{\stress\ on COMBVD (3{,}813 pairs). Lower is better.}
+  \label{fig:stress}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{\stress\ on \combvd\ (3{,}813 pairs). Lower is better.}
+  \label{tab:stress}
+  \begin{tabular}{lrr}
+    \toprule
+    Method & \stress & vs CIEDE2000 \\
+    \midrule
+    \textbf{\helmlab} & \textbf{23.22} & \textbf{$-$20.4\%} \\
+    CIEDE2000 & 29.18 & --- \\
+    $\Delta E^*_{ab}$ (CIE76) & 42.80 & +46.7\% \\
+    CIE94 & 33.59 & +15.1\% \\
+    $\Delta E$ CMC & 34.04 & +16.6\% \\
+    CAM16-UCS (Euclid.) & 33.90 & +16.2\% \\
+    IPT (Euclid.) & 41.21 & +41.3\% \\
+    $J_z a_z b_z$ (Euclid.) & 41.90 & +43.6\% \\
+    Oklab (Euclid.) & 47.46 & +62.7\% \\
+    sRGB (Euclid.) & 67.82 & +132.5\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig2_scatter.pdf}
+  \caption{Predicted vs observed color differences on COMBVD.}
+  \label{fig:scatter}
+\end{figure}
+
+The baselines in \Cref{tab:stress} use simple Euclidean distance in
+each space's native Cartesian coordinates, without parametric weighting
+or compression. Oklab's high \stress\ (47.46) reflects its design
+goal: it was optimized for hue uniformity~\cite{ottosson2020}, not
+color-difference prediction on \combvd. The \helmlab\ distance metric
+includes pair-dependent weighting ($S_L$, $S_C$), Minkowski exponent,
+and monotonic compression, making the comparison not strictly
+apples-to-apples. For a fairer comparison, \helmlab\ with Euclidean
+distance alone achieves \stress\ $\approx$30.2---competitive with
+CIEDE2000 (29.18), indicating that the space transform itself accounts
+for roughly half the overall improvement, and the distance metric for
+the other half.
+
+\subsection{Cross-Validation}
+
+On He~\etal\ 2022 (regularizer, 82~pairs), \helmlab\ achieves
+\stress\ 29.0 vs CIEDE2000's 32.6. On MacAdam~1974 (held out
+entirely, 128~pairs), \helmlab\ achieves 20.2 vs CAM16-UCS's 18.7
+(best). \Cref{fig:crossval} visualizes these results. \helmlab\
+generalizes competitively: it outperforms CIEDE2000 on He~\etal\ but
+trails CAM16-UCS on MacAdam, suggesting no severe overfitting to
+\combvd\ while acknowledging that a single-dataset-trained model
+cannot dominate across all evaluation sets.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig5_crossval.pdf}
+  \caption{Cross-dataset validation on held-out data.}
+  \label{fig:crossval}
+\end{figure}
+
+\subsection{Generation Properties: The Measurement--Generation Tradeoff}
+
+A color space optimized purely for distance prediction need not produce
+usable coordinates for color generation. In \helmlab's development, the
+measurement-optimal configuration mapped neutral grays to chroma
+$\bar{C} \approx 0.34$---the achromatic axis was deformed because the
+optimizer exploited the chromatic plane to improve \stress, at the cost
+of rendering gray gradients unusable (they exhibit visible color
+artifacts). Conversely, constraining grays to $C = 0$ via penalty terms
+created a binary basin conflict: the optimizer either remained stuck in
+the measurement-optimal basin or escaped to a generation-friendly basin
+with significantly worse \stress\ (26--31).
+
+The neutral correction (\Cref{sec:space}, Stage~10) resolves this
+tradeoff structurally. By subtracting the achromatic error \emph{after}
+all enrichment stages, it allows the optimizer to find its
+measurement-optimal configuration freely, then corrects only the
+achromatic axis. The resulting \stress\ increase is just $+0.04$
+(23.18~$\to$~23.22), while achromatic chroma drops from 0.34 to
+$<10^{-6}$. This makes \helmlab\ simultaneously competitive in
+measurement (\stress\ vs \combvd) and practical for generation
+(gradients, palettes, interpolation).
+
+\Cref{fig:neutral} shows neutral ramp uniformity and achromatic chroma
+leakage. \helmlab's neutral correction eliminates chroma leakage
+entirely ($C < 10^{-6}$), while CAM16-UCS exhibits significant leakage
+($\bar{C} = 1.42$).
+\Cref{tab:gen} summarizes all generation properties.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig3_neutral.pdf}
+  \caption{Left: neutral ramp step uniformity. Right: achromatic chroma
+  leakage. \helmlab's NC guarantees $C < 10^{-6}$ for all grays.}
+  \label{fig:neutral}
+\end{figure}
+
+\begin{table}[t]
+  \centering
+  \caption{Generation quality metrics.}
+  \label{tab:gen}
+  \begin{tabular}{lr}
+    \toprule
+    Property & Value \\
+    \midrule
+    Achromatic max $C$ & $<10^{-6}$ \\
+    Hue RMS (6 primaries) & 16.1\textdegree \\
+    Hue max error & 20.2\textdegree \\
+    Round-trip $\|\cdot\|_\infty$ & $<10^{-14}$ \\
+    Munsell CV & 17.6\% \\
+    Jacobian det (min) & 0.10 \\
+    Jacobian cond (median) & 7.7 \\
+    \midrule
+    Val gap (train$-$val) & +1.11 \\
+    He \stress & 29.03 \\
+    MacAdam \stress & 20.23 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The achromatic guarantee ensures that gray gradients and lightness
+ramps interpolate cleanly without color artifacts---a hard requirement
+for design-token generation and palette export. The hue RMS of
+16.1\textdegree\ means sRGB primaries land within $\sim$20\textdegree\
+of their expected positions---acceptable for programmatic palette
+generation, though not perfect. The rigid rotation (\Cref{sec:space},
+Stage~11) provides this hue improvement at zero cost to the distance
+metric via isometry invariance. The Jacobian was evaluated on a
+$64\!\times\!64\!\times\!64$ sRGB grid via finite differences;
+the minimum determinant (0.10) is positive throughout, confirming
+a locally invertible, orientation-preserving map across the entire
+sRGB gamut.
+
+\subsection{Ablation Study}
+
+\Cref{tab:ablation} isolates the contribution of key components.
+
+\begin{table}[t]
+  \centering
+  \caption{Ablation: effect of removing components.}
+  \label{tab:ablation}
+  \begin{tabular}{lrr}
+    \toprule
+    Configuration & \stress & $\Delta$ \\
+    \midrule
+    Full \helmlab\ & 23.22 & --- \\
+    Euclidean distance only & $\sim$30.2 & +7.0 \\
+    No H-K embedding ($w_\mathrm{HK}=0$) & $\sim$24.5 & +1.3 \\
+    No hue correction & $\sim$25.8 & +2.6 \\
+    No dark L compression & $\sim$23.9 & +0.7 \\
+    \midrule
+    Rotation ($-$28.2\textdegree) & 23.22 & 0.00 \\
+    No rotation & 23.22 & 0.00 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The space--metric decomposition shows that the improvement splits
+roughly evenly between the space transform and the distance metric.
+Relative to CIEDE2000 (29.18), the space alone with Euclidean distance
+(\stress\ = 30.2) is slightly worse, while the full metric recovers
+the remaining 7~points. Relative to other Euclidean baselines
+(CAM16-UCS = 33.9), the space alone already provides substantial gain. The H-K
+embedding and hue correction are the most impactful individual
+stages. The rotation row confirms exact metric invariance.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Practical Adoption}
+\label{sec:adoption}
+
+\Cref{fig:gamut} shows the sRGB gamut boundary in \helmlab\ coordinates
+at three lightness levels, confirming smooth and well-behaved geometry.
+\helmlab\ includes a Python utility layer for design system integration:
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig6_gamut.pdf}
+  \caption{sRGB gamut in \helmlab\ $a$--$b$ plane at three L levels.
+  Points colored by their sRGB values.}
+  \label{fig:gamut}
+\end{figure}
+
+\paragraph{Gamut mapping.}
+Binary-search chroma reduction along the L axis maps out-of-gamut
+\helmlab\ coordinates to the nearest in-gamut sRGB or Display~P3
+color, preserving hue and lightness.
+
+\paragraph{Contrast utilities.}
+\texttt{ensure\_contrast(fg, bg, min\_ratio)} adjusts foreground
+lightness via binary search on the \helmlab\ L axis to meet
+WCAG~2.x contrast requirements (4.5:1 for AA, 7:1 for AAA).
+Hue and chroma are preserved.
+
+\paragraph{Palette generation.}
+Lightness ramps and hue rings at fixed chroma produce
+perceptually-spaced palettes. Semantic scales (Tailwind-style
+50--950) are generated by interpolating L between 0.97 and 0.10
+with chroma/hue preserved.
+
+\paragraph{Dark/light mode.}
+When surround parameters are trained, the surround $S$ directly
+modulates the transform. Currently, a fallback soft L-inversion
+maps colors between light ($S=0.7$) and dark ($S=0.2$) modes
+with contrast enforcement.
+
+\paragraph{Token export.}
+A single \texttt{TokenExporter} produces CSS custom properties
+(\texttt{oklch()}, \texttt{color(display-p3 ...)}), Android XML
+(using HCT tone/chroma/hue semantics for Material Design
+compatibility), iOS Swift (Display~P3), Tailwind config, and
+raw JSON.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Limitations and Future Work}
+\label{sec:limitations}
+
+\helmlab\ has several limitations that we state explicitly:
+
+\begin{enumerate}
+  \item \textbf{Training data.} \combvd\ uses a 2\textdegree\ standard
+    observer, which may not generalize to large-field (10\textdegree)
+    viewing. The MacAdam cross-validation partially addresses this.
+
+  \item \textbf{Model complexity.} 72 parameters is substantially more
+    than Oklab ($\sim$15 designed parameters). Interpretability
+    suffers, though each stage has a clear perceptual motivation.
+
+  \item \textbf{Hue alignment.} RMS hue error of 16.1\textdegree\ is
+    a compromise. Some hue regions (cyan, yellow) have errors up to
+    20\textdegree. Further harmonic terms could improve this at the
+    risk of overfitting.
+
+  \item \textbf{Surround dependency.} The surround parameter $S$ is
+    architecturally present but not yet trained on viewing-condition
+    data. Current dark/light adaptation uses heuristics.
+
+  \item \textbf{Sub-dataset variation.} \helmlab\ underperforms
+    CIEDE2000 on 2 of 6 \combvd\ sub-datasets (Leeds, RIT-DuPont),
+    suggesting these subsets favor CIE~Lab-based corrections.
+
+  \item \textbf{Not general-purpose.} \helmlab\ is optimized for UI
+    workflows (sRGB/P3 gamut, screen viewing). It is not designed for
+    print, photography, or spectral applications.
+
+  \item \textbf{Statistical reporting.} We report single \stress\
+    values without confidence intervals or bootstrap estimates.
+    With 72~parameters and 8~restarts, parameter uncertainty is
+    non-trivial; future work should include per-sub-dataset variance
+    analysis and significance testing against baselines.
+\end{enumerate}
+
+Future work includes training the surround parameter on paired
+light/dark viewing data, exploring JavaScript/WASM compilation for
+browser-native performance, and expanding the training set with
+targeted human feedback via the bidirectional optimization framework
+already implemented in the codebase.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section{Conclusion}
+\label{sec:conclusion}
+
+\helmlab\ is a 72-parameter analytical color space that achieves
+\stress\ 23.22 on \combvd---20.4\% better than CIEDE2000---while
+maintaining a structurally guaranteed achromatic axis ($C < 10^{-6}$)
+and reasonable hue alignment (RMS~16.1\textdegree). The central
+technical contribution is the neutral correction, which resolves the
+measurement--generation tradeoff: the optimizer can pursue
+\stress-optimal parameters freely, while the post-pipeline correction
+guarantees clean achromatic behavior at a cost of just $+0.04$
+\stress\ points. Combined with embedded Helmholtz--Kohlrausch
+correction, a learned distance metric, and rigid rotation for
+free hue improvement, \helmlab\ provides both accurate color-difference
+prediction and practical coordinate-space properties for gradient
+interpolation, palette generation, and design-token export.
+Code, trained parameters, and design-system utilities are publicly
+available at \url{https://github.com/Grkmyldz148/helmlab}. An
+interactive demo is at \url{https://grkmyldz148.github.io/helmlab/}.
+
+
+% ══════════════════════════════════════════════════════════════════
+\section*{Acknowledgments}
+
+Thanks to the 71~anonymous observers who participated in the
+bidirectional evaluation study during development.
+
+
+% ══════════════════════════════════════════════════════════════════
+\bibliographystyle{plain}
+\begin{thebibliography}{99}
+
+\bibitem{cie1976}
+CIE, ``Colorimetry,'' CIE Publication 15, 1976.
+
+\bibitem{luo2001}
+M.~R. Luo, G.~Cui, and B.~Rigg, ``The development of the CIE 2000
+colour-difference formula: CIEDE2000,'' \textit{Color Res.\ Appl.},
+vol.~26, no.~5, pp.~340--350, 2001.
+
+\bibitem{ottosson2020}
+B.~Ottosson, ``A perceptual color space for image processing,''
+\url{https://bottosson.github.io/posts/oklab/}, 2020.
+
+\bibitem{li2017}
+C.~Li, Z.~Li, Z.~Wang, \textit{et al.}, ``Comprehensive color
+solutions: CAM16, CAT16, and S-decoupling,'' \textit{Color Res.\
+Appl.}, vol.~42, no.~6, pp.~703--718, 2017.
+
+\bibitem{ebner1998}
+F.~Ebner and M.~D. Fairchild, ``Development and testing of a color
+space (IPT) with improved hue uniformity,'' in \textit{Proc.\ IS\&T
+CIC6}, 1998.
+
+\bibitem{safdar2017}
+M.~Safdar, G.~Cui, Y.~J. Kim, and M.~R. Luo, ``Perceptually uniform
+color space for image signals including high dynamic range and wide
+gamut,'' \textit{Opt.\ Express}, vol.~25, no.~13, 2017.
+
+\bibitem{luo2006}
+M.~R. Luo, G.~Cui, and C.~Li, ``Uniform colour spaces based on
+CIECAM02 colour appearance model,'' \textit{Color Res.\ Appl.},
+vol.~31, pp.~320--330, 2006.
+
+\bibitem{he2022}
+R.~He, G.~Cui, T.~Zhu, and M.~R. Luo, ``Colour difference
+evaluation using large colour differences,'' in \textit{Proc.\ CIE},
+2022.
+
+\bibitem{macadam1974}
+D.~L. MacAdam, ``Uniform color scales,'' \textit{J.\ Opt.\ Soc.\
+Am.}, vol.~64, pp.~1691--1702, 1974.
+
+\bibitem{byrd1995}
+R.~H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu, ``A limited memory
+algorithm for bound constrained optimization,'' \textit{SIAM J.\ Sci.\
+Comput.}, vol.~16, pp.~1190--1208, 1995.
+
+\end{thebibliography}
+
+
+% ══════════════════════════════════════════════════════════════════
+\appendix
+\section{Parameter Table}
+\label{app:params}
+
+\Cref{tab:params} lists all 72 optimized parameters grouped by
+pipeline stage.
+
+\begin{table*}[t]
+  \centering
+  \caption{Optimized \helmlab\ parameters (v19-NC, $\varphi = -28.2$\textdegree).}
+  \label{tab:params}
+  \footnotesize
+  \begin{tabular}{llrl}
+    \toprule
+    Stage & Parameter & Value & Description \\
+    \midrule
+    \multirow{3}{*}{$\mathbf{M}_1$ (9)} & Row 0 & [0.724, 0.238, $-$0.164] & XYZ $\to$ cone-like \\
+    & Row 1 & [$-$0.325, 1.238, $-$0.024] & \\
+    & Row 2 & [0.101, 0.341, 0.849] & \\
+    \midrule
+    $\gamma$ (3) & $\gamma_0, \gamma_1, \gamma_2$ & 0.395, 0.421, 0.434 & Power compression \\
+    \midrule
+    \multirow{3}{*}{$\mathbf{M}_2$ (9)} & Row 0 & [$-$0.425, 0.489, 0.684] & Compressed $\to$ Lab \\
+    & Row 1 & [1.931, $-$2.728, 0.765] & \\
+    & Row 2 & [0.009, 1.642, $-$1.250] & \\
+    \midrule
+    Hue corr. (8) & $\alpha_{1..4}, \beta_{1..4}$ & see JSON & 4-harmonic Fourier \\
+    \midrule
+    H-K (6) & $w, p, m, s_1, c_2, s_2$ & 0.370, 0.852, $-$0.487, ... & Chroma $\to$ L \\
+    \midrule
+    Light. (8) & $p_1, p_2, p_3, Lh_{c1}, Lh_{s1}, \lambda_d, h_c, h_s$ & 0.225, $-$0.748, 0.699, ... & Cubic + Lh + dark \\
+    \midrule
+    Chroma (18) & 4-harm + power + $lc_1, lc_2$ + HLC & see JSON & Hue/power/L-dep \\
+    \midrule
+    Hue-L (4) & $g_{c1..2}, g_{s1..2}$ & see JSON & Hue $\to$ L \\
+    \midrule
+    \multirow{4}{*}{Distance (7)} & $s_L$ & $9.16 \times 10^{-5}$ & Pair-dep L weight \\
+    & $s_C$ & 0.0045 & Pair-dep C weight \\
+    & $p$ & 0.829 & Minkowski exponent \\
+    & $w_C$ & 1.028 & Chroma weight \\
+    & $c$ & 1.588 & Compression \\
+    & $q$ & 1.100 & Post-power \\
+    & $\alpha$ & 0.000 & Linear term \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+Full parameter values are available in the accompanying
+\texttt{analytical\_params.json} file.
+
+\end{document}
