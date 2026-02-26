@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from colorspace.utils.srgb_convert import (
+from helmlab.utils.srgb_convert import (
     linear_to_srgb,
     srgb_to_linear,
     XYZ_to_sRGB,
@@ -16,7 +16,7 @@ from colorspace.utils.srgb_convert import (
     relative_luminance,
     contrast_ratio,
 )
-from colorspace.helmlab import Helmlab
+from helmlab.helmlab import Helmlab
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -356,13 +356,13 @@ class TestGamutMapping:
 
     def test_max_chroma_positive(self, p):
         """max_chroma returns a positive value for mid-lightness."""
-        from colorspace.utils.gamut import max_chroma
+        from helmlab.utils.gamut import max_chroma
         C_max = max_chroma(0.5, 0.0, p._space, "srgb")
         assert C_max > 0.0
 
     def test_max_chroma_less_than_unrestricted(self, p):
         """max_chroma for sRGB < max_chroma for Display P3 at same L,H."""
-        from colorspace.utils.gamut import max_chroma
+        from helmlab.utils.gamut import max_chroma
         C_srgb = max_chroma(0.5, 1.0, p._space, "srgb")
         C_p3 = max_chroma(0.5, 1.0, p._space, "display-p3")
         assert C_p3 >= C_srgb - 1e-4
@@ -370,7 +370,7 @@ class TestGamutMapping:
     def test_gamut_map_preserves_hue(self, p):
         """gamut_map preserves hue angle (±0.5°)."""
         oog = np.array([0.5, 0.6, 0.3])
-        from colorspace.utils.gamut import gamut_map
+        from helmlab.utils.gamut import gamut_map
         mapped = gamut_map(oog, p._space, "srgb")
         h_orig = np.arctan2(oog[2], oog[1])
         h_mapped = np.arctan2(mapped[2], mapped[1])
@@ -381,13 +381,13 @@ class TestGamutMapping:
     def test_gamut_map_preserves_L(self, p):
         """gamut_map preserves lightness (±0.001)."""
         oog = np.array([0.5, 0.6, 0.3])
-        from colorspace.utils.gamut import gamut_map
+        from helmlab.utils.gamut import gamut_map
         mapped = gamut_map(oog, p._space, "srgb")
         assert abs(mapped[0] - oog[0]) < 0.001
 
     def test_gamut_map_in_gamut_unchanged(self, p):
         """In-gamut color passes through unchanged."""
-        from colorspace.utils.gamut import gamut_map
+        from helmlab.utils.gamut import gamut_map
         lab = p.from_hex("#808080")
         mapped = gamut_map(lab, p._space, "srgb")
         np.testing.assert_allclose(mapped, lab, atol=1e-10)
@@ -395,13 +395,13 @@ class TestGamutMapping:
     def test_gamut_map_oog_becomes_in_gamut(self, p):
         """Out-of-gamut color becomes in-gamut after mapping."""
         oog = np.array([0.5, 0.8, 0.0])
-        from colorspace.utils.gamut import gamut_map
+        from helmlab.utils.gamut import gamut_map
         mapped = gamut_map(oog, p._space, "srgb")
         assert p.is_in_srgb(mapped)
 
     def test_gamut_map_batch(self, p):
         """Batch gamut mapping is consistent with single mapping."""
-        from colorspace.utils.gamut import gamut_map
+        from helmlab.utils.gamut import gamut_map
         labs = np.array([
             [0.5, 0.8, 0.0],
             [0.5, 0.01, 0.01],
@@ -426,7 +426,7 @@ class TestDisplayP3:
 
     def test_xyz_p3_roundtrip(self):
         """XYZ → Display P3 → XYZ roundtrip."""
-        from colorspace.utils.srgb_convert import (
+        from helmlab.utils.srgb_convert import (
             XYZ_to_DisplayP3, DisplayP3_to_XYZ, linear_to_displayp3, displayp3_to_linear,
         )
         XYZ = np.array([0.4, 0.3, 0.2])
@@ -436,7 +436,7 @@ class TestDisplayP3:
 
     def test_p3_gamut_wider_than_srgb(self, p):
         """P3 gamut allows higher chroma than sRGB at same L,H."""
-        from colorspace.utils.gamut import max_chroma
+        from helmlab.utils.gamut import max_chroma
         C_srgb = max_chroma(0.6, 0.5, p._space, "srgb")
         C_p3 = max_chroma(0.6, 0.5, p._space, "display-p3")
         assert C_p3 > C_srgb
@@ -572,7 +572,7 @@ class TestSurroundParam:
         lab_default = p.from_hex("#3b82f6")
         # Explicitly pass S=0.5
         srgb = hex_to_srgb("#3b82f6")
-        from colorspace.utils.srgb_convert import sRGB_to_XYZ as s2x
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
         lab_explicit = p._space.from_XYZ(XYZ, S=0.5)
         np.testing.assert_allclose(lab_explicit, lab_default, atol=1e-12)
@@ -580,7 +580,7 @@ class TestSurroundParam:
     def test_roundtrip_s02(self, p):
         """from_XYZ → to_XYZ roundtrip with S=0.2."""
         srgb = hex_to_srgb("#ef4444")
-        from colorspace.utils.srgb_convert import sRGB_to_XYZ as s2x
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
         lab = p._space.from_XYZ(XYZ, S=0.2)
         XYZ_rec = p._space.to_XYZ(lab, S=0.2)
@@ -589,7 +589,7 @@ class TestSurroundParam:
     def test_roundtrip_s08(self, p):
         """from_XYZ → to_XYZ roundtrip with S=0.8."""
         srgb = hex_to_srgb("#22c55e")
-        from colorspace.utils.srgb_convert import sRGB_to_XYZ as s2x
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
         lab = p._space.from_XYZ(XYZ, S=0.8)
         XYZ_rec = p._space.to_XYZ(lab, S=0.8)
@@ -645,7 +645,7 @@ class TestSurroundBackwardCompat:
 
     def test_v14_json_loads_with_s_zero(self):
         """v14 JSON (no S params) loads with S params = 0."""
-        from colorspace.spaces.analytical import AnalyticalParams
+        from helmlab.spaces.analytical import AnalyticalParams
         # Simulate v14 JSON (missing S params)
         d = AnalyticalParams().to_dict()
         # Remove S params to simulate old format
@@ -660,7 +660,7 @@ class TestSurroundBackwardCompat:
 
     def test_serialization_roundtrip_with_s(self):
         """to_dict → from_dict preserves S params."""
-        from colorspace.spaces.analytical import AnalyticalParams
+        from helmlab.spaces.analytical import AnalyticalParams
         p = AnalyticalParams()
         p.hk_weight_S = 0.1
         p.L_S_offset = -0.05

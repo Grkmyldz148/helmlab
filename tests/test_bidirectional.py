@@ -7,9 +7,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from colorspace.helmlab import Helmlab
-from colorspace.feedback.generator import ColorPairGenerator
-from colorspace.feedback.collector import FeedbackDataset
+from helmlab.helmlab import Helmlab
+from helmlab.feedback.generator import ColorPairGenerator
+from helmlab.feedback.collector import FeedbackDataset
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -56,7 +56,7 @@ class TestGenerator:
 
     def test_uniform_random_in_srgb(self, gen):
         """uniform_random_pairs colors are valid sRGB hex."""
-        from colorspace.utils.srgb_convert import hex_to_srgb
+        from helmlab.utils.srgb_convert import hex_to_srgb
         pairs = gen.uniform_random_pairs(n=20)
         for p in pairs:
             srgb = hex_to_srgb(p["hex1"])
@@ -157,7 +157,7 @@ class TestBidirectionalCost:
     def test_feedback_lambda_zero_matches_standard(self):
         """With fb_lambda=0, objective matches standard COMBVD-only."""
         from scripts.optimize_bidirectional import make_objective_with_feedback
-        from colorspace.spaces.analytical import AnalyticalSpace
+        from helmlab.spaces.analytical import AnalyticalSpace
 
         space = AnalyticalSpace()
 

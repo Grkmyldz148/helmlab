@@ -41,16 +41,18 @@ hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950
 
 10KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
 
-### Python
+### Python (pip)
+
+[![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
 
 ```bash
-pip install -e .
+pip install helmlab
 ```
 
 ## Quick Start (Python)
 
 ```python
-from colorspace.helmlab import Helmlab
+from helmlab import Helmlab
 
 hl = Helmlab()
 
@@ -103,7 +105,7 @@ Bootstrap (10,000 iterations): Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [
 ## Project Structure
 
 ```
-src/colorspace/
+src/helmlab/
 ├── helmlab.py              # Main API (Helmlab class)
 ├── config.py               # Configuration and constants
 ├── export.py               # Token export (CSS, Android, iOS, Tailwind)

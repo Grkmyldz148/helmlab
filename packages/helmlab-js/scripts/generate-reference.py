@@ -11,7 +11,7 @@ root = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(root / "src"))
 
 import numpy as np
-from colorspace.helmlab import Helmlab
+from helmlab.helmlab import Helmlab
 
 hl = Helmlab()
 
@@ -76,7 +76,7 @@ for fg, bg in contrasts:
 scale = hl.semantic_scale("#3b82f6")
 
 # XYZ round-trip
-from colorspace.utils.srgb_convert import hex_to_srgb, sRGB_to_XYZ
+from helmlab.utils.srgb_convert import hex_to_srgb, sRGB_to_XYZ
 xyz_tests = []
 for hex_str in ["#3b82f6", "#ff0000", "#808080"]:
     srgb = hex_to_srgb(hex_str)

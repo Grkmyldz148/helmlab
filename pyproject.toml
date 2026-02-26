@@ -5,28 +5,64 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "helmlab"
 version = "0.1.0"
-description = "A data-driven analytical color space for UI design systems"
+description = "A data-driven analytical color space trained on 64,000 human color-difference observations"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "Görkem Yıldız"}]
-
+keywords = [
+    "color", "color-space", "perceptual", "color-difference",
+    "delta-e", "ciede2000", "oklab", "cielab", "gamut-mapping",
+    "wcag", "contrast", "design-system", "palette",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Scientific/Engineering :: Image Processing",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Typing :: Typed",
+]
 dependencies = [
     "numpy>=1.24",
     "scipy>=1.10",
+]
+
+[project.urls]
+Homepage = "https://github.com/Grkmyldz148/helmlab"
+Documentation = "https://grkmyldz148.github.io/helmlab/"
+Repository = "https://github.com/Grkmyldz148/helmlab"
+Issues = "https://github.com/Grkmyldz148/helmlab/issues"
+Demo = "https://grkmyldz148.github.io/helmlab/demo.html"
+
+[project.optional-dependencies]
+datasets = [
     "colour-science>=0.4.4",
     "colour-datasets>=0.2.4",
-    "torch>=2.0",
-    "FrEIA>=0.2",
     "pandas>=2.0",
     "openpyxl>=3.1",
+]
+nn = [
+    "torch>=2.0",
+    "FrEIA>=0.2",
+]
+viz = [
     "matplotlib>=3.7",
     "rich>=13.0",
     "tqdm>=4.65",
 ]
-
-[project.optional-dependencies]
+all = [
+    "helmlab[datasets,nn,viz]",
+]
 dev = [
+    "helmlab[all]",
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "ipykernel>=6.25",

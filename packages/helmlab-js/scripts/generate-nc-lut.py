@@ -13,7 +13,7 @@ root = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.insert(0, str(root / "src"))
 
 import numpy as np
-from colorspace.spaces.analytical import AnalyticalSpace
+from helmlab.spaces.analytical import AnalyticalSpace
 
 N = 256
 

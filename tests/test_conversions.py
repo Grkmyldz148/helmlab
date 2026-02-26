@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from colorspace.utils.conversions import (
+from helmlab.utils.conversions import (
     Lab_to_LCH, LCH_to_Lab,
     xyY_to_XYZ, XYZ_to_xyY,
     Lab_to_XYZ, XYZ_to_Lab,
@@ -53,7 +53,7 @@ class TestLabXYZ:
         np.testing.assert_allclose(rt, valid, atol=1e-10)
 
     def test_white_is_L100(self):
-        from colorspace.config import D65_WHITE
+        from helmlab.config import D65_WHITE
         Lab = XYZ_to_Lab(D65_WHITE.reshape(1, 3))
         assert Lab[0, 0] == pytest.approx(100.0, abs=1e-10)
         assert Lab[0, 1] == pytest.approx(0.0, abs=1e-10)

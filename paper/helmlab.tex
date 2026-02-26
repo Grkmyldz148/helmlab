@@ -44,21 +44,23 @@
 
 % ── Abstract ─────────────────────────────────────────────────────
 \begin{abstract}
-We present \helmlab, a 72-parameter analytical color space designed for
+We present \helmlab, a 72-parameter analytical color space for
 UI design systems. The forward transform maps CIE~XYZ to a
 perceptually-organized Lab representation through learned matrices,
-per-channel power compression, Fourier hue correction, embedded
-Helmholtz--Kohlrausch lightness adjustment, and a post-pipeline neutral
-correction that structurally guarantees achromatic colors map to
-$a\!=\!b\!=\!0$ (chroma $<10^{-6}$). A rigid rotation of the
-chromatic plane improves hue-angle alignment at zero cost to the
+per-channel power compression, Fourier hue correction, and embedded
+Helmholtz--Kohlrausch lightness adjustment. A post-pipeline neutral
+correction guarantees that achromatic colors map to
+$a\!=\!b\!=\!0$ (chroma $<10^{-6}$), and a rigid rotation of the
+chromatic plane improves hue-angle alignment without affecting the
 distance metric, which is invariant under isometries. On the
 \combvd\ dataset (3{,}813 color pairs), \helmlab\ achieves a
-\stress\ of 23.22---a 20.4\% reduction over CIEDE2000 (29.18). Cross-validation on He~\etal\
-2022 and MacAdam~1974 shows competitive cross-dataset performance. The transform is
+\stress\ of 23.22, a 20.4\% reduction from CIEDE2000 (29.18).
+Cross-validation on He~\etal\ 2022 and MacAdam~1974 shows
+competitive cross-dataset performance. The transform is
 invertible with round-trip errors below $10^{-14}$.
-We provide gamut mapping, design-token export, and dark/light mode
-adaptation for practical adoption in web and mobile design systems.
+Gamut mapping, design-token export, and dark/light mode
+adaptation utilities are included for use in web and mobile
+design systems.
 \end{abstract}
 
 \textbf{Keywords:} color space, color difference, perceptual uniformity, STRESS, Helmholtz--Kohlrausch, UI design systems
@@ -68,48 +70,44 @@ adaptation for practical adoption in web and mobile design systems.
 \section{Introduction}
 \label{sec:intro}
 
-Color management in UI design systems requires three capabilities that
-no existing color space provides simultaneously: (1)~accurate perceptual
-distance prediction for contrast checking and palette generation,
-(2)~an achromatic axis where grays map to zero chroma for clean gradient
-interpolation, and (3)~reasonable hue-angle alignment so that
-programmatic color manipulation produces predictable results.
+UI design systems need accurate perceptual distance prediction for
+contrast checking, an achromatic axis where grays map to zero chroma
+for gradient interpolation, and reasonable hue-angle alignment for
+programmatic color manipulation. No existing color space provides all
+three.
 
-CIE~Lab~\cite{cie1976} and CIEDE2000~\cite{luo2001} remain the
-industry standard for color-difference evaluation, but their
-\stress\ on \combvd\ (29.18) leaves room for improvement.
-Oklab~\cite{ottosson2020} offers computational simplicity and CSS
-integration but was optimized for hue uniformity, not color-difference
-prediction (\stress\ 47.5 Euclidean on \combvd). CAM16-UCS~\cite{li2017} derives from
-a color appearance model but is computationally heavy and exhibits
-achromatic chroma leakage ($\bar{C}=1.42$). IPT~\cite{ebner1998}
-optimized for hue linearity at the expense of lightness accuracy.
+CIE~Lab~\cite{cie1976} and CIEDE2000~\cite{luo2001} are the
+standard for color-difference evaluation, but their
+\stress\ on \combvd\ is 29.18.
+Oklab~\cite{ottosson2020} is simple and part of CSS Color Level~4,
+but was optimized for hue uniformity rather than color-difference
+prediction, and gets \stress\ 47.5 (Euclidean) on \combvd.
+CAM16-UCS~\cite{li2017} is derived from a color appearance model
+but is computationally expensive and has achromatic chroma leakage
+($\bar{C}=1.42$). IPT~\cite{ebner1998} was optimized for hue
+linearity at the expense of lightness accuracy.
 $J_z a_z b_z$~\cite{safdar2017} targets HDR via the PQ curve but
-is complex and not CSS-native.
+is complex and not CSS-native. None of these spaces jointly
+optimize the color-space transform and distance metric end-to-end
+against psychophysical data.
 
-None of these spaces were designed with UI workflows in mind. None
-jointly optimize the color-space transform and distance metric
-end-to-end against psychophysical data.
-
-\helmlab\ takes a different approach: we treat the entire
-XYZ-to-distance pipeline as a single system with 72~learnable
-parameters and optimize all of them jointly against the largest
-available color-difference dataset. The result is:
+In this paper, we treat the entire XYZ-to-distance pipeline as a
+single system with 72~learnable parameters and optimize all of them
+jointly against the largest available color-difference dataset.
+The contributions are:
 
 \begin{enumerate}
-  \item A 72-parameter analytical color space achieving \stress\
-    23.22 on \combvd\ ($-$20.4\% vs CIEDE2000).
-  \item Structural achromatic guarantee: grays map to
-    $C < 10^{-6}$ via neutral correction, with no sacrifice in
-    color-difference accuracy.
-  \item A rigid-rotation post-processing step that improves
-    hue-angle alignment (RMS~16.1\textdegree) at exactly zero cost
-    to the distance metric (isometry invariance).
-  \item Embedded Helmholtz--Kohlrausch correction: lightness is
-    explicitly chroma-dependent, learned from data rather than
-    hand-tuned.
-  \item Practical tooling: gamut mapping, CSS/Android/iOS token
-    export, and surround-aware dark/light mode adaptation.
+  \item A 72-parameter analytical color space with \stress\ 23.22
+    on \combvd, 20.4\% lower than CIEDE2000.
+  \item A neutral correction that guarantees $C < 10^{-6}$ for
+    achromatic colors, at a \stress\ cost of only $+0.04$.
+  \item A rigid rotation in the $ab$ plane that reduces hue error
+    (RMS~16.1\textdegree) without changing the distance metric
+    (the metric is invariant under rotation).
+  \item Embedded Helmholtz--Kohlrausch correction where lightness
+    depends on chroma, with parameters learned from data.
+  \item Gamut mapping, CSS/Android/iOS token export, and dark/light
+    mode adaptation for design system use.
 \end{enumerate}
 
 
@@ -186,8 +184,9 @@ Each channel undergoes signed power compression:
   c_i' = \mathrm{sign}(c_i)\,|c_i|^{\gamma_i}, \quad i \in \{0,1,2\}
 \end{equation}
 The exponents $\gamma_i$ generalize the cube-root of CIE~Lab
-($\gamma = 1/3$). Optimized values cluster near 0.4, suggesting a
-slightly different nonlinearity than traditionally assumed.
+($\gamma = 1/3$). The optimized values are close to 0.4, which is
+between the cube-root (0.33) and square-root (0.5) compressions
+used in other spaces.
 
 \paragraph{Stage 3: Lab projection (9 params).}
 A second matrix $\mathbf{M}_2$ projects compressed signals to
@@ -207,15 +206,17 @@ hue angles.
 
 \paragraph{Stage 5: Helmholtz--Kohlrausch embedding (6 params).}
 Saturated colors appear brighter than achromatic stimuli of equal
-luminance. Rather than a post-hoc correction, we embed this directly:
+luminance~\cite{cie1976}. We embed this effect in the lightness
+channel directly:
 \begin{equation}
   L \mathrel{+}= w_\mathrm{HK} \cdot C^{p_\mathrm{HK}} \cdot \bigl[1 + f_\mathrm{HK}(h)\bigr]
   \label{eq:hk}
 \end{equation}
 where $C = \sqrt{a^2+b^2}$ and $f_\mathrm{HK}(h)$ is a 2-harmonic
-hue modulation. The learned weight $w_\mathrm{HK} = 0.37$ and power
-$p_\mathrm{HK} = 0.85$ make lightness explicitly chroma-dependent---a
-departure from the conventional independence assumption.
+hue modulation. The optimized weight is $w_\mathrm{HK} = 0.37$ and
+the power is $p_\mathrm{HK} = 0.85$, making lightness explicitly
+dependent on chroma. Most existing spaces treat lightness and chroma
+as independent.
 
 \paragraph{Stage 6: Lightness refinement (8 params).}
 A cubic polynomial (3~params) with hue-dependent additive term
@@ -386,7 +387,7 @@ optimization.
 \paragraph{Convergence.}
 The optimizer typically converges within 3{,}000--5{,}000 function
 evaluations per restart. The validation gap (train--val \stress\
-difference) is +1.11, indicating moderate but controlled overfitting
+difference) is +1.11, which shows some overfitting but not severe
 for a 72-parameter model.
 
 
@@ -397,11 +398,10 @@ for a 72-parameter model.
 \subsection{Color-Difference Prediction}
 
 \Cref{fig:stress} and \Cref{tab:stress} show \stress\ on \combvd\ for
-\helmlab\ and nine baseline methods. \helmlab\ achieves 23.22, a
-substantial improvement over CIEDE2000 (29.18, $-$20.4\%).
-A 10{,}000-iteration paired bootstrap confirms this difference is
-statistically significant: \helmlab\ 95\% CI $[22.50, 23.93]$,
-CIEDE2000 95\% CI $[27.64, 30.84]$, with zero overlap ($p < 10^{-4}$).
+\helmlab\ and nine baseline methods. \helmlab\ achieves 23.22, compared to 29.18 for CIEDE2000
+($-$20.4\%). A 10{,}000-iteration paired bootstrap gives
+\helmlab\ 95\% CI $[22.50, 23.93]$ and CIEDE2000 95\% CI
+$[27.64, 30.84]$. The intervals do not overlap ($p < 10^{-4}$).
 
 \begin{figure}[t]
   \centering
@@ -439,17 +439,16 @@ CIEDE2000 95\% CI $[27.64, 30.84]$, with zero overlap ($p < 10^{-4}$).
   \label{fig:scatter}
 \end{figure}
 
-The baselines in \Cref{tab:stress} use simple Euclidean distance in
+The baselines in \Cref{tab:stress} use Euclidean distance in
 each space's native Cartesian coordinates, without parametric weighting
-or compression. Oklab's high \stress\ (47.46) reflects its design
-goal: it was optimized for hue uniformity~\cite{ottosson2020}, not
+or compression. Oklab's high \stress\ (47.46) is expected because
+it was optimized for hue uniformity~\cite{ottosson2020}, not
 color-difference prediction on \combvd. The \helmlab\ distance metric
-includes pair-dependent weighting ($S_L$, $S_C$), Minkowski exponent,
-and monotonic compression, making the comparison not strictly
-apples-to-apples. For a fairer comparison, \helmlab\ with Euclidean
-distance alone achieves \stress\ $\approx$30.2---competitive with
-CIEDE2000 (29.18), indicating that the space transform itself accounts
-for roughly half the overall improvement, and the distance metric for
+includes pair-dependent weighting ($S_L$, $S_C$), a Minkowski exponent,
+and monotonic compression, so the comparison is not on equal terms.
+With Euclidean distance only, \helmlab\ gets \stress\ $\approx$30.2,
+which is close to CIEDE2000 (29.18). This means the space transform
+accounts for roughly half the improvement and the distance metric for
 the other half.
 
 \subsection{Cross-Validation}
@@ -457,11 +456,10 @@ the other half.
 On He~\etal\ 2022 (regularizer, 82~pairs), \helmlab\ achieves
 \stress\ 29.0 vs CIEDE2000's 32.6. On MacAdam~1974 (held out
 entirely, 128~pairs), \helmlab\ achieves 20.2 vs CAM16-UCS's 18.7
-(best). \Cref{fig:crossval} visualizes these results. \helmlab\
-generalizes competitively: it outperforms CIEDE2000 on He~\etal\ but
-trails CAM16-UCS on MacAdam, suggesting no severe overfitting to
-\combvd\ while acknowledging that a single-dataset-trained model
-cannot dominate across all evaluation sets.
+(best). \Cref{fig:crossval} visualizes these results. \helmlab\ outperforms CIEDE2000 on He~\etal\ but
+trails CAM16-UCS on MacAdam. This is consistent with what one
+would expect from a model trained primarily on \combvd: it
+generalizes reasonably but does not dominate on all evaluation sets.
 
 \begin{figure}[t]
   \centering
@@ -472,26 +470,24 @@ cannot dominate across all evaluation sets.
 
 \subsection{Generation Properties: The Measurement--Generation Tradeoff}
 
-A color space optimized purely for distance prediction need not produce
-usable coordinates for color generation. In \helmlab's development, the
-measurement-optimal configuration mapped neutral grays to chroma
-$\bar{C} \approx 0.34$---the achromatic axis was deformed because the
-optimizer exploited the chromatic plane to improve \stress, at the cost
-of rendering gray gradients unusable (they exhibit visible color
-artifacts). Conversely, constraining grays to $C = 0$ via penalty terms
-created a binary basin conflict: the optimizer either remained stuck in
-the measurement-optimal basin or escaped to a generation-friendly basin
-with significantly worse \stress\ (26--31).
+A color space optimized for distance prediction does not necessarily
+produce usable coordinates for color generation. During development,
+the measurement-optimal configuration mapped neutral grays to chroma
+$\bar{C} \approx 0.34$. The optimizer had deformed the achromatic
+axis to reduce \stress, which made gray gradients unusable because
+they showed visible color artifacts. Adding a penalty to constrain
+grays to $C = 0$ did not help: the optimizer either stayed in the
+measurement-optimal basin or escaped to a different basin with much
+worse \stress\ (26--31). There was no smooth transition between the
+two.
 
-The neutral correction (\Cref{sec:space}, Stage~10) resolves this
-tradeoff structurally. By subtracting the achromatic error \emph{after}
-all enrichment stages, it allows the optimizer to find its
-measurement-optimal configuration freely, then corrects only the
-achromatic axis. The resulting \stress\ increase is just $+0.04$
-(23.18~$\to$~23.22), while achromatic chroma drops from 0.34 to
-$<10^{-6}$. This makes \helmlab\ simultaneously competitive in
-measurement (\stress\ vs \combvd) and practical for generation
-(gradients, palettes, interpolation).
+The neutral correction (\Cref{sec:space}, Stage~10) addresses this
+problem. It subtracts the achromatic error \emph{after} all
+enrichment stages, so the optimizer can find its measurement-optimal
+parameters without constraint. The achromatic axis is then corrected
+separately. The \stress\ increase from this correction is $+0.04$
+(23.18 to 23.22), while achromatic chroma drops from 0.34 to
+$<10^{-6}$.
 
 \Cref{fig:neutral} shows neutral ramp uniformity and achromatic chroma
 leakage. \helmlab's neutral correction eliminates chroma leakage
@@ -530,18 +526,19 @@ entirely ($C < 10^{-6}$), while CAM16-UCS exhibits significant leakage
   \end{tabular}
 \end{table}
 
-The achromatic guarantee ensures that gray gradients and lightness
-ramps interpolate cleanly without color artifacts---a hard requirement
+The achromatic guarantee means gray gradients and lightness
+ramps interpolate without color artifacts, which is necessary
 for design-token generation and palette export. The hue RMS of
-16.1\textdegree\ means sRGB primaries land within $\sim$20\textdegree\
-of their expected positions---acceptable for programmatic palette
-generation, though not perfect. The rigid rotation (\Cref{sec:space},
-Stage~11) provides this hue improvement at zero cost to the distance
-metric via isometry invariance. The Jacobian was evaluated on a
+16.1\textdegree\ means sRGB primaries land within about 20\textdegree\
+of their expected positions. This is acceptable for palette
+generation but not perfect. The rigid rotation (\Cref{sec:space},
+Stage~11) provides this hue improvement without affecting the
+distance metric because the metric is invariant under rotation.
+The Jacobian was evaluated on a
 $64\!\times\!64\!\times\!64$ sRGB grid via finite differences;
-the minimum determinant (0.10) is positive throughout, confirming
-a locally invertible, orientation-preserving map across the entire
-sRGB gamut.
+the minimum determinant (0.10) is positive throughout, so the
+map is locally invertible and orientation-preserving across the
+entire sRGB gamut.
 
 \subsection{Ablation Study}
 
@@ -567,14 +564,13 @@ sRGB gamut.
   \end{tabular}
 \end{table}
 
-The space--metric decomposition shows that the improvement splits
-roughly evenly between the space transform and the distance metric.
-Relative to CIEDE2000 (29.18), the space alone with Euclidean distance
-(\stress\ = 30.2) is slightly worse, while the full metric recovers
-the remaining 7~points. Relative to other Euclidean baselines
-(CAM16-UCS = 33.9), the space alone already provides substantial gain. The H-K
-embedding and hue correction are the most impactful individual
-stages. The rotation row confirms exact metric invariance.
+With Euclidean distance, the space alone gets \stress\ 30.2, which
+is slightly worse than CIEDE2000 (29.18). The full metric brings it
+down to 23.22, recovering the remaining 7~points. Compared to other
+Euclidean baselines (CAM16-UCS = 33.9), the space alone already
+gives a clear improvement. Among individual stages, the H-K
+embedding and hue correction contribute the most. The rotation row
+confirms that the metric is exactly invariant under rotation.
 
 
 % ══════════════════════════════════════════════════════════════════
@@ -582,7 +578,7 @@ stages. The rotation row confirms exact metric invariance.
 \label{sec:adoption}
 
 \Cref{fig:gamut} shows the sRGB gamut boundary in \helmlab\ coordinates
-at three lightness levels, confirming smooth and well-behaved geometry.
+at three lightness levels. The boundaries are smooth and well-behaved.
 \helmlab\ includes a Python utility layer for design system integration:
 
 \begin{figure}[t]
@@ -628,16 +624,17 @@ raw JSON.
 \section{Limitations and Future Work}
 \label{sec:limitations}
 
-\helmlab\ has several limitations that we state explicitly:
+There are several limitations worth noting:
 
 \begin{enumerate}
   \item \textbf{Training data.} \combvd\ uses a 2\textdegree\ standard
     observer, which may not generalize to large-field (10\textdegree)
     viewing. The MacAdam cross-validation partially addresses this.
 
-  \item \textbf{Model complexity.} 72 parameters is substantially more
-    than Oklab ($\sim$15 designed parameters). Interpretability
-    suffers, though each stage has a clear perceptual motivation.
+  \item \textbf{Model complexity.} 72 parameters is considerably more
+    than Oklab ($\sim$15 designed parameters). Each stage has a
+    perceptual motivation, but the overall model is harder to
+    interpret than simpler spaces.
 
   \item \textbf{Hue alignment.} RMS hue error of 16.1\textdegree\ is
     a compromise. Some hue regions (cyan, yellow) have errors up to
@@ -650,7 +647,8 @@ raw JSON.
 
   \item \textbf{Sub-dataset variation.} \helmlab\ underperforms
     CIEDE2000 on 3 of 6 \combvd\ sub-datasets (BFD-P(C), Leeds,
-    RIT-DuPont), suggesting these subsets favor CIE~Lab-based corrections.
+    RIT-DuPont), which may indicate that these subsets benefit
+    more from CIE~Lab-based corrections.
 
   \item \textbf{Not general-purpose.} \helmlab\ is optimized for UI
     workflows (sRGB/P3 gamut, screen viewing). It is not designed for
@@ -662,36 +660,29 @@ raw JSON.
     restarts remain unquantified.
 \end{enumerate}
 
-Future work includes training the surround parameter on paired
-light/dark viewing data, exploring JavaScript/WASM compilation for
-browser-native performance, and expanding the training set with
-targeted human feedback via the bidirectional optimization framework
-already implemented in the codebase.
+For future work, we plan to train the surround parameter on paired
+light/dark viewing data and to expand the training set with targeted
+human feedback using the bidirectional optimization framework that is
+already in the codebase.
 
 
 % ══════════════════════════════════════════════════════════════════
 \section{Conclusion}
 \label{sec:conclusion}
 
-\helmlab\ is a 72-parameter analytical color space that achieves
-\stress\ 23.22 on \combvd---20.4\% better than CIEDE2000---while
-maintaining a structurally guaranteed achromatic axis ($C < 10^{-6}$)
-and reasonable hue alignment (RMS~16.1\textdegree). The central
-technical contribution is the neutral correction, which resolves the
-measurement--generation tradeoff: the optimizer can pursue
-\stress-optimal parameters freely, while the post-pipeline correction
-guarantees clean achromatic behavior at a cost of just $+0.04$
-\stress\ points. Combined with embedded Helmholtz--Kohlrausch
-correction, a learned distance metric, and rigid rotation for
-free hue improvement, \helmlab\ provides both accurate color-difference
-prediction and practical coordinate-space properties for gradient
-interpolation, palette generation, and design-token export.
-Code, trained parameters, and design-system utilities are publicly
-available at \url{https://github.com/Grkmyldz148/helmlab}. An
-interactive technical demo with live visualizations of each pipeline
-stage is at \url{https://grkmyldz148.github.io/helmlab/demo.html},
-and full API documentation at
-\url{https://grkmyldz148.github.io/helmlab/}.
+We have presented \helmlab, a 72-parameter analytical color space
+that achieves \stress\ 23.22 on \combvd, which is 20.4\% lower than
+CIEDE2000. The achromatic axis is guaranteed to have $C < 10^{-6}$
+via the neutral correction, and a rigid rotation brings hue error
+down to 16.1\textdegree\ RMS without affecting the distance metric.
+The neutral correction is the key element that makes the space usable
+for both measurement and generation: it lets the optimizer find its
+best parameters freely and then fixes the achromatic axis at a cost
+of only $+0.04$ \stress\ points.
+Code, trained parameters, and utilities are available at
+\url{https://github.com/Grkmyldz148/helmlab}. An interactive demo
+is at \url{https://grkmyldz148.github.io/helmlab/demo.html} and
+documentation at \url{https://grkmyldz148.github.io/helmlab/}.
 
 
 % ══════════════════════════════════════════════════════════════════

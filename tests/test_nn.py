@@ -3,10 +3,10 @@
 import torch
 import pytest
 
-from colorspace.config import TrainConfig
-from colorspace.nn.inn import ColorINN
-from colorspace.nn.mlp import ColorMLP
-from colorspace.nn.losses import STRESSLoss, HueLinearityLoss, RoundTripLoss, D4RegularizationLoss, HKEffectLoss, CombinedLoss
+from helmlab.config import TrainConfig
+from helmlab.nn.inn import ColorINN
+from helmlab.nn.mlp import ColorMLP
+from helmlab.nn.losses import STRESSLoss, HueLinearityLoss, RoundTripLoss, D4RegularizationLoss, HKEffectLoss, CombinedLoss
 
 
 @pytest.fixture

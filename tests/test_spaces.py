@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from colorspace.spaces.registry import get_space, all_spaces
+from helmlab.spaces.registry import get_space, all_spaces
 
 
 SPACE_NAMES = ["oklch", "ipt", "jzazbz", "cam16ucs"]

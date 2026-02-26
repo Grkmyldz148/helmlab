@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from colorspace.metrics.stress import stress
+from helmlab.metrics.stress import stress
 
 
 class TestSTRESS:

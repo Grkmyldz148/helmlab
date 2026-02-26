@@ -6,8 +6,8 @@ import tempfile
 import numpy as np
 import pytest
 
-from colorspace.spaces.analytical import AnalyticalParams, AnalyticalSpace, oklab_params
-from colorspace.spaces.registry import get_space
+from helmlab.spaces.analytical import AnalyticalParams, AnalyticalSpace, oklab_params
+from helmlab.spaces.registry import get_space
 
 
 class TestAnalyticalParams:
@@ -322,7 +322,7 @@ class TestOklabEquivalence:
     """With Oklab params and hk_weight=0, should match Oklab closely."""
 
     def test_forward_matches_oklab(self):
-        from colorspace.spaces.oklch import OKLCH
+        from helmlab.spaces.oklch import OKLCH
 
         analytical = AnalyticalSpace(oklab_params())
         oklab = OKLCH()
@@ -338,8 +338,8 @@ class TestOklabEquivalence:
 
     def test_stress_matches_oklab(self):
         """STRESS with Oklab params should be ~same as OKLCH."""
-        from colorspace.data.combvd import load_combvd
-        from colorspace.metrics.stress import stress
+        from helmlab.data.combvd import load_combvd
+        from helmlab.metrics.stress import stress
 
         analytical = AnalyticalSpace(oklab_params())
         oklab = get_space("oklch")

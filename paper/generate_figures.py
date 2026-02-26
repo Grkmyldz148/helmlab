@@ -17,16 +17,16 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from colorspace.spaces.analytical import AnalyticalSpace, AnalyticalParams
-from colorspace.spaces.registry import get_space
-from colorspace.metrics.stress import stress
-from colorspace.data.combvd import load_combvd
-from colorspace.data.he2022 import load_he2022
-from colorspace.data.macadam1974 import load_macadam1974
-from colorspace.data.munsell import load_munsell
-from colorspace.utils.srgb_convert import sRGB_to_XYZ, XYZ_to_sRGB
-from colorspace.utils.conversions import XYZ_to_Lab
-from colorspace.metrics.delta_e import delta_e_2000, delta_e_76, delta_e_94, delta_e_cmc
+from helmlab.spaces.analytical import AnalyticalSpace, AnalyticalParams
+from helmlab.spaces.registry import get_space
+from helmlab.metrics.stress import stress
+from helmlab.data.combvd import load_combvd
+from helmlab.data.he2022 import load_he2022
+from helmlab.data.macadam1974 import load_macadam1974
+from helmlab.data.munsell import load_munsell
+from helmlab.utils.srgb_convert import sRGB_to_XYZ, XYZ_to_sRGB
+from helmlab.utils.conversions import XYZ_to_Lab
+from helmlab.metrics.delta_e import delta_e_2000, delta_e_76, delta_e_94, delta_e_cmc
 
 OUT = Path(__file__).resolve().parent / "figures"
 OUT.mkdir(exist_ok=True)
