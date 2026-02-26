@@ -17,11 +17,37 @@ Helmlab is a 72-parameter color space optimized end-to-end against psychophysica
 
 ## Installation
 
+### npm (TypeScript / JavaScript)
+
+[![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/helmlab)](https://bundlephobia.com/package/helmlab)
+
+```bash
+npm install helmlab
+```
+
+```ts
+import { Helmlab } from 'helmlab';
+
+const hl = new Helmlab();
+
+const lab = hl.fromHex('#3B82F6');                    // Hex → Helmlab Lab
+const hex = hl.toHex([0.5, -0.1, 0.2]);              // Lab → hex (gamut mapped)
+hl.contrastRatio('#ffffff', '#3B82F6');                // → 3.68
+hl.ensureContrast('#3B82F6', '#ffffff', 4.5);         // Adjust to meet 4.5:1
+hl.deltaE('#ff0000', '#00ff00');                      // Perceptual distance
+hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950 scale
+```
+
+10KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
+
+### Python
+
 ```bash
 pip install -e .
 ```
 
-## Quick Start
+## Quick Start (Python)
 
 ```python
 from colorspace.helmlab import Helmlab

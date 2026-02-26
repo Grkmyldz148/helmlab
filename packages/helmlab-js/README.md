@@ -1,5 +1,10 @@
 # helmlab
 
+[![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
+[![npm downloads](https://img.shields.io/npm/dm/helmlab.svg)](https://www.npmjs.com/package/helmlab)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/helmlab)](https://bundlephobia.com/package/helmlab)
+[![license](https://img.shields.io/npm/l/helmlab.svg)](https://github.com/Grkmyldz148/helmlab/blob/main/LICENSE)
+
 Perceptual color space for UI design. Human-tuned Lab with WCAG contrast, gamut mapping, and palette generation.
 
 - **10KB gzipped**, zero dependencies
@@ -7,10 +12,20 @@ Perceptual color space for UI design. Human-tuned Lab with WCAG contrast, gamut 
 - Trained on 64,000+ human color-difference judgments
 - Beats CIEDE2000 and Oklab on perceptual accuracy (STRESS 23.2 vs 29.2 vs 27.5)
 
+**[Documentation](https://grkmyldz148.github.io/helmlab/)** · **[npm](https://www.npmjs.com/package/helmlab)** · **[Interactive Demo](https://grkmyldz148.github.io/helmlab/demo.html)**
+
 ## Install
 
 ```bash
 npm install helmlab
+```
+
+Also available via CDN:
+
+```html
+<script type="module">
+  import { Helmlab } from 'https://esm.sh/helmlab';
+</script>
 ```
 
 ## Quick Start
