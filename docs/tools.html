@@ -552,6 +552,13 @@ function srgbToXYZ(r,g,b) {
 function xyzToSrgb(X,Y,Z) {
   return [linToSrgb(3.2404542*X-1.5371385*Y-0.4985314*Z), linToSrgb(-0.9692660*X+1.8760108*Y+0.0415560*Z), linToSrgb(0.0556434*X-0.2040259*Y+1.0572252*Z)];
 }
+// Display P3 (same transfer function as sRGB, wider primaries)
+function xyzToP3Lin(X,Y,Z) {
+  return [2.4934969*X-0.9313836*Y-0.4027108*Z, -0.8294890*X+1.7626641*Y+0.0236247*Z, 0.0358458*X-0.0761724*Y+0.9568845*Z];
+}
+function xyzToP3(X,Y,Z) { const lin=xyzToP3Lin(X,Y,Z); return [linToSrgb(lin[0]),linToSrgb(lin[1]),linToSrgb(lin[2])]; }
+function inP3(p3) { return p3[0]>=-0.005&&p3[0]<=1.005&&p3[1]>=-0.005&&p3[1]<=1.005&&p3[2]>=-0.005&&p3[2]<=1.005; }
+const hasP3 = typeof window!=='undefined' && window.matchMedia && window.matchMedia('(color-gamut: p3)').matches;
 function mat3(M,v) { return [M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2], M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2], M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]]; }
 function spow(x,g) { return x >= 0 ? Math.pow(x,g) : -Math.pow(-x,g); }
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
@@ -675,6 +682,27 @@ function pInv(L, a, b) {
   return mat3(M1_inv, lms);
 }
 function pInvSrgb(L, a, b) { return xyzToSrgb(...pInv(L, a, b)); }
+function pInvP3(L, a, b) { return xyzToP3(...pInv(L, a, b)); }
+
+// Color output: prefer P3 CSS string for wider gamut, fall back to sRGB hex
+function colorCSS(L, aa, bb) {
+  const xyz = pInv(L, aa, bb);
+  if (hasP3) {
+    const p3 = xyzToP3(xyz[0], xyz[1], xyz[2]);
+    if (inP3(p3)) return `color(display-p3 ${clamp01(p3[0]).toFixed(4)} ${clamp01(p3[1]).toFixed(4)} ${clamp01(p3[2]).toFixed(4)})`;
+    const h = Math.atan2(bb, aa), C = Math.sqrt(aa*aa+bb*bb);
+    let lo=0, hi=C;
+    for (let i=0;i<20;i++) { const mid=(lo+hi)/2; const p=xyzToP3(...pInv(L,mid*Math.cos(h),mid*Math.sin(h))); if(inP3(p))lo=mid;else hi=mid; }
+    const pf = xyzToP3(...pInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    return `color(display-p3 ${clamp01(pf[0]).toFixed(4)} ${clamp01(pf[1]).toFixed(4)} ${clamp01(pf[2]).toFixed(4)})`;
+  }
+  const srgb = xyzToSrgb(xyz[0], xyz[1], xyz[2]);
+  if (inGamut(srgb)) return rgbToHex(srgb[0], srgb[1], srgb[2]);
+  const h = Math.atan2(bb, aa), C = Math.sqrt(aa*aa+bb*bb);
+  const rgb = gamutMapHelmlab(L, h, C);
+  return rgbToHex(clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]));
+}
+function helmlabLChCSS(L, C, h) { return colorCSS(L, C*Math.cos(h), C*Math.sin(h)); }
 
 // Oklab
 const Ok1 = [[0.8189330101,0.3618667424,-0.1288597137],[0.0329845436,0.9293118715,0.0361456387],[0.0482003018,0.2643662691,0.6338517070]];
@@ -726,9 +754,19 @@ function interpCIELab(c1,c2,t) {
 function interpHelmlab(c1,c2,t) {
   const a=pFwdSrgb(...c1), b2=pFwdSrgb(...c2);
   const L=lerp(a[0],b2[0],t), aa=lerp(a[1],b2[1],t), bb=lerp(a[2],b2[2],t);
-  let rgb=pInvSrgb(L,aa,bb);
-  if(!inGamut(rgb)) { const h=Math.atan2(bb,aa), C=Math.sqrt(aa*aa+bb*bb); rgb=gamutMapHelmlab(L,h,C); }
-  return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+  const xyz = pInv(L,aa,bb);
+  // Try P3 first (wider gamut), then sRGB, then gamut-map
+  if (hasP3) { const p3=xyzToP3(xyz[0],xyz[1],xyz[2]); if(inP3(p3)) return [clamp01(p3[0]),clamp01(p3[1]),clamp01(p3[2])]; }
+  const rgb=xyzToSrgb(xyz[0],xyz[1],xyz[2]);
+  if(inGamut(rgb)) return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+  if (hasP3) { const h=Math.atan2(bb,aa),C=Math.sqrt(aa*aa+bb*bb); let lo=0,hi=C; for(let i=0;i<20;i++){const mid=(lo+hi)/2;const p=xyzToP3(...pInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inP3(p))lo=mid;else hi=mid;} const pf=xyzToP3(...pInv(L,lo*Math.cos(h),lo*Math.sin(h))); return [clamp01(pf[0]),clamp01(pf[1]),clamp01(pf[2])]; }
+  const h=Math.atan2(bb,aa),C=Math.sqrt(aa*aa+bb*bb); const gm=gamutMapHelmlab(L,h,C);
+  return [clamp01(gm[0]),clamp01(gm[1]),clamp01(gm[2])];
+}
+// Return CSS color string (P3 or hex) for a Helmlab Lab point
+function interpHelmlabCSS(c1,c2,t) {
+  const a=pFwdSrgb(...c1), b2=pFwdSrgb(...c2);
+  return colorCSS(lerp(a[0],b2[0],t), lerp(a[1],b2[1],t), lerp(a[2],b2[2],t));
 }
 
 // Helmlab distance
@@ -758,6 +796,14 @@ function genHelmlabScale(baseHex) {
     let out=pInvSrgb(targetL,cScale*Math.cos(h),cScale*Math.sin(h));
     if(!inGamut(out)) out=gamutMapHelmlab(targetL,h,cScale);
     return [clamp01(out[0]),clamp01(out[1]),clamp01(out[2])];
+  });
+}
+function genHelmlabScaleCSS(baseHex) {
+  const rgb=hexToRgb(baseHex), lab=pFwdSrgb(...rgb);
+  const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]), h=Math.atan2(lab[2],lab[1]);
+  return PAL_L_TARGETS.map(targetL => {
+    const cScale=C*Math.min(1,4*targetL*(1-targetL));
+    return colorCSS(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
   });
 }
 function genOklabScale(baseHex) {
@@ -960,7 +1006,7 @@ function setScaleBase(hex) {
 function buildScale() {
   const baseHex = document.getElementById('scaleBase').value;
   const methods = [
-    { name:'Helmlab', color:'#60a5fa', fn:genHelmlabScale },
+    { name:'Helmlab', color:'#60a5fa', fn:genHelmlabScale, cssFn:genHelmlabScaleCSS },
     { name:'Oklab', color:'#34d399', fn:genOklabScale },
     { name:'HSL', color:'#71717a', fn:genHSLScale },
   ];
@@ -970,6 +1016,7 @@ function buildScale() {
   for (const m of methods) {
     const scale = m.fn(baseHex);
     const hexes = scale.map(rgb => rgbToHex(rgb[0],rgb[1],rgb[2]));
+    const displayColors = m.cssFn ? m.cssFn(baseHex) : hexes;
     if (m.name === 'Helmlab') {
       PAL_STEPS.forEach((step,i) => { currentScaleHexes[step] = hexes[i]; });
     }
@@ -987,11 +1034,11 @@ function buildScale() {
     html += `<div style="font-size:0.72em;color:#52525b;font-family:'SF Mono',monospace;">${t('pal_cv_label')} <strong style="color:${cv<20?'#34d399':cv<35?'#fbbf24':'#f87171'}">${cv.toFixed(1)}%</strong> (${cvTag})</div>`;
     html += `</div><div class="pal-scale">`;
     for (let i=0;i<scale.length;i++) {
-      const rgb=scale[i], hex=hexes[i];
+      const rgb=scale[i], hex=hexes[i], bgColor=displayColors[i];
       const lum=srgbToLin(rgb[0])*0.2126+srgbToLin(rgb[1])*0.7152+srgbToLin(rgb[2])*0.0722;
       const tc=lum>0.18?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
       const crW=wcagCR(rgb,[1,1,1]).toFixed(1), crB=wcagCR(rgb,[0,0,0]).toFixed(1);
-      html += `<div class="pal-swatch" style="background:${hex};color:${tc}" onclick="navigator.clipboard.writeText('${hex.toUpperCase()}')" title="Click to copy">
+      html += `<div class="pal-swatch" style="background:${bgColor};color:${tc}" onclick="navigator.clipboard.writeText('${hex.toUpperCase()}')" title="Click to copy">
         <div class="pal-step-label">${PAL_STEPS[i]}</div>
         <div class="pal-hex">${hex.toUpperCase()}</div>
         <div class="pal-contrast">${lum>0.18?crW+':1':crB+':1'}</div>
@@ -1105,14 +1152,15 @@ function buildHarmony() {
     let rgb = pInvSrgb(lab[0], C*Math.cos(newH), C*Math.sin(newH));
     if (!inGamut(rgb)) rgb = gamutMapHelmlab(lab[0], newH, C).map(clamp01);
     else rgb = rgb.map(clamp01);
-    return { rgb, hex: rgbToHex(rgb[0],rgb[1],rgb[2]), angle: ((newH*180/Math.PI)%360+360)%360 };
+    const css = colorCSS(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    return { rgb, hex: rgbToHex(rgb[0],rgb[1],rgb[2]), css, angle: ((newH*180/Math.PI)%360+360)%360 };
   });
 
   let html = '<div class="harmony-swatches">';
   for (const c of colors) {
     const lum = relativeLuminance(c.rgb);
     const tc = lum>0.18?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
-    html += `<div class="harmony-swatch" style="background:${c.hex};color:${tc}" onclick="navigator.clipboard.writeText('${c.hex.toUpperCase()}')" title="${c.hex.toUpperCase()} (${c.angle.toFixed(0)}°)">${c.hex.toUpperCase()}</div>`;
+    html += `<div class="harmony-swatch" style="background:${c.css};color:${tc}" onclick="navigator.clipboard.writeText('${c.hex.toUpperCase()}')" title="${c.hex.toUpperCase()} (${c.angle.toFixed(0)}°)">${c.hex.toUpperCase()}</div>`;
   }
   html += '</div>';
 
@@ -1122,19 +1170,18 @@ function buildHarmony() {
   // Draw ring
   for (let i=0;i<72;i++) {
     const a1=i/72*PI2, a2=(i+1)/72*PI2;
-    const rr=pInvSrgb(0.6, 0.12*Math.cos(a1), 0.12*Math.sin(a1)).map(clamp01);
-    const col=rgbToHex(rr[0],rr[1],rr[2]);
+    const col=colorCSS(0.6, 0.12*Math.cos(a1), 0.12*Math.sin(a1));
     const x1=cx+r*Math.cos(a1-Math.PI/2),y1=cy+r*Math.sin(a1-Math.PI/2);
     const x2=cx+r*Math.cos(a2-Math.PI/2),y2=cy+r*Math.sin(a2-Math.PI/2);
     const x3=cx+(r-14)*Math.cos(a2-Math.PI/2),y3=cy+(r-14)*Math.sin(a2-Math.PI/2);
     const x4=cx+(r-14)*Math.cos(a1-Math.PI/2),y4=cy+(r-14)*Math.sin(a1-Math.PI/2);
-    html += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" fill="${col}" stroke="none"/>`;
+    html += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" style="fill:${col}" stroke="none"/>`;
   }
   // Draw markers
   for (let i=0;i<colors.length;i++) {
     const ang=colors[i].angle*Math.PI/180 - Math.PI/2;
     const mx=cx+r*Math.cos(ang), my=cy+r*Math.sin(ang);
-    html += `<circle cx="${mx}" cy="${my}" r="8" fill="${colors[i].hex}" stroke="#fafafa" stroke-width="2.5"/>`;
+    html += `<circle cx="${mx}" cy="${my}" r="8" style="fill:${colors[i].css}" stroke="#fafafa" stroke-width="2.5"/>`;
   }
   html += '</svg>';
   document.getElementById('harmonyArea').innerHTML = html;
@@ -1153,29 +1200,29 @@ function buildHueRing() {
 
   const size=220, cx=size/2, cy=size/2, r=85, PI2=Math.PI*2;
 
-  function makeRing(label, color, toRgbFn) {
+  function makeRing(label, color, toRgbFn, toCSSFn) {
     let svg = `<div class="hue-ring-col"><div class="hue-ring-label" style="color:${color}">${label}</div>`;
     svg += `<svg width="${size}" height="${size}" class="hue-ring-svg" viewBox="0 0 ${size} ${size}">`;
     // Background ring
     for (let i=0;i<72;i++) {
       const a1=i/72*PI2, a2=(i+1)/72*PI2;
-      const rgb=toRgbFn(L,C,a1);
-      const col=rgbToHex(rgb[0],rgb[1],rgb[2]);
+      const col = toCSSFn ? toCSSFn(L,C,a1) : (()=>{const rgb=toRgbFn(L,C,a1);return rgbToHex(rgb[0],rgb[1],rgb[2]);})();
       const x1=cx+r*Math.cos(a1-Math.PI/2),y1=cy+r*Math.sin(a1-Math.PI/2);
       const x2=cx+r*Math.cos(a2-Math.PI/2),y2=cy+r*Math.sin(a2-Math.PI/2);
       const x3=cx+(r-20)*Math.cos(a2-Math.PI/2),y3=cy+(r-20)*Math.sin(a2-Math.PI/2);
       const x4=cx+(r-20)*Math.cos(a1-Math.PI/2),y4=cy+(r-20)*Math.sin(a1-Math.PI/2);
-      svg += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" fill="${col}" stroke="none"/>`;
+      svg += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" style="fill:${col}" stroke="none"/>`;
     }
     // Swatch dots
     for (let i=0;i<N;i++) {
       const ang=i/N*PI2;
       const rgb=toRgbFn(L,C,ang);
       const hex=rgbToHex(rgb[0],rgb[1],rgb[2]);
+      const dotFill = toCSSFn ? toCSSFn(L,C,ang) : hex;
       const mx=cx+r*Math.cos(ang-Math.PI/2), my=cy+r*Math.sin(ang-Math.PI/2);
       const lum=relativeLuminance(rgb);
       const tc=lum>0.18?'#000':'#fff';
-      svg += `<circle cx="${mx}" cy="${my}" r="12" fill="${hex}" stroke="#fafafa" stroke-width="2" style="cursor:pointer" onclick="navigator.clipboard.writeText('${hex.toUpperCase()}')"/>`;
+      svg += `<circle cx="${mx}" cy="${my}" r="12" style="fill:${dotFill};cursor:pointer" stroke="#fafafa" stroke-width="2" onclick="navigator.clipboard.writeText('${hex.toUpperCase()}')"/>`;
     }
     svg += '</svg></div>';
     return svg;
@@ -1193,7 +1240,7 @@ function buildHueRing() {
   }
 
   let html = '<div class="hue-ring-row">';
-  html += makeRing('Helmlab', '#60a5fa', helmlabToRgb);
+  html += makeRing('Helmlab', '#60a5fa', helmlabToRgb, helmlabLChCSS);
   html += makeRing('Oklab', '#34d399', oklabToRgb);
   html += '</div>';
   document.getElementById('hueRingArea').innerHTML = html;
@@ -1209,7 +1256,7 @@ function buildGrad() {
   document.getElementById('gradStepsVal').textContent = N;
 
   const methods = [
-    {name:'Helmlab',cls:'p',fn:interpHelmlab,color:'#3b82f6'},
+    {name:'Helmlab',cls:'p',fn:interpHelmlab,cssFn:interpHelmlabCSS,color:'#3b82f6'},
     {name:'Oklab',cls:'o',fn:interpOklab,color:'#10b981'},
     {name:'CIE Lab',cls:'c',fn:interpCIELab,color:'#8b5cf6'},
     {name:'sRGB',cls:'s',fn:interpSRGB,color:'#71717a'},
@@ -1225,11 +1272,16 @@ function buildGrad() {
     const maxD=Math.max(...dists);
     const cvTag=cv<15?t('cv_uniform'):cv<25?t('cv_moderate'):t('cv_nonuniform');
 
+    // Compute CSS color strings (P3 for Helmlab, sRGB hex for others)
+    const cssColors = [];
+    if (m.cssFn) { for(let i=0;i<N;i++) cssColors.push(m.cssFn(c1,c2,i/(N-1))); }
+    else { for(const s of steps) cssColors.push(rgbToHex(s[0],s[1],s[2])); }
+
     html += `<div class="grad-method"><div class="grad-head">
       <div class="grad-name" style="color:${m.color}">${m.name}</div>
       <div class="grad-cv">CV: <strong>${cv.toFixed(1)}%</strong> (${cvTag})</div>
     </div><div class="grad-strip">`;
-    for(const s of steps) html+=`<div class="grad-step" style="background:${rgbToHex(s[0],s[1],s[2])}"></div>`;
+    for(const col of cssColors) html+=`<div class="grad-step" style="background:${col}"></div>`;
     html += `</div><div class="grad-bars">`;
     for(const d of dists){const h2=Math.max(3,d/maxD*22);html+=`<div class="grad-bar" style="height:${h2}px;background:${m.color}"></div>`;}
     html += `</div></div>`;
@@ -1241,7 +1293,7 @@ function exportGradient() {
   const c1=hexToRgb(document.getElementById('gradFrom').value);
   const c2=hexToRgb(document.getElementById('gradTo').value);
   const N=parseInt(document.getElementById('gradSteps').value);
-  const stops=[]; for(let i=0;i<N;i++){const rgb=interpHelmlab(c1,c2,i/(N-1));stops.push(rgbToHex(rgb[0],rgb[1],rgb[2]).toUpperCase());}
+  const stops=[]; for(let i=0;i<N;i++) stops.push(interpHelmlabCSS(c1,c2,i/(N-1)));
   const text=`background: linear-gradient(90deg, ${stops.join(', ')});`;
   navigator.clipboard.writeText(text).then(()=>{
     const btn=event.target;btn.classList.add('copied');const orig=btn.textContent;btn.textContent='Copied!';
@@ -1272,7 +1324,7 @@ function updateInspector() {
   const inSrgb = r>=0&&r<=1&&g>=0&&g<=1&&b>=0&&b<=1;
 
   let html = '';
-  html += `<div class="sp-block"><div class="sp-title blue">Helmlab v19 (Lab)</div><div class="sp-vals">
+  html += `<div class="sp-block"><div class="sp-title blue">Helmlab v20b (Lab)</div><div class="sp-vals">
     <div class="sp-val"><div class="k">L</div><div class="v blue mono">${pg[0].toFixed(4)}</div></div>
     <div class="sp-val"><div class="k">a</div><div class="v blue mono">${pg[1].toFixed(4)}</div></div>
     <div class="sp-val"><div class="k">b</div><div class="v blue mono">${pg[2].toFixed(4)}</div></div>
