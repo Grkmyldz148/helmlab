@@ -752,44 +752,34 @@ function interpCIELab(c1,c2,t) {
   const rgb=xyzToSrgb(...xyz); return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
 }
 function interpHelmlab(c1,c2,t) {
-  // LCH interpolation: hue arc instead of Lab linear (avoids gray midpoint)
+  // Lab linear interpolation + sRGB gamut mapping
   const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
-  const C1=Math.sqrt(lab1[1]**2+lab1[2]**2), h1=Math.atan2(lab1[2],lab1[1]);
-  const C2=Math.sqrt(lab2[1]**2+lab2[2]**2), h2=Math.atan2(lab2[2],lab2[1]);
-  let dh=h2-h1; if(dh>Math.PI)dh-=2*Math.PI; if(dh<-Math.PI)dh+=2*Math.PI;
-  const L=lerp(lab1[0],lab2[0],t), C=lerp(C1,C2,t), h=h1+dh*t;
-  const a=C*Math.cos(h), b=C*Math.sin(h);
+  const L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
   const rgb=xyzToSrgb(...pInv(L,a,b));
   if(inGamut(rgb)) return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
-  const gm=gamutMapHelmlab(L,h,C);
+  const h=Math.atan2(b,a),C=Math.sqrt(a*a+b*b); const gm=gamutMapHelmlab(L,h,C);
   return [clamp01(gm[0]),clamp01(gm[1]),clamp01(gm[2])];
 }
-// Batch gradient: LCH + gamut-relative chroma (always saturated, always in gamut)
+// Batch gradient: Lab interpolation + uniform chroma scaling (no jumps possible)
 function interpHelmlabBatchCSS(c1, c2, N) {
   const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
   const checkGamut = hasP3
     ? (L,a,b) => { const xyz=pInv(L,a,b); return inP3(xyzToP3(...xyz)); }
     : (L,a,b) => inGamut(xyzToSrgb(...pInv(L,a,b)));
-  const findMaxC = (L, h) => {
-    let lo=0, hi=0.5;
-    for(let j=0;j<20;j++){const mid=(lo+hi)/2;if(checkGamut(L,mid*Math.cos(h),mid*Math.sin(h)))lo=mid;else hi=mid;}
-    return lo;
-  };
-  const C1=Math.sqrt(lab1[1]**2+lab1[2]**2), h1=Math.atan2(lab1[2],lab1[1]);
-  const C2=Math.sqrt(lab2[1]**2+lab2[2]**2), h2=Math.atan2(lab2[2],lab2[1]);
-  const maxC1=findMaxC(lab1[0],h1), maxC2=findMaxC(lab2[0],h2);
-  const util1=maxC1>1e-6?Math.min(C1/maxC1,1):0;
-  const util2=maxC2>1e-6?Math.min(C2/maxC2,1):0;
-  let dh=h2-h1; if(dh>Math.PI)dh-=2*Math.PI; if(dh<-Math.PI)dh+=2*Math.PI;
-  return Array.from({length:N}, (_,i) => {
+  const labs=[]; let minRatio=1;
+  for(let i=0;i<N;i++){
     const t=i/(N-1);
-    const L=lerp(lab1[0],lab2[0],t);
-    const h=h1+dh*t;
-    const maxC=findMaxC(L,h);
-    const util=lerp(util1,util2,t);
-    const C=util*maxC*0.95;
-    return colorCSS(L, C*Math.cos(h), C*Math.sin(h));
-  });
+    const L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
+    labs.push([L,a,b]);
+    const C=Math.sqrt(a*a+b*b);
+    if(C<0.005) continue; // near-achromatic, skip
+    if(checkGamut(L,a,b)) continue;
+    const h=Math.atan2(b,a);
+    let lo=0, hi=C;
+    for(let j=0;j<20;j++){const mid=(lo+hi)/2;if(checkGamut(L,mid*Math.cos(h),mid*Math.sin(h)))lo=mid;else hi=mid;}
+    minRatio=Math.min(minRatio, lo/C);
+  }
+  return labs.map(([L,a,b])=>colorCSS(L, a*minRatio, b*minRatio));
 }
 // Single-step CSS (used by scale generators, not gradients)
 function interpHelmlabCSS(c1,c2,t) {
