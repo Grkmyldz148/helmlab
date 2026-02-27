@@ -760,26 +760,43 @@ function interpHelmlab(c1,c2,t) {
   const h=Math.atan2(b,a),C=Math.sqrt(a*a+b*b); const gm=gamutMapHelmlab(L,h,C);
   return [clamp01(gm[0]),clamp01(gm[1]),clamp01(gm[2])];
 }
-// Batch gradient: Lab interpolation + uniform chroma scaling (no jumps possible)
+// Batch gradient: Lab interpolation + chroma smoothing
+// Prevents the sharp V-dip that causes visible jumps at endpoints
 function interpHelmlabBatchCSS(c1, c2, N) {
   const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
-  const checkGamut = hasP3
-    ? (L,a,b) => { const xyz=pInv(L,a,b); return inP3(xyzToP3(...xyz)); }
-    : (L,a,b) => inGamut(xyzToSrgb(...pInv(L,a,b)));
-  const labs=[]; let minRatio=1;
+  const C1=Math.sqrt(lab1[1]**2+lab1[2]**2), h1=Math.atan2(lab1[2],lab1[1]);
+  const C2=Math.sqrt(lab2[1]**2+lab2[2]**2), h2=Math.atan2(lab2[2],lab2[1]);
+  // Shorter hue arc for fallback hue when chroma is near zero
+  let dh=h2-h1; if(dh>Math.PI)dh-=2*Math.PI; if(dh<-Math.PI)dh+=2*Math.PI;
+
+  // Compute raw Lab values and chroma curve
+  const labs=[], rawC=[];
   for(let i=0;i<N;i++){
     const t=i/(N-1);
     const L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
     labs.push([L,a,b]);
-    const C=Math.sqrt(a*a+b*b);
-    if(C<0.005) continue; // near-achromatic, skip
-    if(checkGamut(L,a,b)) continue;
-    const h=Math.atan2(b,a);
-    let lo=0, hi=C;
-    for(let j=0;j<20;j++){const mid=(lo+hi)/2;if(checkGamut(L,mid*Math.cos(h),mid*Math.sin(h)))lo=mid;else hi=mid;}
-    minRatio=Math.min(minRatio, lo/C);
+    rawC.push(Math.sqrt(a*a+b*b));
   }
-  return labs.map(([L,a,b])=>colorCSS(L, a*minRatio, b*minRatio));
+  // LCH chroma curve (linear, never dips to zero for saturated endpoints)
+  const lchC = Array.from({length:N}, (_,i) => lerp(C1, C2, i/(N-1)));
+  // Blend: keep Lab chroma where it's high, boost with LCH floor where it dips
+  // Floor = 30% of LCH chroma — subtle enough to avoid visible wrong hues
+  const finalC = rawC.map((c,i) => Math.max(c, lchC[i]*0.3));
+
+  return labs.map(([L,a,b], i) => {
+    const t=i/(N-1), C=rawC[i], Cf=finalC[i];
+    let fa, fb;
+    if(C > 0.01) {
+      // Lab hue is reliable — scale chroma
+      const s = Cf/C;
+      fa = a*s; fb = b*s;
+    } else {
+      // Near achromatic — use interpolated hue direction
+      const h = h1 + dh*t;
+      fa = Cf*Math.cos(h); fb = Cf*Math.sin(h);
+    }
+    return colorCSS(L, fa, fb);
+  });
 }
 // Single-step CSS (used by scale generators, not gradients)
 function interpHelmlabCSS(c1,c2,t) {
