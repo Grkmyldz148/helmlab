@@ -592,9 +592,21 @@ function baseLabToCSS(L, a, b) {
   if (hasP3) {
     const p3 = xyzToP3(xyz[0], xyz[1], xyz[2]);
     if (inP3(p3)) return `color(display-p3 ${clamp01(p3[0]).toFixed(4)} ${clamp01(p3[1]).toFixed(4)} ${clamp01(p3[2]).toFixed(4)})`;
+    // P3 gamut map: reduce chroma until in-gamut
+    const h=Math.atan2(b,a), C=Math.sqrt(a*a+b*b);
+    let lo=0,hi=C;
+    for(let i=0;i<20;i++){const mid=(lo+hi)/2;const tp=xyzToP3(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inP3(tp))lo=mid;else hi=mid;}
+    const pf=xyzToP3(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    return `color(display-p3 ${clamp01(pf[0]).toFixed(4)} ${clamp01(pf[1]).toFixed(4)} ${clamp01(pf[2]).toFixed(4)})`;
   }
   const srgb = xyzToSrgb(xyz[0], xyz[1], xyz[2]);
-  return rgbToHex(clamp01(srgb[0]), clamp01(srgb[1]), clamp01(srgb[2]));
+  if (inGamut(srgb)) return rgbToHex(srgb[0], srgb[1], srgb[2]);
+  // sRGB gamut map: reduce chroma until in-gamut
+  const h=Math.atan2(b,a), C=Math.sqrt(a*a+b*b);
+  let lo=0,hi=C;
+  for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inGamut(ts))lo=mid;else hi=mid;}
+  const sf=xyzToSrgb(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+  return rgbToHex(clamp01(sf[0]), clamp01(sf[1]), clamp01(sf[2]));
 }
 
 function relativeLuminance(rgb) {
@@ -725,7 +737,7 @@ function colorCSS(L, aa, bb) {
   const rgb = gamutMapHelmlab(L, h, C);
   return rgbToHex(clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]));
 }
-function helmlabLChCSS(L, C, h) { return colorCSS(L, C*Math.cos(h), C*Math.sin(h)); }
+function helmlabLChCSS(L, C, h) { return baseLabToCSS(L, C*Math.cos(h), C*Math.sin(h)); }
 
 // Oklab
 const Ok1 = [[0.8189330101,0.3618667424,-0.1288597137],[0.0329845436,0.9293118715,0.0361456387],[0.0482003018,0.2643662691,0.6338517070]];
@@ -819,21 +831,25 @@ const PAL_STEPS = [50,100,200,300,400,500,600,700,800,900,950];
 const PAL_L_TARGETS = [0.97,0.93,0.86,0.76,0.64,0.53,0.43,0.34,0.27,0.20,0.15];
 
 function genHelmlabScale(baseHex) {
-  const rgb=hexToRgb(baseHex), lab=pFwdSrgb(...rgb);
+  const rgb=hexToRgb(baseHex), lab=baseLabFwdSrgb(...rgb);
   const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]), h=Math.atan2(lab[2],lab[1]);
   return PAL_L_TARGETS.map(targetL => {
     let cScale=C*Math.min(1,4*targetL*(1-targetL));
-    let out=pInvSrgb(targetL,cScale*Math.cos(h),cScale*Math.sin(h));
-    if(!inGamut(out)) out=gamutMapHelmlab(targetL,h,cScale);
+    let xyz=baseLabInv(targetL,cScale*Math.cos(h),cScale*Math.sin(h)), out=xyzToSrgb(...xyz);
+    if(!inGamut(out)) {
+      let lo=0,hi=cScale;
+      for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(targetL,mid*Math.cos(h),mid*Math.sin(h)));if(inGamut(ts))lo=mid;else hi=mid;}
+      out=xyzToSrgb(...baseLabInv(targetL,lo*Math.cos(h),lo*Math.sin(h)));
+    }
     return [clamp01(out[0]),clamp01(out[1]),clamp01(out[2])];
   });
 }
 function genHelmlabScaleCSS(baseHex) {
-  const rgb=hexToRgb(baseHex), lab=pFwdSrgb(...rgb);
+  const rgb=hexToRgb(baseHex), lab=baseLabFwdSrgb(...rgb);
   const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]), h=Math.atan2(lab[2],lab[1]);
   return PAL_L_TARGETS.map(targetL => {
     const cScale=C*Math.min(1,4*targetL*(1-targetL));
-    return colorCSS(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
+    return baseLabToCSS(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
   });
 }
 function genOklabScale(baseHex) {
@@ -856,14 +872,28 @@ function ensureContrast(fgHex, bgHex, minRatio) {
   minRatio = minRatio || 4.5;
   const fgRgb = hexToRgb(fgHex), bgRgb = hexToRgb(bgHex);
   if (wcagCR(fgRgb, bgRgb) >= minRatio) return fgHex;
-  const fgLab = pFwdSrgb(...fgRgb), origL = fgLab[0];
+  const fgLab = baseLabFwdSrgb(...fgRgb), origL = fgLab[0];
+  const h = Math.atan2(fgLab[2], fgLab[1]), C = Math.sqrt(fgLab[1]**2+fgLab[2]**2);
+  // Search with buffer to survive hex quantization (8-bit rounding)
+  const target = minRatio + 0.15;
   let bestHex = fgHex, bestRatio = 0, bestL = origL;
   for (const dir of ['darken','lighten']) {
-    let lo = dir==='darken'?0:origL, hi = dir==='darken'?origL:1.5;
-    const cand = [...fgLab];
-    for (let i=0;i<40;i++) { const mid=(lo+hi)/2; cand[0]=mid; const srgb=[clamp01(pInvSrgb(...cand)[0]),clamp01(pInvSrgb(...cand)[1]),clamp01(pInvSrgb(...cand)[2])]; const ratio=wcagCR(srgb,bgRgb); if(dir==='darken'){if(ratio>=minRatio)lo=mid;else hi=mid;}else{if(ratio>=minRatio)hi=mid;else lo=mid;} }
-    const safeL = dir==='darken'?lo:hi; cand[0]=safeL;
-    const out=pInvSrgb(...cand), hex=rgbToHex(clamp01(out[0]),clamp01(out[1]),clamp01(out[2]));
+    let lo = dir==='darken'?0:origL, hi = dir==='darken'?origL:1.0;
+    for (let i=0;i<40;i++) {
+      const mid=(lo+hi)/2;
+      // Gamut map: reduce chroma if out of gamut at this L
+      let tc=C, srgb=xyzToSrgb(...baseLabInv(mid,tc*Math.cos(h),tc*Math.sin(h)));
+      if(!inGamut(srgb)){let clo=0,chi=tc;for(let j=0;j<16;j++){const cm=(clo+chi)/2;const ts=xyzToSrgb(...baseLabInv(mid,cm*Math.cos(h),cm*Math.sin(h)));if(inGamut(ts))clo=cm;else chi=cm;}tc=clo;srgb=xyzToSrgb(...baseLabInv(mid,tc*Math.cos(h),tc*Math.sin(h)));}
+      srgb=srgb.map(clamp01);
+      const ratio=wcagCR(srgb,bgRgb);
+      if(dir==='darken'){if(ratio>=target)lo=mid;else hi=mid;}
+      else{if(ratio>=target)hi=mid;else lo=mid;}
+    }
+    const safeL = dir==='darken'?lo:hi;
+    // Get gamut-mapped color at safeL
+    let tc=C, out=xyzToSrgb(...baseLabInv(safeL,tc*Math.cos(h),tc*Math.sin(h)));
+    if(!inGamut(out)){let clo=0,chi=tc;for(let j=0;j<16;j++){const cm=(clo+chi)/2;const ts=xyzToSrgb(...baseLabInv(safeL,cm*Math.cos(h),cm*Math.sin(h)));if(inGamut(ts))clo=cm;else chi=cm;}out=xyzToSrgb(...baseLabInv(safeL,clo*Math.cos(h),clo*Math.sin(h)));}
+    const hex=rgbToHex(clamp01(out[0]),clamp01(out[1]),clamp01(out[2]));
     const ratio=wcagCR(hexToRgb(hex),bgRgb);
     if(ratio>=minRatio) { const dist=Math.abs(safeL-origL),bestDist=Math.abs(bestL-origL); if(bestRatio<minRatio||dist<bestDist){bestHex=hex;bestRatio=ratio;bestL=safeL;} }
   }
@@ -1163,7 +1193,7 @@ function buildHarmony() {
   buildHarmonyTypes();
   const baseHex=document.getElementById('harmonyBase').value;
   const baseRgb=hexToRgb(baseHex);
-  const lab=pFwdSrgb(...baseRgb);
+  const lab=baseLabFwdSrgb(...baseRgb);
   const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
   const h=Math.atan2(lab[2],lab[1]);
   const PI2=Math.PI*2;
@@ -1179,10 +1209,15 @@ function buildHarmony() {
 
   const colors = offsets.map(off => {
     const newH = h + off;
-    let rgb = pInvSrgb(lab[0], C*Math.cos(newH), C*Math.sin(newH));
-    if (!inGamut(rgb)) rgb = gamutMapHelmlab(lab[0], newH, C).map(clamp01);
-    else rgb = rgb.map(clamp01);
-    const css = colorCSS(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    const css = baseLabToCSS(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    const xyz = baseLabInv(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    let rgb = xyzToSrgb(...xyz);
+    if (!inGamut(rgb)) {
+      let lo=0,hi=C;
+      for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(lab[0],mid*Math.cos(newH),mid*Math.sin(newH)));if(inGamut(ts))lo=mid;else hi=mid;}
+      rgb=xyzToSrgb(...baseLabInv(lab[0],lo*Math.cos(newH),lo*Math.sin(newH)));
+    }
+    rgb = rgb.map(clamp01);
     return { rgb, hex: rgbToHex(rgb[0],rgb[1],rgb[2]), css, angle: ((newH*180/Math.PI)%360+360)%360 };
   });
 
@@ -1200,7 +1235,7 @@ function buildHarmony() {
   // Draw ring
   for (let i=0;i<72;i++) {
     const a1=i/72*PI2, a2=(i+1)/72*PI2;
-    const col=colorCSS(0.6, 0.12*Math.cos(a1), 0.12*Math.sin(a1));
+    const col=baseLabToCSS(0.6, 0.12*Math.cos(a1), 0.12*Math.sin(a1));
     const x1=cx+r*Math.cos(a1-Math.PI/2),y1=cy+r*Math.sin(a1-Math.PI/2);
     const x2=cx+r*Math.cos(a2-Math.PI/2),y2=cy+r*Math.sin(a2-Math.PI/2);
     const x3=cx+(r-14)*Math.cos(a2-Math.PI/2),y3=cy+(r-14)*Math.sin(a2-Math.PI/2);
@@ -1259,8 +1294,12 @@ function buildHueRing() {
   }
 
   function helmlabToRgb(L,C,h) {
-    let rgb=pInvSrgb(L,C*Math.cos(h),C*Math.sin(h));
-    if(!inGamut(rgb)) rgb=gamutMapHelmlab(L,h,C);
+    let rgb=xyzToSrgb(...baseLabInv(L,C*Math.cos(h),C*Math.sin(h)));
+    if(!inGamut(rgb)) {
+      let lo=0,hi=C;
+      for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inGamut(ts))lo=mid;else hi=mid;}
+      rgb=xyzToSrgb(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    }
     return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
   }
   function oklabToRgb(L,C,h) {
