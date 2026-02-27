@@ -54,10 +54,7 @@ $a\!=\!b\!=\!0$ (chroma $<10^{-6}$), and a rigid rotation of the
 chromatic plane improves hue-angle alignment without affecting the
 distance metric, which is invariant under isometries. On the
 \combvd\ dataset (3{,}813 color pairs), \helmlab\ achieves a
-\stress\ of 23.30, a 20.2\% reduction from CIEDE2000 (29.18).
-A blue-band refit with sub-dataset penalties reduces gradient
-non-uniformity in the blue--cyan region by $8.9\times$ at a cost
-of only $+0.08$ \stress.
+\stress\ of 23.22, a 20.4\% reduction from CIEDE2000 (29.18).
 Cross-validation on He~\etal\ 2022 and MacAdam~1974 shows
 competitive cross-dataset performance. The transform is
 invertible with round-trip errors below $10^{-14}$.
@@ -100,18 +97,15 @@ jointly against the largest available color-difference dataset.
 The contributions are:
 
 \begin{enumerate}
-  \item A 72-parameter analytical color space with \stress\ 23.30
-    on \combvd, 20.2\% lower than CIEDE2000.
+  \item A 72-parameter analytical color space with \stress\ 23.22
+    on \combvd, 20.4\% lower than CIEDE2000.
   \item A neutral correction that guarantees $C < 10^{-6}$ for
-    achromatic colors, at a \stress\ cost of only $+0.08$.
+    achromatic colors, at a \stress\ cost of only $+0.04$.
   \item A rigid rotation in the $ab$ plane that reduces hue error
-    (RMS~18.1\textdegree) without changing the distance metric
+    (RMS~16.1\textdegree) without changing the distance metric
     (the metric is invariant under rotation).
   \item Embedded Helmholtz--Kohlrausch correction where lightness
     depends on chroma, with parameters learned from data.
-  \item A blue-band refit that reduces gradient non-uniformity
-    in the blue--cyan region by $8.9\times$ while improving
-    \stress\ on 5 of 6 \combvd\ sub-datasets.
   \item Gamut mapping, CSS/Android/iOS token export, and dark/light
     mode adaptation for design system use.
 \end{enumerate}
@@ -219,8 +213,8 @@ channel directly:
   \label{eq:hk}
 \end{equation}
 where $C = \sqrt{a^2+b^2}$ and $f_\mathrm{HK}(h)$ is a 2-harmonic
-hue modulation. The optimized weight is $w_\mathrm{HK} = 0.389$ and
-the power is $p_\mathrm{HK} = 0.849$, making lightness explicitly
+hue modulation. The optimized weight is $w_\mathrm{HK} = 0.37$ and
+the power is $p_\mathrm{HK} = 0.85$, making lightness explicitly
 dependent on chroma. Most existing spaces treat lightness and chroma
 as independent.
 
@@ -350,10 +344,10 @@ followed by monotonic compression and post-power:
 \end{equation}
 
 The pair-dependent weights $S_L$ and $S_C$ are inspired by
-CIEDE2000 but learned from data (optimized values: $s_L = 0.001$,
-$s_C = 0.022$). The Minkowski exponent $p = 0.804$ and
-chroma weight $w_C = 1.046$ slightly favor chroma differences over
-lightness. The compression $c = 1.590$ and post-power $q = 1.1$
+CIEDE2000 but learned from data (optimized values: $s_L \approx 10^{-4}$,
+$s_C \approx 0.0045$). The Minkowski exponent $p = 0.83$ and
+chroma weight $w_C = 1.03$ slightly favor chroma differences over
+lightness. The compression $c = 1.59$ and post-power $q = 1.1$
 reduce systematic bias for large color differences.
 
 The distance metric contributes 7~parameters. Total system:
@@ -366,26 +360,13 @@ The distance metric contributes 7~parameters. Total system:
 
 All 72 parameters are jointly optimized by minimizing:
 \begin{equation}
-  \mathcal{L} = \mathrm{STRESS}_\combvd + 0.05 \cdot \mathrm{STRESS}_\mathrm{He} + \mathcal{L}_\mathrm{blue}
+  \mathcal{L} = \mathrm{STRESS}_\combvd + 0.05 \cdot \mathrm{STRESS}_\mathrm{He}
   \label{eq:loss}
 \end{equation}
 using L-BFGS-B~\cite{byrd1995} with box constraints. We perform
-10~random restarts (each 5{,}000 iterations) and keep the best. The
+8~random restarts (each 5{,}000 iterations) and keep the best. The
 He~\etal\ term ($\lambda = 0.05$) acts as a mild regularizer against
 overfitting to \combvd.
-
-The blue-band penalty is:
-\begin{equation}
-  \mathcal{L}_\mathrm{blue} = \lambda_b(\mathrm{STRESS}_\mathrm{RIT} + \mathrm{STRESS}_\mathrm{LEEDS} + 0.5\,\mathrm{STRESS}_\mathrm{FullBlue})
-  \label{eq:loss_blue}
-\end{equation}
-where $\lambda_b = 0.1$ and the subscripts denote \combvd\
-sub-datasets with high blue-band content. Additional constraints
-enforce round-trip accuracy ($\lambda_\mathrm{RT} = 100$),
-achromatic integrity ($\lambda_\mathrm{ach} = 500$), and Munsell
-uniformity ($0.1 \cdot \max(\mathrm{CV} - 20, 0)$). The blue-band
-penalty was introduced in v2 of this paper to address gradient
-non-uniformity in the blue--cyan region (\Cref{sec:blue-band}).
 
 \paragraph{Training data.}
 \combvd\ comprises 3{,}813 color pairs from six psychophysical
@@ -405,10 +386,9 @@ optimization.
 
 \paragraph{Convergence.}
 The optimizer typically converges within 3{,}000--5{,}000 function
-evaluations per restart. Five-fold cross-validation (with
-re-optimization per fold) yields a mean validation gap of $+0.98$
-\stress\ points (std.\ $0.78$), indicating mild but acceptable
-overfitting for a 72-parameter model.
+evaluations per restart. The validation gap (train--val \stress\
+difference) is +1.11, which shows some overfitting but not severe
+for a 72-parameter model.
 
 
 % ══════════════════════════════════════════════════════════════════
@@ -418,8 +398,8 @@ overfitting for a 72-parameter model.
 \subsection{Color-Difference Prediction}
 
 \Cref{fig:stress} and \Cref{tab:stress} show \stress\ on \combvd\ for
-\helmlab\ and nine baseline methods. \helmlab\ achieves 23.30, compared to 29.18 for CIEDE2000
-($-$20.2\%). A 10{,}000-iteration paired bootstrap gives
+\helmlab\ and nine baseline methods. \helmlab\ achieves 23.22, compared to 29.18 for CIEDE2000
+($-$20.4\%). A 10{,}000-iteration paired bootstrap gives
 \helmlab\ 95\% CI $[22.50, 23.93]$ and CIEDE2000 95\% CI
 $[27.64, 30.84]$. The intervals do not overlap ($p < 10^{-4}$).
 
@@ -438,7 +418,7 @@ $[27.64, 30.84]$. The intervals do not overlap ($p < 10^{-4}$).
     \toprule
     Method & \stress & vs CIEDE2000 \\
     \midrule
-    \textbf{\helmlab} & \textbf{23.30} & \textbf{$-$20.2\%} \\
+    \textbf{\helmlab} & \textbf{23.22} & \textbf{$-$20.4\%} \\
     CIEDE2000 & 29.18 & --- \\
     $\Delta E^*_{ab}$ (CIE76) & 42.80 & +46.7\% \\
     CIE94 & 33.59 & +15.1\% \\
@@ -466,17 +446,16 @@ it was optimized for hue uniformity~\cite{ottosson2020}, not
 color-difference prediction on \combvd. The \helmlab\ distance metric
 includes pair-dependent weighting ($S_L$, $S_C$), a Minkowski exponent,
 and monotonic compression, so the comparison is not on equal terms.
-With Euclidean distance only, \helmlab\ gets \stress\ 27.6,
-which already improves on CIEDE2000 (29.18) by 5.4\%. The full
-distance metric then reduces \stress\ by a further 4.3~points.
-Relative to CIEDE2000, the space transform and the distance metric
-contribute roughly equally to the total improvement.
+With Euclidean distance only, \helmlab\ gets \stress\ $\approx$30.2,
+which is close to CIEDE2000 (29.18). This means the space transform
+accounts for roughly half the improvement and the distance metric for
+the other half.
 
 \subsection{Cross-Validation}
 
 On He~\etal\ 2022 (regularizer, 82~pairs), \helmlab\ achieves
-\stress\ 30.3 vs CIEDE2000's 32.6. On MacAdam~1974 (held out
-entirely, 128~pairs), \helmlab\ achieves 20.3 vs CAM16-UCS's 18.7
+\stress\ 29.0 vs CIEDE2000's 32.6. On MacAdam~1974 (held out
+entirely, 128~pairs), \helmlab\ achieves 20.2 vs CAM16-UCS's 18.7
 (best). \Cref{fig:crossval} visualizes these results. \helmlab\ outperforms CIEDE2000 on He~\etal\ but
 trails CAM16-UCS on MacAdam. This is consistent with what one
 would expect from a model trained primarily on \combvd: it
@@ -506,10 +485,8 @@ The neutral correction (\Cref{sec:space}, Stage~10) addresses this
 problem. It subtracts the achromatic error \emph{after} all
 enrichment stages, so the optimizer can find its measurement-optimal
 parameters without constraint. The achromatic axis is then corrected
-separately. The \stress\ increase from the neutral correction alone is $+0.04$
-(from a measurement-only baseline of 23.18 to 23.22); the subsequent
-blue-band refit (\Cref{sec:blue-band}) adds another $+0.08$,
-yielding the final 23.30. Achromatic chroma drops from 0.34 to
+separately. The \stress\ increase from this correction is $+0.04$
+(23.18 to 23.22), while achromatic chroma drops from 0.34 to
 $<10^{-6}$.
 
 \Cref{fig:neutral} shows neutral ramp uniformity and achromatic chroma
@@ -535,16 +512,16 @@ entirely ($C < 10^{-6}$), while CAM16-UCS exhibits significant leakage
     Property & Value \\
     \midrule
     Achromatic max $C$ & $<10^{-6}$ \\
-    Hue RMS (6 primaries) & 18.1\textdegree \\
-    Hue max error & 23.9\textdegree \\
+    Hue RMS (6 primaries) & 16.1\textdegree \\
+    Hue max error & 20.2\textdegree \\
     Round-trip $\|\cdot\|_\infty$ & $<10^{-14}$ \\
-    Munsell CV & 20.0\% \\
+    Munsell CV & 17.6\% \\
     Jacobian det (min) & 0.10 \\
     Jacobian cond (median) & 7.7 \\
     \midrule
-    5-fold CV gap (mean) & +0.98 \\
-    He \stress & 30.33 \\
-    MacAdam \stress & 20.33 \\
+    Val gap (train$-$val) & +1.11 \\
+    He \stress & 29.03 \\
+    MacAdam \stress & 20.23 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -552,9 +529,9 @@ entirely ($C < 10^{-6}$), while CAM16-UCS exhibits significant leakage
 The achromatic guarantee means gray gradients and lightness
 ramps interpolate without color artifacts, which is necessary
 for design-token generation and palette export. The hue RMS of
-18.1\textdegree\ means sRGB primaries land within about
-24\textdegree\ of their expected positions. This is acceptable
-for palette generation but not perfect. The rigid rotation (\Cref{sec:space},
+16.1\textdegree\ means sRGB primaries land within about 20\textdegree\
+of their expected positions. This is acceptable for palette
+generation but not perfect. The rigid rotation (\Cref{sec:space},
 Stage~11) provides this hue improvement without affecting the
 distance metric because the metric is invariant under rotation.
 The Jacobian was evaluated on a
@@ -565,98 +542,35 @@ entire sRGB gamut.
 
 \subsection{Ablation Study}
 
-\Cref{tab:ablation} isolates the contribution of key components
-using \emph{frozen} ablation: each row disables one component while
-keeping all other parameters at their optimized values. This measures
-the marginal contribution of each component given the current
-parameter setting, not its isolated effect.
+\Cref{tab:ablation} isolates the contribution of key components.
 
 \begin{table}[t]
   \centering
-  \caption{Ablation: effect of removing components (frozen, not re-optimized).}
+  \caption{Ablation: effect of removing components.}
   \label{tab:ablation}
   \begin{tabular}{lrr}
     \toprule
     Configuration & \stress & $\Delta$ \\
     \midrule
-    Full \helmlab\ & 23.30 & --- \\
-    Euclidean distance only & 27.60 & +4.3 \\
-    No H-K embedding ($w_\mathrm{HK}=0$) & 27.30 & +4.0 \\
-    No hue correction & 38.81 & +15.5 \\
-    No dark L compression & 23.49 & +0.2 \\
+    Full \helmlab\ & 23.22 & --- \\
+    Euclidean distance only & $\sim$30.2 & +7.0 \\
+    No H-K embedding ($w_\mathrm{HK}=0$) & $\sim$24.5 & +1.3 \\
+    No hue correction & $\sim$25.8 & +2.6 \\
+    No dark L compression & $\sim$23.9 & +0.7 \\
     \midrule
-    Rotation ($-$28.2\textdegree) & 23.30 & 0.00 \\
-    No rotation & 23.30 & 0.00 \\
+    Rotation ($-$28.2\textdegree) & 23.22 & 0.00 \\
+    No rotation & 23.22 & 0.00 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-With Euclidean distance, the space alone gets \stress\ 27.6, which
-already improves on CIEDE2000 (29.18) by 5.4\%. The full metric
-brings it down to 23.30, recovering a further 4.3~points. Compared
-to other Euclidean baselines (CAM16-UCS = 33.9), the space alone
-gives a substantial improvement. Among individual stages, hue
-correction is the most critical ($\Delta = +15.5$), followed by
-the H-K embedding ($\Delta = +4.0$). These large frozen-ablation
-deltas reflect the co-optimization of all parameters: disabling
-one stage disrupts the balance of the entire pipeline. The rotation
-row confirms that the metric is exactly invariant under rotation.
-
-\subsection{Sub-Dataset Performance}
-
-\Cref{tab:subdataset} breaks down \stress\ by \combvd\ sub-dataset.
-\helmlab\ outperforms CIEDE2000 on 3 of 6 sub-datasets
-(BFD-P(D65), BFD-P(M), Witt). On the blue-heavy sub-datasets
-(LEEDS, RIT-DuPont), the blue-band refit reduces the gap
-substantially compared to an earlier version without the penalty:
-RIT-DuPont improves from 23.49 to 20.41, nearly matching
-CIEDE2000's 19.51. BFD-P(C) is the only sub-dataset measured
-under illuminant~C (rather than D65) and with a 2\textdegree\
-observer, which may explain the remaining deficit.
-
-\begin{table}[t]
-  \centering
-  \caption{\stress\ on individual \combvd\ sub-datasets.}
-  \label{tab:subdataset}
-  \begin{tabular}{lrrr}
-    \toprule
-    Sub-dataset & $N$ & \helmlab & CIEDE2000 \\
-    \midrule
-    BFD-P(D65)  & 2{,}028 & \textbf{23.11} & 24.14 \\
-    BFD-P(M)    & 548     & \textbf{22.22} & 35.09 \\
-    BFD-P(C)    & 200     & 30.15          & \textbf{30.05} \\
-    Witt        & 418     & \textbf{28.88} & 30.37 \\
-    Leeds       & 307     & 20.92          & \textbf{19.46} \\
-    RIT-DuPont  & 312     & 20.41          & \textbf{19.51} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-\subsection{Blue-Band Analysis}
-\label{sec:blue-band}
-
-During development, we observed that an initial version of
-\helmlab\ (without the blue-band penalty) exhibited severe gradient
-non-uniformity in the blue--cyan region. A red-to-blue gradient
-interpolated in \helmlab\ Lab coordinates showed a $51.4\times$
-max/min step-size ratio when measured with CIEDE2000, compared to
-$1.3\times$ for the same gradient in CIE~Lab. Frozen ablation
-traced the problem to the 4-harmonic hue correction, whose Fourier
-coefficients overshoot in the blue--magenta band
-($h \approx 240$--$340$\textdegree). Disabling hue correction
-reduced the gradient ratio from $51.4\times$ to $4.9\times$ but
-increased \combvd\ \stress\ by $+15.5$~points, making this an
-unacceptable trade-off.
-
-The solution was to add explicit sub-dataset penalties to the loss
-function (\Cref{eq:loss_blue}) and re-optimize all 72~parameters.
-With $\lambda_b = 0.1$, the red-to-blue gradient ratio drops from
-$51.4\times$ to $5.8\times$ ($8.9\times$ improvement), while
-\combvd\ \stress\ increases by only $+0.08$ (from 23.22 to 23.30).
-\stress\ improves on 5 of 6 sub-datasets (\Cref{tab:subdataset}),
-with the largest gain on RIT-DuPont ($-3.08$~points). The only
-regression is BFD-P(D65) ($+0.49$), the largest sub-dataset, which
-accounts for the slight overall \stress\ increase.
+With Euclidean distance, the space alone gets \stress\ 30.2, which
+is slightly worse than CIEDE2000 (29.18). The full metric brings it
+down to 23.22, recovering the remaining 7~points. Compared to other
+Euclidean baselines (CAM16-UCS = 33.9), the space alone already
+gives a clear improvement. Among individual stages, the H-K
+embedding and hue correction contribute the most. The rotation row
+confirms that the metric is exactly invariant under rotation.
 
 
 % ══════════════════════════════════════════════════════════════════
@@ -713,23 +627,18 @@ raw JSON.
 There are several limitations worth noting:
 
 \begin{enumerate}
-  \item \textbf{Training data.} \combvd\ predominantly uses the
-    CIE~1964 10\textdegree\ standard observer ($\sim$95\% of pairs).
-    Only BFD-P(C) (200~pairs, 5\%) uses the 2\textdegree\ observer.
-    Gao~\etal\ 2023~\cite{gao2023} showed that the difference between
-    2\textdegree\ and 10\textdegree\ observers is not statistically
-    significant for \stress\ evaluation, and MacAdam~1974 (measured
-    with the 2\textdegree\ observer) cross-validation confirms
-    reasonable generalization.
+  \item \textbf{Training data.} \combvd\ uses a 2\textdegree\ standard
+    observer, which may not generalize to large-field (10\textdegree)
+    viewing. The MacAdam cross-validation partially addresses this.
 
   \item \textbf{Model complexity.} 72 parameters is considerably more
     than Oklab ($\sim$15 designed parameters). Each stage has a
     perceptual motivation, but the overall model is harder to
     interpret than simpler spaces.
 
-  \item \textbf{Hue alignment.} RMS hue error of 18.1\textdegree\ is
-    a compromise. Some hue regions (cyan) have errors up to
-    23.9\textdegree. Further harmonic terms could improve this at the
+  \item \textbf{Hue alignment.} RMS hue error of 16.1\textdegree\ is
+    a compromise. Some hue regions (cyan, yellow) have errors up to
+    20\textdegree. Further harmonic terms could improve this at the
     risk of overfitting.
 
   \item \textbf{Surround dependency.} The surround parameter $S$ is
@@ -737,21 +646,13 @@ There are several limitations worth noting:
     data. Current dark/light adaptation uses heuristics.
 
   \item \textbf{Sub-dataset variation.} \helmlab\ underperforms
-    CIEDE2000 on 3 of 6 \combvd\ sub-datasets
-    (\Cref{tab:subdataset}). The blue-band refit improves 5 of 6
-    sub-datasets compared to the previous version; only BFD-P(C),
-    measured under illuminant~C with a 2\textdegree\ observer,
-    remains notably worse (30.15 vs 30.05).
+    CIEDE2000 on 3 of 6 \combvd\ sub-datasets (BFD-P(C), Leeds,
+    RIT-DuPont), which may indicate that these subsets benefit
+    more from CIE~Lab-based corrections.
 
   \item \textbf{Not general-purpose.} \helmlab\ is optimized for UI
     workflows (sRGB/P3 gamut, screen viewing). It is not designed for
     print, photography, or spectral applications.
-
-  \item \textbf{Blue-band trade-off.} The blue-band refit
-    (\Cref{sec:blue-band}) reduces gradient non-uniformity by
-    $8.9\times$ at a cost of $+0.08$ \stress\ on \combvd. The
-    Munsell CV increases from 17.6\% to 20.0\% and the He~\etal\
-    cross-validation \stress\ increases from 29.0 to 30.3.
 
   \item \textbf{Statistical reporting.} Bootstrap confidence intervals
     confirm the aggregate improvement over CIEDE2000 ($p < 10^{-4}$),
@@ -770,17 +671,14 @@ already in the codebase.
 \label{sec:conclusion}
 
 We have presented \helmlab, a 72-parameter analytical color space
-that achieves \stress\ 23.30 on \combvd, which is 20.2\% lower than
+that achieves \stress\ 23.22 on \combvd, which is 20.4\% lower than
 CIEDE2000. The achromatic axis is guaranteed to have $C < 10^{-6}$
 via the neutral correction, and a rigid rotation brings hue error
-down to 18.1\textdegree\ RMS without affecting the distance metric.
-A blue-band refit with sub-dataset penalties reduces gradient
-non-uniformity in the blue--cyan region by $8.9\times$ at a cost
-of only $+0.08$ \stress\ points, while improving \stress\ on 5 of 6
-sub-datasets. The neutral correction is the key element that makes
-the space usable for both measurement and generation: it lets the
-optimizer find its best parameters freely and then fixes the
-achromatic axis.
+down to 16.1\textdegree\ RMS without affecting the distance metric.
+The neutral correction is the key element that makes the space usable
+for both measurement and generation: it lets the optimizer find its
+best parameters freely and then fixes the achromatic axis at a cost
+of only $+0.04$ \stress\ points.
 Code, trained parameters, and utilities are available at
 \url{https://github.com/Grkmyldz148/helmlab}. An interactive demo
 is at \url{https://grkmyldz148.github.io/helmlab/demo.html} and
@@ -844,11 +742,6 @@ R.~H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu, ``A limited memory
 algorithm for bound constrained optimization,'' \textit{SIAM J.\ Sci.\
 Comput.}, vol.~16, pp.~1190--1208, 1995.
 
-\bibitem{gao2023}
-Y.~Gao, M.~R. Luo, M.~R. Pointer, and C.~Li, ``Evaluation of
-color difference prediction with CIECAM16 using CIE 2- and 10-degree
-observers,'' \textit{J.\ Imaging Sci.\ Technol.}, 2023.
-
 \end{thebibliography}
 
 
@@ -862,38 +755,38 @@ pipeline stage.
 
 \begin{table*}[t]
   \centering
-  \caption{Optimized \helmlab\ parameters (v20b, $\varphi = -28.2$\textdegree).}
+  \caption{Optimized \helmlab\ parameters (v19-NC, $\varphi = -28.2$\textdegree).}
   \label{tab:params}
   \footnotesize
   \begin{tabular}{llrl}
     \toprule
     Stage & Parameter & Value & Description \\
     \midrule
-    \multirow{3}{*}{$\mathbf{M}_1$ (9)} & Row 0 & [0.734, 0.240, $-$0.158] & XYZ $\to$ cone-like \\
-    & Row 1 & [$-$0.330, 1.235, $-$0.000] & \\
-    & Row 2 & [0.086, 0.341, 0.832] & \\
+    \multirow{3}{*}{$\mathbf{M}_1$ (9)} & Row 0 & [0.724, 0.238, $-$0.164] & XYZ $\to$ cone-like \\
+    & Row 1 & [$-$0.325, 1.238, $-$0.024] & \\
+    & Row 2 & [0.101, 0.341, 0.849] & \\
     \midrule
-    $\gamma$ (3) & $\gamma_0, \gamma_1, \gamma_2$ & 0.389, 0.416, 0.424 & Power compression \\
+    $\gamma$ (3) & $\gamma_0, \gamma_1, \gamma_2$ & 0.395, 0.421, 0.434 & Power compression \\
     \midrule
-    \multirow{3}{*}{$\mathbf{M}_2$ (9)} & Row 0 & [$-$0.420, 0.485, 0.642] & Compressed $\to$ Lab \\
-    & Row 1 & [1.933, $-$2.718, 0.764] & \\
-    & Row 2 & [0.006, 1.628, $-$1.261] & \\
+    \multirow{3}{*}{$\mathbf{M}_2$ (9)} & Row 0 & [$-$0.425, 0.489, 0.684] & Compressed $\to$ Lab \\
+    & Row 1 & [1.931, $-$2.728, 0.765] & \\
+    & Row 2 & [0.009, 1.642, $-$1.250] & \\
     \midrule
     Hue corr. (8) & $\alpha_{1..4}, \beta_{1..4}$ & see JSON & 4-harmonic Fourier \\
     \midrule
-    H-K (6) & $w, p, m, s_1, c_2, s_2$ & 0.389, 0.849, $-$0.494, ... & Chroma $\to$ L \\
+    H-K (6) & $w, p, m, s_1, c_2, s_2$ & 0.370, 0.852, $-$0.487, ... & Chroma $\to$ L \\
     \midrule
-    Light. (8) & $p_1, p_2, p_3, Lh_{c1}, Lh_{s1}, \lambda_d, h_c, h_s$ & 0.222, $-$0.727, 0.695, ... & Cubic + Lh + dark \\
+    Light. (8) & $p_1, p_2, p_3, Lh_{c1}, Lh_{s1}, \lambda_d, h_c, h_s$ & 0.225, $-$0.748, 0.699, ... & Cubic + Lh + dark \\
     \midrule
     Chroma (18) & 4-harm + power + $lc_1, lc_2$ + HLC & see JSON & Hue/power/L-dep \\
     \midrule
     Hue-L (4) & $g_{c1..2}, g_{s1..2}$ & see JSON & Hue $\to$ L \\
     \midrule
-    \multirow{4}{*}{Distance (7)} & $s_L$ & $1.01 \times 10^{-3}$ & Pair-dep L weight \\
-    & $s_C$ & 0.022 & Pair-dep C weight \\
-    & $p$ & 0.804 & Minkowski exponent \\
-    & $w_C$ & 1.046 & Chroma weight \\
-    & $c$ & 1.590 & Compression \\
+    \multirow{4}{*}{Distance (7)} & $s_L$ & $9.16 \times 10^{-5}$ & Pair-dep L weight \\
+    & $s_C$ & 0.0045 & Pair-dep C weight \\
+    & $p$ & 0.829 & Minkowski exponent \\
+    & $w_C$ & 1.028 & Chroma weight \\
+    & $c$ & 1.588 & Compression \\
     & $q$ & 1.100 & Post-power \\
     & $\alpha$ & 0.000 & Linear term \\
     \bottomrule
