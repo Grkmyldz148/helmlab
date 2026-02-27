@@ -725,7 +725,9 @@ function interpCIELab(c1,c2,t) {
 }
 function interpHelmlab(c1,c2,t) {
   const a=pFwdSrgb(...c1), b2=pFwdSrgb(...c2);
-  const rgb=pInvSrgb(lerp(a[0],b2[0],t),lerp(a[1],b2[1],t),lerp(a[2],b2[2],t));
+  const L=lerp(a[0],b2[0],t), aa=lerp(a[1],b2[1],t), bb=lerp(a[2],b2[2],t);
+  let rgb=pInvSrgb(L,aa,bb);
+  if(!inGamut(rgb)) { const h=Math.atan2(bb,aa), C=Math.sqrt(aa*aa+bb*bb); rgb=gamutMapHelmlab(L,h,C); }
   return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
 }
 
