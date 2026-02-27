@@ -4,7 +4,11 @@ A data-driven analytical color space for UI design systems.
 
 Helmlab is a 72-parameter color space optimized end-to-end against psychophysical data. It achieves STRESS 23.22 on COMBVD (3,813 color pairs) — a 20.4% improvement over CIEDE2000 — while maintaining a structurally guaranteed achromatic axis and reasonable hue alignment.
 
-**[Interactive Demo](https://grkmyldz148.github.io/helmlab/demo.html)** | **[Documentation](https://grkmyldz148.github.io/helmlab/)** | **[Paper](paper/helmlab.tex)**
+[![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
+[![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
+[![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
+
+**[Interactive Demo](https://grkmyldz148.github.io/helmlab/demo.html)** | **[Tools](https://grkmyldz148.github.io/helmlab/tools.html)** | **[Documentation](https://grkmyldz148.github.io/helmlab/)** | **[Paper](https://arxiv.org/abs/2602.23010)**
 
 ## Key Features
 
@@ -164,7 +168,9 @@ python -m pytest tests/ -q
 @article{yildiz2025helmlab,
   title={Helmlab: A Data-Driven Analytical Color Space for UI Design Systems},
   author={Y{\i}ld{\i}z, G{\"o}rkem},
-  year={2025}
+  journal={arXiv preprint arXiv:2602.23010},
+  year={2025},
+  url={https://arxiv.org/abs/2602.23010}
 }
 ```
 
