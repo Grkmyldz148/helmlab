@@ -754,16 +754,40 @@ function interpCIELab(c1,c2,t) {
 function interpHelmlab(c1,c2,t) {
   const a=pFwdSrgb(...c1), b2=pFwdSrgb(...c2);
   const L=lerp(a[0],b2[0],t), aa=lerp(a[1],b2[1],t), bb=lerp(a[2],b2[2],t);
-  const xyz = pInv(L,aa,bb);
-  // Try P3 first (wider gamut), then sRGB, then gamut-map
-  if (hasP3) { const p3=xyzToP3(xyz[0],xyz[1],xyz[2]); if(inP3(p3)) return [clamp01(p3[0]),clamp01(p3[1]),clamp01(p3[2])]; }
-  const rgb=xyzToSrgb(xyz[0],xyz[1],xyz[2]);
+  // Always return sRGB (consistent for distance computation)
+  const rgb=xyzToSrgb(...pInv(L,aa,bb));
   if(inGamut(rgb)) return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
-  if (hasP3) { const h=Math.atan2(bb,aa),C=Math.sqrt(aa*aa+bb*bb); let lo=0,hi=C; for(let i=0;i<20;i++){const mid=(lo+hi)/2;const p=xyzToP3(...pInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inP3(p))lo=mid;else hi=mid;} const pf=xyzToP3(...pInv(L,lo*Math.cos(h),lo*Math.sin(h))); return [clamp01(pf[0]),clamp01(pf[1]),clamp01(pf[2])]; }
   const h=Math.atan2(bb,aa),C=Math.sqrt(aa*aa+bb*bb); const gm=gamutMapHelmlab(L,h,C);
   return [clamp01(gm[0]),clamp01(gm[1]),clamp01(gm[2])];
 }
-// Return CSS color string (P3 or hex) for a Helmlab Lab point
+// Batch gradient: smooth chroma scaling to avoid harsh gamut-map jumps
+function interpHelmlabBatchCSS(c1, c2, N) {
+  const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
+  const labs=[], ratios=[];
+  const checkGamut = hasP3
+    ? (L,a,b) => { const xyz=pInv(L,a,b); return inP3(xyzToP3(...xyz)); }
+    : (L,a,b) => inGamut(xyzToSrgb(...pInv(L,a,b)));
+  const findMaxC = (L, h, C0) => {
+    let lo=0, hi=C0;
+    for(let j=0;j<20;j++){const mid=(lo+hi)/2;if(checkGamut(L,mid*Math.cos(h),mid*Math.sin(h)))lo=mid;else hi=mid;}
+    return lo;
+  };
+  for(let i=0;i<N;i++){
+    const t=i/(N-1), L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
+    labs.push([L,a,b]);
+    const C=Math.sqrt(a*a+b*b);
+    if(C<1e-6){ratios.push(1);continue;}
+    if(checkGamut(L,a,b)){ratios.push(1);continue;}
+    ratios.push(findMaxC(L,Math.atan2(b,a),C)/C);
+  }
+  // Smooth ratios: limit how fast chroma can increase per step
+  const maxJump=2.5/N;
+  const sm=[...ratios];
+  for(let i=1;i<N;i++) sm[i]=Math.min(sm[i],sm[i-1]+maxJump);
+  for(let i=N-2;i>=0;i--) sm[i]=Math.min(sm[i],sm[i+1]+maxJump);
+  return labs.map(([L,a,b],i)=>colorCSS(L,a*sm[i],b*sm[i]));
+}
+// Single-step CSS (used by scale generators, not gradients)
 function interpHelmlabCSS(c1,c2,t) {
   const a=pFwdSrgb(...c1), b2=pFwdSrgb(...c2);
   return colorCSS(lerp(a[0],b2[0],t), lerp(a[1],b2[1],t), lerp(a[2],b2[2],t));
@@ -1256,7 +1280,7 @@ function buildGrad() {
   document.getElementById('gradStepsVal').textContent = N;
 
   const methods = [
-    {name:'Helmlab',cls:'p',fn:interpHelmlab,cssFn:interpHelmlabCSS,color:'#3b82f6'},
+    {name:'Helmlab',cls:'p',fn:interpHelmlab,batchCssFn:interpHelmlabBatchCSS,color:'#3b82f6'},
     {name:'Oklab',cls:'o',fn:interpOklab,color:'#10b981'},
     {name:'CIE Lab',cls:'c',fn:interpCIELab,color:'#8b5cf6'},
     {name:'sRGB',cls:'s',fn:interpSRGB,color:'#71717a'},
@@ -1272,9 +1296,9 @@ function buildGrad() {
     const maxD=Math.max(...dists);
     const cvTag=cv<15?t('cv_uniform'):cv<25?t('cv_moderate'):t('cv_nonuniform');
 
-    // Compute CSS color strings (P3 for Helmlab, sRGB hex for others)
+    // Compute CSS color strings (batch P3 for Helmlab, sRGB hex for others)
     const cssColors = [];
-    if (m.cssFn) { for(let i=0;i<N;i++) cssColors.push(m.cssFn(c1,c2,i/(N-1))); }
+    if (m.batchCssFn) { cssColors.push(...m.batchCssFn(c1, c2, N)); }
     else { for(const s of steps) cssColors.push(rgbToHex(s[0],s[1],s[2])); }
 
     html += `<div class="grad-method"><div class="grad-head">
@@ -1293,7 +1317,7 @@ function exportGradient() {
   const c1=hexToRgb(document.getElementById('gradFrom').value);
   const c2=hexToRgb(document.getElementById('gradTo').value);
   const N=parseInt(document.getElementById('gradSteps').value);
-  const stops=[]; for(let i=0;i<N;i++) stops.push(interpHelmlabCSS(c1,c2,i/(N-1)));
+  const stops=interpHelmlabBatchCSS(c1,c2,N);
   const text=`background: linear-gradient(90deg, ${stops.join(', ')});`;
   navigator.clipboard.writeText(text).then(()=>{
     const btn=event.target;btn.classList.add('copied');const orig=btn.textContent;btn.textContent='Copied!';
