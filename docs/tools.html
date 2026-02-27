@@ -574,6 +574,29 @@ function mat3inv(M) {
 }
 const M1_inv = mat3inv(Q.M1), M2_inv = mat3inv(Q.M2), inv_gamma = Q.gamma.map(g => 1/g);
 
+// Base Lab: M1→power→M2 only (no enrichment pipeline). Used for gradient interpolation.
+// Structurally identical to Oklab, avoids the fold in Lab→XYZ mapping caused by enrichment stages.
+function baseLabFwd(X, Y, Z) {
+  let l = mat3(Q.M1, [X, Y, Z]);
+  l = [spow(l[0], Q.gamma[0]), spow(l[1], Q.gamma[1]), spow(l[2], Q.gamma[2])];
+  return mat3(Q.M2, l);
+}
+function baseLabInv(L, a, b) {
+  let lms = mat3(M2_inv, [L, a, b]);
+  lms = [spow(lms[0], inv_gamma[0]), spow(lms[1], inv_gamma[1]), spow(lms[2], inv_gamma[2])];
+  return mat3(M1_inv, lms);
+}
+function baseLabFwdSrgb(r, g, b) { return baseLabFwd(...srgbToXYZ(r, g, b)); }
+function baseLabToCSS(L, a, b) {
+  const xyz = baseLabInv(L, a, b);
+  if (hasP3) {
+    const p3 = xyzToP3(xyz[0], xyz[1], xyz[2]);
+    if (inP3(p3)) return `color(display-p3 ${clamp01(p3[0]).toFixed(4)} ${clamp01(p3[1]).toFixed(4)} ${clamp01(p3[2]).toFixed(4)})`;
+  }
+  const srgb = xyzToSrgb(xyz[0], xyz[1], xyz[2]);
+  return rgbToHex(clamp01(srgb[0]), clamp01(srgb[1]), clamp01(srgb[2]));
+}
+
 function relativeLuminance(rgb) {
   return 0.2126*srgbToLin(rgb[0]) + 0.7152*srgbToLin(rgb[1]) + 0.0722*srgbToLin(rgb[2]);
 }
@@ -752,50 +775,22 @@ function interpCIELab(c1,c2,t) {
   const rgb=xyzToSrgb(...xyz); return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
 }
 function interpHelmlab(c1,c2,t) {
-  // Lab linear interpolation + sRGB gamut mapping
-  const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
-  const L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
-  const rgb=xyzToSrgb(...pInv(L,a,b));
-  if(inGamut(rgb)) return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
-  const h=Math.atan2(b,a),C=Math.sqrt(a*a+b*b); const gm=gamutMapHelmlab(L,h,C);
-  return [clamp01(gm[0]),clamp01(gm[1]),clamp01(gm[2])];
+  // Base Lab interpolation (M1→power→M2 only, smooth like Oklab)
+  const bl1=baseLabFwdSrgb(...c1), bl2=baseLabFwdSrgb(...c2);
+  const L=lerp(bl1[0],bl2[0],t), a=lerp(bl1[1],bl2[1],t), b=lerp(bl1[2],bl2[2],t);
+  const rgb=xyzToSrgb(...baseLabInv(L,a,b));
+  return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
 }
-// Batch gradient: Lab interpolation + chroma smoothing
-// Prevents the sharp V-dip that causes visible jumps at endpoints
+// Batch gradient: base Lab interpolation (M1→power→M2 only, no enrichment).
+// The enrichment pipeline creates folds in Lab→XYZ mapping that cause brightness
+// spikes during interpolation. Base Lab is structurally identical to Oklab
+// (matrix→power→matrix) and produces equally smooth gradients.
 function interpHelmlabBatchCSS(c1, c2, N) {
-  const lab1=pFwdSrgb(...c1), lab2=pFwdSrgb(...c2);
-  const C1=Math.sqrt(lab1[1]**2+lab1[2]**2), h1=Math.atan2(lab1[2],lab1[1]);
-  const C2=Math.sqrt(lab2[1]**2+lab2[2]**2), h2=Math.atan2(lab2[2],lab2[1]);
-  // Shorter hue arc for fallback hue when chroma is near zero
-  let dh=h2-h1; if(dh>Math.PI)dh-=2*Math.PI; if(dh<-Math.PI)dh+=2*Math.PI;
-
-  // Compute raw Lab values and chroma curve
-  const labs=[], rawC=[];
-  for(let i=0;i<N;i++){
+  const bl1=baseLabFwdSrgb(...c1), bl2=baseLabFwdSrgb(...c2);
+  return Array.from({length:N}, (_,i) => {
     const t=i/(N-1);
-    const L=lerp(lab1[0],lab2[0],t), a=lerp(lab1[1],lab2[1],t), b=lerp(lab1[2],lab2[2],t);
-    labs.push([L,a,b]);
-    rawC.push(Math.sqrt(a*a+b*b));
-  }
-  // LCH chroma curve (linear, never dips to zero for saturated endpoints)
-  const lchC = Array.from({length:N}, (_,i) => lerp(C1, C2, i/(N-1)));
-  // Blend: keep Lab chroma where it's high, boost with LCH floor where it dips
-  // Floor = 30% of LCH chroma — subtle enough to avoid visible wrong hues
-  const finalC = rawC.map((c,i) => Math.max(c, lchC[i]*0.3));
-
-  return labs.map(([L,a,b], i) => {
-    const t=i/(N-1), C=rawC[i], Cf=finalC[i];
-    let fa, fb;
-    if(C > 0.01) {
-      // Lab hue is reliable — scale chroma
-      const s = Cf/C;
-      fa = a*s; fb = b*s;
-    } else {
-      // Near achromatic — use interpolated hue direction
-      const h = h1 + dh*t;
-      fa = Cf*Math.cos(h); fb = Cf*Math.sin(h);
-    }
-    return colorCSS(L, fa, fb);
+    const L=lerp(bl1[0],bl2[0],t), a=lerp(bl1[1],bl2[1],t), b=lerp(bl1[2],bl2[2],t);
+    return baseLabToCSS(L, a, b);
   });
 }
 // Single-step CSS (used by scale generators, not gradients)

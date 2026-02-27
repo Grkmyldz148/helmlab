@@ -36,9 +36,9 @@ def build_pair_data(include_extra: bool = False) -> dict:
     ----------
     include_extra : bool
         If True, also include He 2022 and MacAdam 1974 datasets.
-        These use CIE 10° observer (vs 2° for COMBVD/Munsell), so
-        mixing them can degrade model performance. Default False
-        (use them only for cross-validation, not training).
+        These are separate experimental datasets.  COMBVD itself is
+        predominantly CIE 1964 10° observer (only BFD-P(C) uses 2°).
+        Default False (use them only for cross-validation, not training).
 
     Returns
     -------
