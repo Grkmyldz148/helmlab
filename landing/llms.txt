@@ -1,0 +1,102 @@
+# Helmlab
+
+> A data-driven analytical color space for UI design systems.
+
+Helmlab is a family of two purpose-built color spaces: MetricSpace for perceptual distance measurement, and GenSpace for gradient/palette generation. It is open-source (MIT), available as both a Python (pip) and JavaScript/TypeScript (npm) package.
+
+- Website: https://helmlab.space
+- GitHub: https://github.com/Grkmyldz148/helmlab
+- npm: https://www.npmjs.com/package/helmlab
+- PyPI: https://pypi.org/project/helmlab/
+- Paper: https://arxiv.org/abs/2602.23010
+- Documentation: https://grkmyldz148.github.io/helmlab/
+- Interactive Demo: https://grkmyldz148.github.io/helmlab/demo.html
+- Author: Gorkem Yildiz
+
+## What It Does
+
+Helmlab provides:
+- Accurate perceptual color difference measurement (STRESS 23.30 on COMBVD, 20% better than CIEDE2000)
+- Perfectly uniform gradient generation (CV ~ 0% via CIEDE2000 arc-length reparameterization)
+- WCAG contrast ratio checking and enforcement
+- Gamut mapping (sRGB, Display P3)
+- Palette generation (Tailwind-style semantic scales, lightness ramps, hue rings)
+- Token export (CSS oklch(), Android XML, iOS Swift, Tailwind, JSON)
+
+## Architecture
+
+### MetricSpace (72 parameters)
+Optimized for perceptual distance. 13-stage enriched pipeline:
+XYZ -> M1 -> power -> M2 -> hue correction -> H-K -> L scaling -> chroma scaling -> neutral correction -> rotation -> Lab
+
+Best use: deltaE(), color difference measurement, accessibility checking, color harmony validation.
+
+### GenSpace (21 parameters)
+Optimized for generation. Minimal linear-algebra pipeline:
+XYZ -> M1 -> cube root -> M2 -> neutral correction -> Lab
+Plus CIEDE2000 arc-length reparameterization for gradient().
+
+Best use: gradient(), palette(), semanticScale(), any color generation task.
+
+## Installation
+
+Python:
+```
+pip install helmlab
+```
+
+JavaScript/TypeScript:
+```
+npm install helmlab
+```
+
+## Quick Start (JavaScript)
+
+```js
+import { Helmlab } from 'helmlab';
+const hl = new Helmlab();
+
+hl.fromHex('#3B82F6');                          // Hex -> MetricSpace Lab
+hl.toHex([0.5, -0.1, 0.2]);                    // Lab -> hex (gamut mapped)
+hl.deltaE('#ff0000', '#00ff00');                // Perceptual distance
+hl.gradient('#ff0000', '#0000ff', 8);           // Perfectly uniform gradient
+hl.contrastRatio('#ffffff', '#3B82F6');          // WCAG contrast ratio
+hl.ensureContrast('#3B82F6', '#ffffff', 4.5);   // Adjust to meet 4.5:1
+hl.semanticScale('#3B82F6');                     // Tailwind-style 50-950 scale
+hl.palette('#3B82F6', 5);                       // Lightness ramp
+```
+
+## Quick Start (Python)
+
+```python
+from helmlab import Helmlab
+hl = Helmlab()
+
+hl.from_srgb([0.2, 0.5, 0.8])                  # sRGB -> MetricSpace Lab
+hl.delta_e('#ff0000', '#00ff00')                # Perceptual distance
+hl.gradient('#ff0000', '#0000ff', 8)            # Perfectly uniform gradient
+hl.ensure_contrast('#ffffff', '#3B82F6', 4.5)   # WCAG contrast enforcement
+hl.semantic_scale('#3B82F6')                    # Tailwind-style 50-950 scale
+```
+
+## Benchmarks
+
+### Perceptual Distance (MetricSpace)
+STRESS on COMBVD (3,813 color pairs), lower is better:
+- Helmlab v20b: 23.30 (best)
+- CIEDE2000: 29.18
+- CIE94: 33.59
+- CAM16-UCS: 33.90
+- CIE Lab dE76: 42.80
+- Oklab: 47.46
+
+### Gradient Uniformity (GenSpace + arc-length)
+CV of CIEDE2000 step sizes, lower is better:
+- Helmlab: ~0% on any color pair
+- Oklab: 25-40%
+- CIE Lab: 40-60%
+
+## Package Details
+- JavaScript: ~12KB gzipped, zero dependencies, ESM + CJS, full TypeScript types
+- Python: requires numpy, scipy
+- License: MIT

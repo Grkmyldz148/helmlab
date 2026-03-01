@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://helmlab.space/sitemap.xml
+Llms-txt: https://helmlab.space/llms.txt
