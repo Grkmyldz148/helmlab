@@ -6,7 +6,8 @@ from helmlab.spaces.oklch import OKLCH
 from helmlab.spaces.cam16ucs import CAM16UCS
 from helmlab.spaces.ipt import IPT
 from helmlab.spaces.jzczhz import JzAzBz
-from helmlab.spaces.analytical import AnalyticalSpace
+from helmlab.spaces.metric import MetricSpace
+from helmlab.spaces.gen import GenSpace
 
 _REGISTRY: dict[str, type[ColorSpace]] = {
     "srgb": SRGB,
@@ -17,8 +18,10 @@ _REGISTRY: dict[str, type[ColorSpace]] = {
     "ipt": IPT,
     "jzazbz": JzAzBz,
     "jzczhz": JzAzBz,
-    "analytical": AnalyticalSpace,
-    "helmlab": AnalyticalSpace,
+    "analytical": MetricSpace,
+    "helmlab": MetricSpace,
+    "metric": MetricSpace,
+    "gen": GenSpace,
 }
 
 # Singleton cache

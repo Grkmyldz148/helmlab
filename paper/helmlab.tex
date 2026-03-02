@@ -103,7 +103,7 @@ The contributions are:
   \item A 72-parameter analytical color space with \stress\ 23.30
     on \combvd, 20.2\% lower than CIEDE2000.
   \item A neutral correction that guarantees $C < 10^{-6}$ for
-    achromatic colors, at a \stress\ cost of only $+0.08$.
+    achromatic colors, at a \stress\ cost of only $+0.04$.
   \item A rigid rotation in the $ab$ plane that reduces hue error
     (RMS~18.1\textdegree) without changing the distance metric
     (the metric is invariant under rotation).
@@ -750,7 +750,8 @@ There are several limitations worth noting:
   \item \textbf{Blue-band trade-off.} The blue-band refit
     (\Cref{sec:blue-band}) reduces gradient non-uniformity by
     $8.9\times$ at a cost of $+0.08$ \stress\ on \combvd. The
-    Munsell CV increases from 17.6\% to 20.0\% and the He~\etal\
+    Munsell CV increases from 17.6\% to 20.0\%, hue RMS from
+    16.1\textdegree\ to 18.1\textdegree, and the He~\etal\
     cross-validation \stress\ increases from 29.0 to 30.3.
 
   \item \textbf{Statistical reporting.} Bootstrap confidence intervals
@@ -759,6 +760,10 @@ There are several limitations worth noting:
     restarts remain unquantified.
 \end{enumerate}
 
+The open-source release includes a second, generation-optimized space
+(\textsc{GenSpace}) with shared $\gamma\!=\!\tfrac{1}{3}$ and no
+enrichment stages, which trades distance accuracy for faster, invertible
+gradient and palette generation.
 For future work, we plan to train the surround parameter on paired
 light/dark viewing data and to expand the training set with targeted
 human feedback using the bidirectional optimization framework that is
@@ -901,6 +906,6 @@ pipeline stage.
 \end{table*}
 
 Full parameter values are available in the accompanying
-\texttt{analytical\_params.json} file.
+\texttt{metric\_params.json} file.
 
 \end{document}

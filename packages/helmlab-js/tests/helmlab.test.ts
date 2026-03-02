@@ -45,6 +45,11 @@ describe('ensureContrast', () => {
     const result = hl.ensureContrast('#000000', '#ffffff', 4.5);
     expect(result).toBe('#000000');
   });
+  it('does not return #ffffff for dark bg', () => {
+    const result = hl.ensureContrast('#a51d1d', '#111113');
+    expect(result).not.toBe('#ffffff');
+    expect(hl.contrastRatio(result, '#111113')).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 describe('Semantic scale', () => {
@@ -75,11 +80,82 @@ describe('palette', () => {
     const lastL = hl.info(p[9]).L;
     expect(firstL).toBeGreaterThan(lastL);
   });
+  it('palette colors are vivid (not washed out)', () => {
+    const p = hl.palette('#3b82f6', 5);
+    let saturated = 0;
+    for (const hex of p) {
+      const parse = (h: string) => [
+        parseInt(h.slice(1, 3), 16) / 255,
+        parseInt(h.slice(3, 5), 16) / 255,
+        parseInt(h.slice(5, 7), 16) / 255,
+      ];
+      const rgb = parse(hex);
+      if (Math.max(...rgb) - Math.min(...rgb) > 0.1) saturated++;
+    }
+    expect(saturated).toBeGreaterThanOrEqual(3);
+  });
 });
 
 describe('paletteHues', () => {
   it('generates correct number of hues', () => {
     expect(hl.paletteHues(0.6, 0.15, 12)).toHaveLength(12);
+  });
+});
+
+describe('Base Lab', () => {
+  it('baseFromHex round-trips via baseToHex (±1/255)', () => {
+    for (const hex of ['#3b82f6', '#ff0000', '#808080', '#000000', '#ffffff']) {
+      const lab = hl.baseFromHex(hex);
+      const rt = hl.baseToHex(lab);
+      const parse = (h: string) => [
+        parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16),
+      ];
+      const [r1, g1, b1] = parse(hex);
+      const [r2, g2, b2] = parse(rt);
+      const diff = Math.max(Math.abs(r1 - r2), Math.abs(g1 - g2), Math.abs(b1 - b2));
+      expect(diff).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('semantic scale level 500 matches base color', () => {
+    const scale = hl.semanticScale('#3b82f6');
+    const parse = (h: string) => [
+      parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16),
+    ];
+    const [r1, g1, b1] = parse('#3b82f6');
+    const [r2, g2, b2] = parse(scale['500']);
+    const diff = Math.max(Math.abs(r1 - r2), Math.abs(g1 - g2), Math.abs(b1 - b2));
+    expect(diff).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('gradient', () => {
+  it('returns correct number of steps', () => {
+    expect(hl.gradient('#ff6b00', '#0066ff', 8)).toHaveLength(8);
+    expect(hl.gradient('#ff0000', '#00ff00', 32)).toHaveLength(32);
+  });
+  it('first and last match input colors (±1/255)', () => {
+    const g = hl.gradient('#ff6b00', '#0066ff', 16);
+    const parse = (h: string) => [
+      parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16),
+    ];
+    const [r1, g1, b1] = parse(g[0]);
+    const [r2, g2, b2] = parse('#ff6b00');
+    expect(Math.max(Math.abs(r1 - r2), Math.abs(g1 - g2), Math.abs(b1 - b2))).toBeLessThanOrEqual(1);
+    const [r3, g3, b3] = parse(g[15]);
+    const [r4, g4, b4] = parse('#0066ff');
+    expect(Math.max(Math.abs(r3 - r4), Math.abs(g3 - g4), Math.abs(b3 - b4))).toBeLessThanOrEqual(1);
+  });
+  it('produces valid hex strings', () => {
+    const g = hl.gradient('#ff0000', '#0000ff', 10);
+    for (const hex of g) {
+      expect(hex).toMatch(/^#[0-9a-f]{6}$/);
+    }
+  });
+  it('single step returns start color', () => {
+    const g = hl.gradient('#ff6b00', '#0066ff', 1);
+    expect(g).toHaveLength(1);
+    expect(g[0]).toBe('#ff6b00');
   });
 });
 

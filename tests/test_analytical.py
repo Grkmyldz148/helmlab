@@ -315,7 +315,11 @@ class TestDistance:
 class TestRegistry:
     def test_analytical_in_registry(self):
         space = get_space("analytical")
-        assert space.name == "Analytical"
+        assert space.name == "Metric"
+
+    def test_metric_in_registry(self):
+        space = get_space("metric")
+        assert space.name == "Metric"
 
 
 class TestOklabEquivalence:

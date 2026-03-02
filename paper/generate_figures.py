@@ -48,7 +48,7 @@ GRAY_COLOR = "#6B7280"
 
 
 def get_helmlab():
-    """Load Helmlab space with v19-NC + rotation."""
+    """Load Helmlab space with v20b-NC + rotation."""
     return AnalyticalSpace(neutral_correction=True, ab_rotate_deg=-28.2)
 
 

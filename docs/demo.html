@@ -113,6 +113,7 @@
     transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .stress-bar.p { background: linear-gradient(90deg, #1e3a5f, #3b82f6); }
+  .stress-bar.g { background: linear-gradient(90deg, #78350f, #f59e0b); }
   .stress-bar.o { background: linear-gradient(90deg, #064e3b, #10b981); }
   .stress-bar.c { background: linear-gradient(90deg, #4c1d95, #8b5cf6); }
   .stress-bar.d { background: linear-gradient(90deg, #7f1d1d, #ef4444); }
@@ -305,7 +306,7 @@
     <img src="logo.svg" alt="Helmlab" class="hero-logo">
     <p class="tagline" data-i18n="hero_tagline"></p>
     <div class="stats-row">
-      <div class="stat"><div class="num mono blue">23.22</div><div class="lbl" data-i18n="stat_stress"></div></div>
+      <div class="stat"><div class="num mono blue">23.30</div><div class="lbl" data-i18n="stat_stress"></div></div>
       <div class="stat"><div class="num mono green">0.000001</div><div class="lbl" data-i18n="stat_achC"></div></div>
       <div class="stat"><div class="num mono purple">16.1&deg;</div><div class="lbl" data-i18n="stat_hue"></div></div>
       <div class="stat"><div class="num mono red">&lt; 10<sup style="font-size:0.55em">-6</sup></div><div class="lbl" data-i18n="stat_rt"></div></div>
@@ -409,7 +410,7 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-// Helmlab v19 params (production, from analytical_params.json)
+// Helmlab v20b params (production, from analytical_params.json)
 // ═══════════════════════════════════════════════════════════════
 const Q = {
   M1: [[0.7238917894754542,0.23752256244852013,-0.16360402061669702],[-0.32473817466217925,1.2376071292045372,-0.02422967958773127],[0.10107326870619343,0.3405173988415208,0.8493976291873828]],
@@ -503,7 +504,7 @@ const M2_inv = mat3inv(Q.M2);
 const inv_gamma = Q.gamma.map(g => 1/g);
 
 // ═══════════════════════════════════════════════════════════════
-// Helmlab v19 forward (WITHOUT NC — raw pipeline)
+// Helmlab v20b forward (WITHOUT NC — raw pipeline)
 // ═══════════════════════════════════════════════════════════════
 function pFwdRaw(X, Y, Z) {
   let l = mat3(Q.M1, [X, Y, Z]);
@@ -599,7 +600,7 @@ const AB_ROT_COS = Math.cos(AB_ROT_RAD);
 const AB_ROT_SIN = Math.sin(AB_ROT_RAD);
 
 // ═══════════════════════════════════════════════════════════════
-// Helmlab v19 forward (WITH NC + rotation)
+// Helmlab v20b forward (WITH NC + rotation)
 // ═══════════════════════════════════════════════════════════════
 function pFwd(X, Y, Z) {
   let lab = pFwdRaw(X, Y, Z);
@@ -617,7 +618,7 @@ function pFwd(X, Y, Z) {
 function pFwdSrgb(r, g, b) { return pFwd(...srgbToXYZ(r, g, b)); }
 
 // ═══════════════════════════════════════════════════════════════
-// Helmlab v19 inverse
+// Helmlab v20b inverse
 // ═══════════════════════════════════════════════════════════════
 function pInv(L, a, b) {
   // Undo rotation
@@ -709,6 +710,20 @@ function pInvSrgb(L, a, b) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Helmlab GenSpace (generation-optimized, Phase 1H)
+// ═══════════════════════════════════════════════════════════════
+const G = {
+  M1: [[0.4407412072890238,0.40911369156796634,0.18687249931895067],[0.12308224353121994,0.557136239636739,0.19274910862205916],[-0.23021079382916068,0.9278243045135821,0.4854100909928004]],
+  M2: [[0.2778609560084774,0.21180362605092856,0.6372017137356791],[1.7548720474157444,-0.9793270531556616,-0.7760752041286899],[-2.418690735750103,3.982044105359993,-1.2833774660668076]]
+};
+const G_M1_inv = mat3inv(G.M1);
+const G_M2_inv = mat3inv(G.M2);
+function gFwd(X,Y,Z) { let l=mat3(G.M1,[X,Y,Z]); l=[Math.cbrt(l[0]),Math.cbrt(l[1]),Math.cbrt(l[2])]; return mat3(G.M2,l); }
+function gFwdSrgb(r,g,b) { return gFwd(...srgbToXYZ(r,g,b)); }
+function gInv(L,a,b) { let l=mat3(G_M2_inv,[L,a,b]); l=[l[0]*l[0]*l[0],l[1]*l[1]*l[1],l[2]*l[2]*l[2]]; return mat3(G_M1_inv,l); }
+function gInvSrgb(L,a,b) { const xyz=gInv(L,a,b); return xyzToSrgb(...xyz); }
+
+// ═══════════════════════════════════════════════════════════════
 // Oklab
 // ═══════════════════════════════════════════════════════════════
 const Ok1 = [[0.8189330101,0.3618667424,-0.1288597137],[0.0329845436,0.9293118715,0.0361456387],[0.0482003018,0.2643662691,0.6338517070]];
@@ -750,14 +765,53 @@ function interpHelmlab(c1,c2,t) {
   const rgb=pInvSrgb(lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t));
   return [clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2])];
 }
+function interpGenSpace(c1,c2,t) {
+  const a=gFwdSrgb(...c1), b=gFwdSrgb(...c2);
+  const rgb=gInvSrgb(lerp(a[0],b[0],t), lerp(a[1],b[1],t), lerp(a[2],b[2],t));
+  return [clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2])];
+}
 
-// Distance using Helmlab metric
+// Distance using Helmlab metric (for STRESS section)
 function pDist(rgb1, rgb2) {
   const a = pFwdSrgb(...rgb1), b = pFwdSrgb(...rgb2);
   const dL=a[0]-b[0], da=a[1]-b[1], db=a[2]-b[2];
   const pw = Q.dist_power;
   const raw = Math.pow(Math.abs(dL)**pw + Q.dist_wC*(Math.abs(da)**pw + Math.abs(db)**pw), 1/pw);
   return Math.pow(raw / (1 + Q.dist_compress*raw), Q.dist_post_power);
+}
+
+// CIEDE2000 (neutral standard for gradient CV measurement)
+function ciede2000(rgb1, rgb2) {
+  const lab1 = cieFromSRGB(...rgb1), lab2 = cieFromSRGB(...rgb2);
+  const L1=lab1[0],a1=lab1[1],b1=lab1[2], L2=lab2[0],a2=lab2[1],b2=lab2[2];
+  const C1=Math.sqrt(a1*a1+b1*b1), C2=Math.sqrt(a2*a2+b2*b2);
+  const Cab=(C1+C2)/2;
+  const Cab7=Math.pow(Cab,7), G=0.5*(1-Math.sqrt(Cab7/(Cab7+6103515625)));
+  const ap1=(1+G)*a1, ap2=(1+G)*a2;
+  const Cp1=Math.sqrt(ap1*ap1+b1*b1), Cp2=Math.sqrt(ap2*ap2+b2*b2);
+  let hp1=Math.atan2(b1,ap1)*180/Math.PI; if(hp1<0)hp1+=360;
+  let hp2=Math.atan2(b2,ap2)*180/Math.PI; if(hp2<0)hp2+=360;
+  const dLp=L2-L1, dCp=Cp2-Cp1;
+  let dhp=0;
+  if(Cp1*Cp2!==0){
+    dhp=hp2-hp1;
+    if(dhp>180)dhp-=360; else if(dhp<-180)dhp+=360;
+  }
+  const dHp=2*Math.sqrt(Cp1*Cp2)*Math.sin(dhp*Math.PI/360);
+  const Lpm=(L1+L2)/2, Cpm=(Cp1+Cp2)/2;
+  let hpm;
+  if(Cp1*Cp2===0){hpm=hp1+hp2;}
+  else if(Math.abs(hp1-hp2)<=180){hpm=(hp1+hp2)/2;}
+  else{hpm=(hp1+hp2+360)/2; if(hpm>=360)hpm-=360;}
+  const T2=1-0.17*Math.cos((hpm-30)*Math.PI/180)+0.24*Math.cos(2*hpm*Math.PI/180)+0.32*Math.cos((3*hpm+6)*Math.PI/180)-0.20*Math.cos((4*hpm-63)*Math.PI/180);
+  const SL=1+0.015*(Lpm-50)**2/Math.sqrt(20+(Lpm-50)**2);
+  const SC=1+0.045*Cpm;
+  const SH=1+0.015*Cpm*T2;
+  const Cpm7=Math.pow(Cpm,7);
+  const RC=2*Math.sqrt(Cpm7/(Cpm7+6103515625));
+  const dtheta=30*Math.exp(-(((hpm-275)/25)**2));
+  const RT=-Math.sin(2*dtheta*Math.PI/180)*RC;
+  return Math.sqrt((dLp/SL)**2+(dCp/SC)**2+(dHp/SH)**2+RT*(dCp/SC)*(dHp/SH));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -790,8 +844,8 @@ const T = {
   // Section 1
   s1_title: { tr: 'STRESS Kar\u015f\u0131la\u015ft\u0131rma', en: 'STRESS Benchmark' },
   s1_desc: {
-    tr: 'STRESS metrigi, bir renk uzay\u0131n\u0131n tahmin etti\u011fi mesafe (\u0394E) ile insan deneylerinde \u00f6l\u00e7\u00fclen alg\u0131sal fark\u0131n (\u0394V) ne kadar uyumlu oldu\u011funu \u00f6l\u00e7er. D\u00fc\u015f\u00fck de\u011fer = daha do\u011fru alg\u0131sal tahmin. Helmlab v19, \u00fc\u00e7 farkl\u0131 veri setinde CIEDE2000 ve Oklab\u2019\u0131 ge\u00e7iyor.',
-    en: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab v19 outperforms CIEDE2000 and Oklab across all three datasets.'
+    tr: 'STRESS metrigi, bir renk uzay\u0131n\u0131n tahmin etti\u011fi mesafe (\u0394E) ile insan deneylerinde \u00f6l\u00e7\u00fclen alg\u0131sal fark\u0131n (\u0394V) ne kadar uyumlu oldu\u011funu \u00f6l\u00e7er. D\u00fc\u015f\u00fck de\u011fer = daha do\u011fru alg\u0131sal tahmin. Helmlab v20b, \u00fc\u00e7 farkl\u0131 veri setinde CIEDE2000 ve Oklab\u2019\u0131 ge\u00e7iyor.',
+    en: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab v20b outperforms CIEDE2000 and Oklab across all three datasets.'
   },
 
   // Section 2
@@ -804,8 +858,8 @@ const T = {
   // Section 3
   s3_title: { tr: 'Akromatik Eksen', en: 'Achromatic Axis' },
   s3_desc: {
-    tr: 'Siyahtan beyaza 11 gri ton. Her gri i\u00e7in kromasite (C) \u00f6l\u00e7\u00fcl\u00fcyor. Helmlab v19, yap\u0131sal n\u00f6tral d\u00fczeltme (NC) ile t\u00fcm grilerde C < 0.001 garantisi verir. Bu garanti optimize edilen parametrelerden ba\u011f\u0131ms\u0131z, matematiksel bir zorunluluktur.',
-    en: '11 gray tones from black to white. Chromaticity (C) is measured for each gray. Helmlab v19 guarantees C < 0.001 for all grays via structural neutral correction (NC). This guarantee is mathematical \u2014 independent of the optimized parameters.'
+    tr: 'Siyahtan beyaza 11 gri ton. Her gri i\u00e7in kromasite (C) \u00f6l\u00e7\u00fcl\u00fcyor. Helmlab v20b, yap\u0131sal n\u00f6tral d\u00fczeltme (NC) ile t\u00fcm grilerde C < 0.001 garantisi verir. Bu garanti optimize edilen parametrelerden ba\u011f\u0131ms\u0131z, matematiksel bir zorunluluktur.',
+    en: '11 gray tones from black to white. Chromaticity (C) is measured for each gray. Helmlab v20b guarantees C < 0.001 for all grays via structural neutral correction (NC). This guarantee is mathematical \u2014 independent of the optimized parameters.'
   },
 
   // Section 4
@@ -867,8 +921,8 @@ const T = {
 
   // Achromatic
   ach_note: {
-    tr: 'Helmlab v19: yap\u0131sal NC (N\u00f6tral D\u00fczeltme) sayesinde t\u00fcm grilerde C \u2248 0. Oklab de akromatik eksende iyi performans g\u00f6sterir (tasar\u0131m gere\u011fi), ancak Helmlab\u2019\u0131n garantisi yap\u0131sal \u2014 optimize edilen parametrelerden ba\u011f\u0131ms\u0131z.',
-    en: 'Helmlab v19: structural NC (Neutral Correction) guarantees C \u2248 0 for all grays. Oklab also performs well on the achromatic axis (by design), but Helmlab\u2019s guarantee is structural \u2014 independent of the optimized parameters.'
+    tr: 'Helmlab v20b: yap\u0131sal NC (N\u00f6tral D\u00fczeltme) sayesinde t\u00fcm grilerde C \u2248 0. Oklab de akromatik eksende iyi performans g\u00f6sterir (tasar\u0131m gere\u011fi), ancak Helmlab\u2019\u0131n garantisi yap\u0131sal \u2014 optimize edilen parametrelerden ba\u011f\u0131ms\u0131z.',
+    en: 'Helmlab v20b: structural NC (Neutral Correction) guarantees C \u2248 0 for all grays. Oklab also performs well on the achromatic axis (by design), but Helmlab\u2019s guarantee is structural \u2014 independent of the optimized parameters.'
   },
 
   // Color names
@@ -909,8 +963,8 @@ const T = {
     en: 'Left: saturated color. Right: gray at the same luminance (Y). In Helmlab, the L difference reflects the H-K effect; in Oklab, L is nearly equal.'
   },
   pipe_note: {
-    tr: 'v19: NC (N\u00f6tral D\u00fczeltme) pipeline sonunda uygulan\u0131r \u2014 zenginle\u015ftirme katmanlar\u0131n\u0131n hue etkile\u015fimini bozmadan akromatik ekseni yap\u0131sal olarak d\u00fczeltir. 256 gri Y de\u011feri \u00fczerinden PCHIP interpolasyonla hesaplanan a_err(L) ve b_err(L) LUT kullan\u0131r.',
-    en: 'v19: NC (Neutral Correction) is applied at the end of the pipeline \u2014 structurally corrects the achromatic axis without disrupting hue interactions in the enrichment layers. Uses a_err(L) and b_err(L) LUT computed via PCHIP interpolation over 256 gray Y values.'
+    tr: 'v20b: NC (N\u00f6tral D\u00fczeltme) pipeline sonunda uygulan\u0131r \u2014 zenginle\u015ftirme katmanlar\u0131n\u0131n hue etkile\u015fimini bozmadan akromatik ekseni yap\u0131sal olarak d\u00fczeltir. 256 gri Y de\u011feri \u00fczerinden PCHIP interpolasyonla hesaplanan a_err(L) ve b_err(L) LUT kullan\u0131r.',
+    en: 'v20b: NC (Neutral Correction) is applied at the end of the pipeline \u2014 structurally corrects the achromatic axis without disrupting hue interactions in the enrichment layers. Uses a_err(L) and b_err(L) LUT computed via PCHIP interpolation over 256 gray Y values.'
   },
 
   // Pipeline steps
@@ -943,8 +997,8 @@ const T = {
 
   // Footer
   footer: {
-    tr: 'Helmlab v19-NC \u2014 G\u00f6rkem Y\u0131ld\u0131z<br>72 parametre \u00b7 COMBVD + He 2022 + MacAdam verileriyle optimize \u00b7 STRESS = 23.22 \u00b7 Yap\u0131sal akromatik (C < 10<sup>-6</sup>)',
-    en: 'Helmlab v19-NC \u2014 G\u00f6rkem Y\u0131ld\u0131z<br>72 parameters \u00b7 Optimized on COMBVD + He 2022 + MacAdam datasets \u00b7 STRESS = 23.22 \u00b7 Structural achromatic (C < 10<sup>-6</sup>)'
+    tr: 'Helmlab v20b \u2014 G\u00f6rkem Y\u0131ld\u0131z<br>72 parametre \u00b7 COMBVD + He 2022 + MacAdam verileriyle optimize \u00b7 STRESS = 23.30 \u00b7 Yap\u0131sal akromatik (C < 10<sup>-6</sup>)',
+    en: 'Helmlab v20b \u2014 G\u00f6rkem Y\u0131ld\u0131z<br>72 parameters \u00b7 Optimized on COMBVD + He 2022 + MacAdam datasets \u00b7 STRESS = 23.30 \u00b7 Structural achromatic (C < 10<sup>-6</sup>)'
   }
 };
 
@@ -980,19 +1034,19 @@ function setLang(lang) {
 function buildStress() {
   const datasets = [
     { name: t('ds_combvd'), data: [
-      {label:'Helmlab v19', cls:'p', val:23.22},
+      {label:'Helmlab v20b', cls:'p', val:23.30},
       {label:'Oklab', cls:'o', val:27.50},
       {label:'CIEDE2000', cls:'d', val:29.18},
       {label:'CIE Lab dE76', cls:'c', val:30.30},
     ]},
     { name: t('ds_he'), data: [
-      {label:'Helmlab v19', cls:'p', val:29.03},
+      {label:'Helmlab v20b', cls:'p', val:29.03},
       {label:'CIE Lab dE76', cls:'c', val:30.77},
       {label:'CIEDE2000', cls:'d', val:32.58},
       {label:'Oklab', cls:'o', val:49.04},
     ]},
     { name: t('ds_mac'), data: [
-      {label:'Helmlab v19', cls:'p', val:20.23},
+      {label:'Helmlab v20b', cls:'p', val:20.23},
       {label:'CIEDE2000', cls:'d', val:22.13},
       {label:'CIE Lab dE76', cls:'c', val:24.53},
       {label:'Oklab', cls:'o', val:32.72},
@@ -1028,7 +1082,8 @@ function buildGrad() {
   const c2 = hexToRgb(document.getElementById('gTo').value);
   const N = 21;
   const methods = [
-    {name:'Helmlab', cls:'p', fn:interpHelmlab, color:'#3b82f6'},
+    {name:'Helmlab Gen', cls:'g', fn:interpGenSpace, color:'#f59e0b'},
+    {name:'Helmlab Metric', cls:'p', fn:interpHelmlab, color:'#3b82f6'},
     {name:'Oklab', cls:'o', fn:interpOklab, color:'#10b981'},
     {name:'CIE Lab', cls:'c', fn:interpCIELab, color:'#8b5cf6'},
     {name:'sRGB', cls:'s', fn:interpSRGB, color:'#71717a'},
@@ -1039,7 +1094,7 @@ function buildGrad() {
     const steps = [];
     for (let i = 0; i < N; i++) steps.push(m.fn(c1, c2, i/(N-1)));
     const dists = [];
-    for (let i = 1; i < N; i++) dists.push(pDist(steps[i-1], steps[i]));
+    for (let i = 1; i < N; i++) dists.push(ciede2000(steps[i-1], steps[i]));
     const mean = dists.reduce((a,b)=>a+b,0)/dists.length;
     const std = Math.sqrt(dists.reduce((a,b)=>a+(b-mean)**2,0)/dists.length);
     const cv = mean > 0 ? (std/mean*100) : 0;
@@ -1118,7 +1173,32 @@ function buildLightness() {
   ];
   const N = 11;
 
-  let html = '<div class="scale-section-title blue">Helmlab v19</div>';
+  let html = '<div class="scale-section-title" style="color:#f59e0b">Helmlab Gen</div>';
+  for (const base of bases) {
+    const lab = gFwdSrgb(...base.rgb);
+    const C = Math.sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+    const h = Math.atan2(lab[2], lab[1]);
+    html += `<div class="scale-row"><div class="scale-label" style="color:${base.color}">${t(base.nameKey)}</div><div class="scale-strip">`;
+    for (let i = 0; i < N; i++) {
+      const targetL = 0.15 + i * 0.70 / (N-1);
+      let cScale = C * (targetL > 0.01 ? Math.min(1, 4*targetL*(1-targetL)) : 0);
+      let rgb = gInvSrgb(targetL, cScale*Math.cos(h), cScale*Math.sin(h));
+      if (!inGamut(rgb)) {
+        let lo2 = 0, hi2 = cScale;
+        for (let j = 0; j < 16; j++) {
+          let mid = (lo2+hi2)/2;
+          rgb = gInvSrgb(targetL, mid*Math.cos(h), mid*Math.sin(h));
+          if (inGamut(rgb)) lo2 = mid; else hi2 = mid;
+        }
+        rgb = gInvSrgb(targetL, lo2*Math.cos(h), lo2*Math.sin(h));
+      }
+      html += `<div class="scale-cell" style="background:${rgbToHex(clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2]))}" title="L=${targetL.toFixed(2)}"></div>`;
+    }
+    html += `</div></div>`;
+  }
+
+  html += '<div style="height:24px;"></div>';
+  html += '<div class="scale-section-title blue">Helmlab Metric</div>';
   for (const base of bases) {
     const lab = pFwdSrgb(...base.rgb);
     const C = Math.sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
@@ -1269,7 +1349,7 @@ function updatePicker() {
   const rtErr = Math.sqrt((r-rt[0])**2 + (g-rt[1])**2 + (b-rt[2])**2);
 
   document.getElementById('pickerVals').innerHTML = `
-    <div class="sp-block"><div class="sp-title blue">Helmlab v19</div><div class="sp-vals">
+    <div class="sp-block"><div class="sp-title blue">Helmlab v20b</div><div class="sp-vals">
       <div class="sp-val"><div class="k">L</div><div class="v blue mono">${pg[0].toFixed(4)}</div></div>
       <div class="sp-val"><div class="k">a</div><div class="v blue mono">${pg[1].toFixed(4)}</div></div>
       <div class="sp-val"><div class="k">b</div><div class="v blue mono">${pg[2].toFixed(4)}</div></div>

@@ -2,9 +2,13 @@
 
 import type { Lab, XYZ } from '../types.js';
 import { M_XYZ_TO_SRGB, M_XYZ_TO_DISPLAYP3 } from './srgb.js';
-import type { AnalyticalSpace } from '../core/analytical.js';
 
 const { cos, sin, sqrt, atan2, min } = Math;
+
+/** Minimal interface for gamut mapping — any object with toXYZ. */
+export interface SpaceLike {
+  toXYZ(lab: Lab): XYZ;
+}
 
 type Gamut = 'srgb' | 'display-p3';
 
@@ -23,13 +27,13 @@ function xyzInGamut(M: Float64Array, x: number, y: number, z: number, tol: numbe
 }
 
 /** Check if Lab coordinates are in the specified gamut. */
-export function isInGamut(lab: Lab, space: AnalyticalSpace, gamut: Gamut = 'srgb', tol = 1e-4): boolean {
+export function isInGamut(lab: Lab, space: SpaceLike, gamut: Gamut = 'srgb', tol = 1e-4): boolean {
   const xyz = space.toXYZ(lab);
   return xyzInGamut(getMatrix(gamut), xyz[0], xyz[1], xyz[2], tol);
 }
 
 /** Binary search for maximum in-gamut chroma at fixed L and hue. */
-export function maxChroma(L: number, hRad: number, space: AnalyticalSpace, gamut: Gamut = 'srgb', tol = 1e-4): number {
+export function maxChroma(L: number, hRad: number, space: SpaceLike, gamut: Gamut = 'srgb', tol = 1e-4): number {
   const cosH = cos(hRad);
   const sinH = sin(hRad);
   const M = getMatrix(gamut);
@@ -56,7 +60,7 @@ export function maxChroma(L: number, hRad: number, space: AnalyticalSpace, gamut
 }
 
 /** Gamut-map a single Lab by reducing chroma (preserving L and hue). */
-function gamutMapSingle(lab: Lab, space: AnalyticalSpace, gamut: Gamut): Lab {
+function gamutMapSingle(lab: Lab, space: SpaceLike, gamut: Gamut): Lab {
   if (isInGamut(lab, space, gamut)) return [...lab];
 
   const [L, a, b] = lab;
@@ -71,6 +75,6 @@ function gamutMapSingle(lab: Lab, space: AnalyticalSpace, gamut: Gamut): Lab {
 }
 
 /** Gamut-map Lab coordinates. Handles single or batch. */
-export function gamutMap(lab: Lab, space: AnalyticalSpace, gamut: Gamut = 'srgb'): Lab {
+export function gamutMap(lab: Lab, space: SpaceLike, gamut: Gamut = 'srgb'): Lab {
   return gamutMapSingle(lab, space, gamut);
 }

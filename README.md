@@ -2,7 +2,7 @@
 
 A data-driven analytical color space for UI design systems.
 
-Helmlab is a 72-parameter color space optimized end-to-end against psychophysical data. It achieves STRESS 23.22 on COMBVD (3,813 color pairs) — a 20.4% improvement over CIEDE2000 — while maintaining a structurally guaranteed achromatic axis and reasonable hue alignment.
+Helmlab is a family of purpose-built color spaces: **MetricSpace** (72-parameter enriched pipeline for perceptual distance) and **GenSpace** (generation-optimized pipeline for gradients and palettes). MetricSpace achieves STRESS 23.30 on COMBVD (3,813 color pairs) — a 20.1% improvement over CIEDE2000. GenSpace + arc-length reparameterization produces perfectly uniform gradients (CV ≈ 0% on any color pair).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -12,7 +12,8 @@ Helmlab is a 72-parameter color space optimized end-to-end against psychophysica
 
 ## Key Features
 
-- **State-of-the-art color difference prediction** — STRESS 23.22 vs CIEDE2000's 29.18
+- **State-of-the-art color difference prediction** — STRESS 23.30 vs CIEDE2000's 29.18 (MetricSpace)
+- **Perfectly uniform gradients** — CIEDE2000 arc-length reparameterization, CV ≈ 0% on any pair (GenSpace)
 - **Achromatic guarantee** — Grays map to C < 10⁻⁶ via neutral correction (no color artifacts in gradients)
 - **Free hue improvement** — Rigid rotation reduces hue error (RMS 16.1°) at zero cost to the distance metric
 - **Embedded Helmholtz-Kohlrausch** — Lightness is chroma-dependent, learned from data
@@ -40,10 +41,11 @@ const hex = hl.toHex([0.5, -0.1, 0.2]);              // Lab → hex (gamut mappe
 hl.contrastRatio('#ffffff', '#3B82F6');                // → 3.68
 hl.ensureContrast('#3B82F6', '#ffffff', 4.5);         // Adjust to meet 4.5:1
 hl.deltaE('#ff0000', '#00ff00');                      // Perceptual distance
+hl.gradient('#ff0000', '#0000ff', 8);                 // Perfectly uniform gradient
 hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950 scale
 ```
 
-10KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
+~12KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
 
 ### Python (pip)
 
@@ -64,11 +66,11 @@ hl = Helmlab()
 lab = hl.from_srgb([0.2, 0.5, 0.8])
 print(f"L={lab[0]:.3f}, a={lab[1]:.3f}, b={lab[2]:.3f}")
 
-# Back to sRGB (round-trip error < 10⁻¹⁴)
-rgb = hl.to_srgb(lab)
-
 # Color difference between two sRGB colors
 dist = hl.delta_e("#ff0000", "#00ff00")
+
+# Perfectly uniform gradient (arc-length reparameterized)
+gradient = hl.gradient("#ff0000", "#0000ff", 8)
 
 # Ensure WCAG AA contrast (4.5:1)
 adjusted = hl.ensure_contrast("#ffffff", "#3B82F6", min_ratio=4.5)
@@ -77,25 +79,33 @@ adjusted = hl.ensure_contrast("#ffffff", "#3B82F6", min_ratio=4.5)
 scale = hl.semantic_scale("#3B82F6")
 ```
 
-## How It Works
+## Architecture
 
-Helmlab maps CIE XYZ (D65) to a perceptually-organized Lab space through 13 stages:
+Helmlab is a family of purpose-built color spaces:
 
 ```
-XYZ → M₁(9) → γᵢ(3) → M₂(9) → Hue corr.(8) → H-K(6) → L corr.(5)
-    → Dark L(3) → C scale(8) → C power(4) → L×C(2) → HLC(4) → Hue-L(4)
-    → NC → Rot φ → Lab
+Helmlab (UI layer)
+├── MetricSpace — 72-param enriched pipeline (distance, deltaE)
+│   XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
+│
+└── GenSpace — generation-optimized pipeline (gradient, palette)
+    XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
+    + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
-All 72 parameters (65 space + 7 distance metric) are jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. See the [documentation](https://grkmyldz148.github.io/helmlab/) for the full mathematical description of each stage.
+**MetricSpace** (72 parameters) is jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation.
+
+**GenSpace** (21 parameters) uses Phase1H-optimized M1/M2 matrices with shared γ=⅓. No enrichment stages — pure linear-algebra pipeline, fast and invertible. 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS).
 
 ## Benchmarks
+
+### Perceptual Distance (MetricSpace)
 
 STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. Lower is better.
 
 | Method | COMBVD STRESS | vs CIEDE2000 |
 |--------|--------------|-------------|
-| **Helmlab v19** | **23.22** | **-20.4%** |
+| **Helmlab v20b** | **23.30** | **-20.1%** |
 | CIEDE2000 | 29.18 | — |
 | CIE94 | 33.59 | +15.1% |
 | CAM16-UCS (Euclid.) | 33.90 | +16.2% |
@@ -106,22 +116,28 @@ STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. 
 
 Bootstrap (10,000 iterations): Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [27.64, 30.84]. Zero overlap, p < 10⁻⁴.
 
+### Gradient Uniformity (GenSpace + arc-length)
+
+CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
+
+| Method | Red→Blue | Orange→Cyan | Black→White |
+|--------|----------|-------------|-------------|
+| **Helmlab** | **≈ 0%** | **≈ 0%** | **≈ 0%** |
+| Oklab | 31.5% | 41.4% | 41.2% |
+| CIE Lab | 44.8% | 52.3% | 61.5% |
+
 ## Project Structure
 
 ```
 src/helmlab/
 ├── helmlab.py              # Main API (Helmlab class)
-├── config.py               # Configuration and constants
-├── export.py               # Token export (CSS, Android, iOS, Tailwind)
 ├── spaces/
-│   ├── analytical.py       # Core 72-param transform
+│   ├── metric.py           # MetricSpace — 72-param enriched pipeline
+│   ├── gen.py              # GenSpace — generation-optimized pipeline
+│   ├── analytical.py       # Compatibility shim → MetricSpace
 │   ├── base.py             # Abstract base class
 │   ├── registry.py         # Color space registry
-│   ├── cam16ucs.py         # CAM16-UCS baseline
-│   ├── ipt.py              # IPT baseline
-│   ├── jzczhz.py           # JzCzhz baseline
-│   ├── oklch.py            # Oklch baseline
-│   └── srgb.py             # sRGB baseline
+│   └── ...                 # Baseline spaces (CAM16, IPT, Oklch, etc.)
 ├── metrics/
 │   ├── delta_e.py          # Color difference formulas
 │   ├── stress.py           # STRESS computation
@@ -129,37 +145,25 @@ src/helmlab/
 ├── utils/
 │   ├── srgb_convert.py     # sRGB/Display P3 conversions
 │   ├── gamut.py            # Gamut mapping (binary search)
-│   ├── conversions.py      # XYZ ↔ xyY, Lab ↔ LCh, etc.
-│   ├── io.py               # File I/O helpers
-│   └── visualization.py    # Plotting utilities
+│   └── ...                 # Converters, I/O, visualization
 ├── data/
-│   ├── analytical_params.json  # Trained parameters (v19-NC)
-│   ├── combvd.py           # COMBVD dataset loader
-│   ├── he2022.py           # He 2022 dataset loader
-│   ├── macadam1974.py      # MacAdam 1974 dataset loader
-│   ├── munsell.py          # Munsell dataset loader
-│   ├── hung_berns.py       # Hung & Berns hue data
-│   ├── dataset.py          # Unified dataset interface
-│   └── preprocessing.py    # Data preprocessing
-├── nn/
-│   ├── inn.py              # Invertible Neural Network (Phase 0)
-│   ├── mlp.py              # MLP baseline
-│   ├── training.py         # Training loop
-│   ├── losses.py           # Loss functions
-│   └── evaluate.py         # Evaluation utilities
-└── feedback/
-    ├── generator.py        # Bidirectional test pair generation
-    └── collector.py        # Human feedback collection
+│   ├── metric_params.json  # MetricSpace params (v20b, STRESS 23.30)
+│   ├── gen_params.json     # GenSpace params (Phase1H optimized)
+│   └── ...                 # Dataset loaders (COMBVD, Munsell, etc.)
+├── export.py               # Token export (CSS, Android, iOS, Tailwind)
+└── feedback/               # Human feedback collection tools
 
+packages/helmlab-js/        # npm package (TypeScript)
 docs/                       # Documentation + interactive demo
 paper/                      # LaTeX paper + figures
-tests/                      # 214 tests
+tests/                      # 337 tests (233 Python + 104 JavaScript)
 ```
 
 ## Tests
 
 ```bash
-python -m pytest tests/ -q
+python -m pytest tests/ -q        # 233 Python tests
+cd packages/helmlab-js && npx vitest run  # 104 JS tests
 ```
 
 ## Citation

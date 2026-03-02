@@ -1,5 +1,6 @@
 import { mat3, mat3Inv, type Mat3 } from '../utils/math.js';
 import defaultParams from '../data/params.json';
+import defaultGenParams from '../data/gen-params.json';
 
 /** All parameters for the analytical color space transform. */
 export interface HelmlabParams {
@@ -93,4 +94,47 @@ export function compileParams(p: HelmlabParams): CompiledParams {
 
 export function getDefaultParams(): HelmlabParams {
   return defaultParams as HelmlabParams;
+}
+
+// ── GenParams (generation-optimized space) ────────────────────────
+
+/** Parameters for the generation color space (subset of HelmlabParams). */
+export interface GenParams {
+  M1: number[][];
+  gamma: number[];
+  M2: number[][];
+  hue_cos1: number; hue_sin1: number;
+  hue_cos2: number; hue_sin2: number;
+  hue_cos3: number; hue_sin3: number;
+  hue_cos4: number; hue_sin4: number;
+  L_corr_p1: number; L_corr_p2: number; L_corr_p3: number;
+  lp_dark: number; lp_dark_hcos: number; lp_dark_hsin: number;
+  lc1: number; lc2: number;
+}
+
+/** Compiled gen params ready for compute. */
+export interface CompiledGenParams {
+  M1: Mat3;
+  M1_inv: Mat3;
+  M2: Mat3;
+  M2_inv: Mat3;
+  gamma: Float64Array;
+  inv_gamma: Float64Array;
+  raw: GenParams;
+}
+
+export function compileGenParams(p: GenParams): CompiledGenParams {
+  const M1 = mat3(p.M1);
+  const M2 = mat3(p.M2);
+  return {
+    M1, M1_inv: mat3Inv(M1),
+    M2, M2_inv: mat3Inv(M2),
+    gamma: new Float64Array(p.gamma),
+    inv_gamma: new Float64Array(p.gamma.map(g => 1 / g)),
+    raw: p,
+  };
+}
+
+export function getDefaultGenParams(): GenParams {
+  return defaultGenParams as GenParams;
 }

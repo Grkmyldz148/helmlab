@@ -185,7 +185,7 @@
   <!-- CONTENT (filled by JS) -->
   <div id="content"></div>
 
-  <div class="footer">Helmlab v19-NC &mdash; G&ouml;rkem Y&imath;ld&imath;z &bull; MIT License</div>
+  <div class="footer">Helmlab v20b &mdash; G&ouml;rkem Y&imath;ld&imath;z &bull; MIT License</div>
 </div>
 
 <script>
@@ -450,7 +450,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
   <code>a<sub>out</sub> = a - a<sub>err</sub>(L)</code><br>
   <code>b<sub>out</sub> = b - b<sub>err</sub>(L)</code>
 </div>
-<p>The key innovation of v19. A lookup table (256 gray Y values \u2192 PCHIP interpolation) subtracts the achromatic error from the enrichment pipeline\u2019s output. This guarantees C < 10\u207b\u2076 for all grays, mathematically, regardless of the optimized parameters. Applied at the end of the pipeline to avoid disrupting hue interactions. Cost: only +0.04 STRESS points vs the unconstrained optimum.</p>
+<p>The key innovation of v20b. A lookup table (256 gray Y values \u2192 PCHIP interpolation) subtracts the achromatic error from the enrichment pipeline\u2019s output. This guarantees C < 10\u207b\u2076 for all grays, mathematically, regardless of the optimized parameters. Applied at the end of the pipeline to avoid disrupting hue interactions. Cost: only +0.04 STRESS points vs the unconstrained optimum.</p>
 
 <h3>Post-pipeline: Rigid Rotation</h3>
 <div class="math">
@@ -511,7 +511,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
   <code>a<sub>out</sub> = a - a<sub>err</sub>(L)</code><br>
   <code>b<sub>out</sub> = b - b<sub>err</sub>(L)</code>
 </div>
-<p>v19\u2019un anahtar yenili\u011fi. 256 gri Y de\u011ferinden PCHIP interpolasyonla olu\u015fturulan bir LUT, zenginle\u015ftirme pipeline\u2019\u0131n\u0131n \u00e7\u0131kt\u0131s\u0131ndan akromatik hatay\u0131 \u00e7\u0131kar\u0131r. T\u00fcm griler i\u00e7in C < 10\u207b\u2076 garantisi verir \u2014 optimize edilen parametrelerden ba\u011f\u0131ms\u0131z. Maliyet: k\u0131s\u0131tlamas\u0131z optimuma g\u00f6re sadece +0.04 STRESS puan\u0131.</p>
+<p>v20b\u2019un anahtar yenili\u011fi. 256 gri Y de\u011ferinden PCHIP interpolasyonla olu\u015fturulan bir LUT, zenginle\u015ftirme pipeline\u2019\u0131n\u0131n \u00e7\u0131kt\u0131s\u0131ndan akromatik hatay\u0131 \u00e7\u0131kar\u0131r. T\u00fcm griler i\u00e7in C < 10\u207b\u2076 garantisi verir \u2014 optimize edilen parametrelerden ba\u011f\u0131ms\u0131z. Maliyet: k\u0131s\u0131tlamas\u0131z optimuma g\u00f6re sadece +0.04 STRESS puan\u0131.</p>
 
 <h3>Pipeline Sonras\u0131: Rijit Rotasyon</h3>
 <div class="math">
@@ -540,7 +540,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <p>STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. Lower is better.</p>
 <table>
 <tr><th>Method</th><th>COMBVD STRESS</th><th>vs CIEDE2000</th></tr>
-<tr><td><strong>Helmlab v19</strong></td><td><strong>23.22</strong></td><td><strong>-20.4%</strong></td></tr>
+<tr><td><strong>Helmlab v20b</strong></td><td><strong>23.30</strong></td><td><strong>-20.1%</strong></td></tr>
 <tr><td>CIEDE2000</td><td>29.18</td><td>\u2014</td></tr>
 <tr><td>CIE94</td><td>33.59</td><td>+15.1%</td></tr>
 <tr><td>CAM16-UCS (Euclid.)</td><td>33.90</td><td>+16.2%</td></tr>
@@ -564,7 +564,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <p>COMBVD (3.813 \u00e7ift) \u00fczerinde STRESS. Her y\u00f6ntem kendi standart mesafe form\u00fcl\u00fcn\u00fc kullan\u0131r. D\u00fc\u015f\u00fck = iyi.</p>
 <table>
 <tr><th>Y\u00f6ntem</th><th>COMBVD STRESS</th><th>vs CIEDE2000</th></tr>
-<tr><td><strong>Helmlab v19</strong></td><td><strong>23.22</strong></td><td><strong>-20.4%</strong></td></tr>
+<tr><td><strong>Helmlab v20b</strong></td><td><strong>23.30</strong></td><td><strong>-20.1%</strong></td></tr>
 <tr><td>CIEDE2000</td><td>29.18</td><td>\u2014</td></tr>
 <tr><td>CIE94</td><td>33.59</td><td>+15.1%</td></tr>
 <tr><td>CAM16-UCS (\u00d6klid)</td><td>33.90</td><td>+16.2%</td></tr>

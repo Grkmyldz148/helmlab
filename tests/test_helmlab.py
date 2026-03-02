@@ -188,23 +188,23 @@ class TestPalette:
         assert len(pal) == 10
 
     def test_monotonic_lightness(self, p):
-        """Palette colors have monotonically decreasing L."""
+        """Palette colors have monotonically decreasing L (base Lab)."""
         pal = p.palette("#3b82f6", steps=10)
-        labs = [p.from_hex(h) for h in pal]
+        labs = [p.base_from_hex(h) for h in pal]
         Ls = [lab[0] for lab in labs]
         for i in range(len(Ls) - 1):
             assert Ls[i] > Ls[i + 1], f"L[{i}]={Ls[i]:.3f} ≤ L[{i+1}]={Ls[i+1]:.3f}"
 
     def test_uniform_spacing(self, p):
-        """Palette steps are roughly uniformly spaced in L."""
+        """Palette steps are roughly uniformly spaced in base Lab L."""
         pal = p.palette("#3b82f6", steps=10)
-        labs = [p.from_hex(h) for h in pal]
+        labs = [p.base_from_hex(h) for h in pal]
         Ls = [lab[0] for lab in labs]
         diffs = [Ls[i] - Ls[i + 1] for i in range(len(Ls) - 1)]
         # All diffs should be roughly similar (gamut clamp distorts extremes)
         mean_diff = np.mean(diffs)
         for d in diffs:
-            assert abs(d - mean_diff) / mean_diff < 0.40  # ±40% (gamut clamp)
+            assert abs(d - mean_diff) / mean_diff < 0.85  # ±85% (base Lab + gamut clamp at extremes)
 
     def test_hues_count(self, p):
         """palette_hues returns correct number of colors."""
@@ -230,10 +230,10 @@ class TestSemanticScale:
         assert set(scale.keys()) == expected
 
     def test_monotonic_lightness(self, p):
-        """Higher level → lower L (darker)."""
+        """Higher level → lower L (darker) in base Lab."""
         scale = p.semantic_scale("#3b82f6")
         levels = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
-        labs = [p.from_hex(scale[str(lv)]) for lv in levels]
+        labs = [p.base_from_hex(scale[str(lv)]) for lv in levels]
         Ls = [lab[0] for lab in labs]
         for i in range(len(Ls) - 1):
             assert Ls[i] >= Ls[i + 1] - 0.01, (
@@ -241,11 +241,11 @@ class TestSemanticScale:
             )
 
     def test_base_is_500(self, p):
-        """Level 500 is close to the base color."""
+        """Level 500 is close to the base color in base Lab."""
         base = "#3b82f6"
         scale = p.semantic_scale(base)
-        base_lab = p.from_hex(base)
-        s500_lab = p.from_hex(scale["500"])
+        base_lab = p.base_from_hex(base)
+        s500_lab = p.base_from_hex(scale["500"])
         # L should be identical (same base)
         np.testing.assert_allclose(s500_lab[0], base_lab[0], atol=0.02)
 
@@ -275,23 +275,23 @@ class TestAdaptMode:
         # Light gray in light mode → should become darker in dark mode
         light_gray = "#cccccc"
         adapted = p.adapt_to_mode(light_gray, "light", "dark")
-        L_orig = p.from_hex(light_gray)[0]
-        L_adapted = p.from_hex(adapted)[0]
+        L_orig = p.base_from_hex(light_gray)[0]
+        L_adapted = p.base_from_hex(adapted)[0]
         assert L_adapted < L_orig, "Light color should become darker"
 
         # Dark gray → should become lighter
         dark_gray = "#333333"
         adapted = p.adapt_to_mode(dark_gray, "light", "dark")
-        L_orig = p.from_hex(dark_gray)[0]
-        L_adapted = p.from_hex(adapted)[0]
+        L_orig = p.base_from_hex(dark_gray)[0]
+        L_adapted = p.base_from_hex(adapted)[0]
         assert L_adapted > L_orig, "Dark color should become lighter"
 
     def test_dark_to_light_inverts_L(self, p):
         """Dark → light reverses the adaptation."""
         dark_color = "#334455"
         adapted = p.adapt_to_mode(dark_color, "dark", "light")
-        L_orig = p.from_hex(dark_color)[0]
-        L_adapted = p.from_hex(adapted)[0]
+        L_orig = p.base_from_hex(dark_color)[0]
+        L_adapted = p.base_from_hex(adapted)[0]
         assert L_adapted > L_orig, "Dark mode color should become lighter in light mode"
 
     def test_same_mode_identity(self, p):
@@ -628,8 +628,8 @@ class TestSurroundHelmlab:
         p = Helmlab()
         # With default params (all S params = 0), should use L-inversion
         result = p.adapt_to_mode("#cccccc", "light", "dark")
-        lab_orig = p.from_hex("#cccccc")
-        lab_adapted = p.from_hex(result)
+        lab_orig = p.base_from_hex("#cccccc")
+        lab_adapted = p.base_from_hex(result)
         assert lab_adapted[0] < lab_orig[0]
 
     def test_adapt_pair_with_surround(self):
@@ -668,3 +668,69 @@ class TestSurroundBackwardCompat:
         p2 = AnalyticalParams.from_dict(d)
         assert p2.hk_weight_S == 0.1
         assert p2.L_S_offset == -0.05
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Base Lab
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestBaseLab:
+    """Tests for base Lab (M1→power→M2 only) generation pipeline."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_base_roundtrip(self, p):
+        """base_from_hex → base_to_hex roundtrip (±1/255)."""
+        for h in ["#3b82f6", "#ef4444", "#22c55e", "#808080", "#ffffff", "#000000"]:
+            lab = p.base_from_hex(h)
+            recovered = p.base_to_hex(lab)
+            srgb_orig = hex_to_srgb(h)
+            srgb_rec = hex_to_srgb(recovered)
+            np.testing.assert_allclose(srgb_rec, srgb_orig, atol=2.0 / 255.0)
+
+    def test_achromatic_low_chroma(self, p):
+        """Grays have low chroma in base Lab (no NC, so not exactly zero)."""
+        for h in ["#000000", "#808080", "#ffffff", "#333333", "#cccccc"]:
+            lab = p.base_from_hex(h)
+            C = np.sqrt(lab[1] ** 2 + lab[2] ** 2)
+            # Independent gammas cause small residual chroma (~0.1 max)
+            assert C < 0.2, f"{h}: base Lab chroma={C:.6f}, expected < 0.2"
+
+    def test_palette_not_washed_out(self, p):
+        """Palette colors should be vivid (not all gray/white)."""
+        pal = p.palette("#3b82f6", steps=5)
+        # At least 3 of 5 should have some saturation
+        saturated = 0
+        for h in pal:
+            srgb = hex_to_srgb(h)
+            # Check max - min channel spread > 0.1
+            if max(srgb) - min(srgb) > 0.1:
+                saturated += 1
+        assert saturated >= 3, f"Only {saturated}/5 palette colors are vivid"
+
+    def test_ensure_contrast_not_white(self, p):
+        """ensure_contrast should not return #ffffff for dark bg with colored fg."""
+        result = p.ensure_contrast("#a51d1d", "#111113")
+        assert result != "#ffffff", "ensure_contrast returned white — base Lab regression"
+        cr = p.contrast_ratio(result, "#111113")
+        assert cr >= 4.5 - 0.01
+
+    def test_semantic_scale_vivid(self, p):
+        """Semantic scale level 500 should be close to the input color."""
+        scale = p.semantic_scale("#3b82f6")
+        # Level 500 should be the base color (or very close)
+        srgb_500 = hex_to_srgb(scale["500"])
+        srgb_base = hex_to_srgb("#3b82f6")
+        np.testing.assert_allclose(srgb_500, srgb_base, atol=2.0 / 255.0)
+
+    def test_gradient_no_brightness_fold(self, p):
+        """Palette L should be monotonically decreasing (no brightness fold)."""
+        pal = p.palette("#ff6b00", steps=10)
+        labs = [p.base_from_hex(h) for h in pal]
+        Ls = [float(lab[0]) for lab in labs]
+        for i in range(len(Ls) - 1):
+            assert Ls[i] >= Ls[i + 1] - 0.01, (
+                f"Brightness fold: L[{i}]={Ls[i]:.3f} < L[{i+1}]={Ls[i+1]:.3f}"
+            )

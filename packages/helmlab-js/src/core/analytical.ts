@@ -281,6 +281,94 @@ export class AnalyticalSpace {
     ];
   }
 
+  // ── Base Lab (M1 → power → M2 only, no enrichment) ────────────
+
+  /** XYZ → base Lab (M1 → power → M2 only). Good for color generation. */
+  baseFromXYZ(xyz: XYZ): Lab {
+    const M1 = this.p.M1;
+    const M2 = this.p.M2;
+    const g = this.p.gamma;
+
+    const lms0 = M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2];
+    const lms1 = M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2];
+    const lms2 = M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2];
+
+    const c0 = signedPow(lms0, g[0]);
+    const c1 = signedPow(lms1, g[1]);
+    const c2 = signedPow(lms2, g[2]);
+
+    return [
+      M2[0] * c0 + M2[1] * c1 + M2[2] * c2,
+      M2[3] * c0 + M2[4] * c1 + M2[5] * c2,
+      M2[6] * c0 + M2[7] * c1 + M2[8] * c2,
+    ];
+  }
+
+  /** Base Lab → XYZ (M2_inv → inv_power → M1_inv). Inverse of baseFromXYZ. */
+  baseToXYZ(lab: Lab): XYZ {
+    const [L, a, b] = lab;
+    const M2i = this.p.M2_inv;
+    const lc0 = M2i[0] * L + M2i[1] * a + M2i[2] * b;
+    const lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
+    const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
+
+    const ig = this.p.inv_gamma;
+    const l0 = signedPow(lc0, ig[0]);
+    const l1 = signedPow(lc1, ig[1]);
+    const l2 = signedPow(lc2, ig[2]);
+
+    const M1i = this.p.M1_inv;
+    return [
+      M1i[0] * l0 + M1i[1] * l1 + M1i[2] * l2,
+      M1i[3] * l0 + M1i[4] * l1 + M1i[5] * l2,
+      M1i[6] * l0 + M1i[7] * l1 + M1i[8] * l2,
+    ];
+  }
+
+  // ── Base Lab neutral error ─────────────────────────────────────
+
+  private _baseNcL: Float64Array | null = null;
+  private _baseNcA: Float64Array | null = null;
+  private _baseNcB: Float64Array | null = null;
+
+  private _buildBaseNc(): void {
+    const N = 256;
+    const Ls = new Float64Array(N);
+    const As = new Float64Array(N);
+    const Bs = new Float64Array(N);
+    for (let i = 0; i < N; i++) {
+      const Y = i / (N - 1);
+      const lab = this.baseFromXYZ([Y * 0.95047, Y, Y * 1.08883]);
+      Ls[i] = lab[0];
+      As[i] = lab[1];
+      Bs[i] = lab[2];
+    }
+    this._baseNcL = Ls;
+    this._baseNcA = As;
+    this._baseNcB = Bs;
+  }
+
+  /** Achromatic error in base Lab at lightness L. */
+  baseNeutralError(L: number): [number, number] {
+    if (!this._baseNcL) this._buildBaseNc();
+    const Ls = this._baseNcL!;
+    const As = this._baseNcA!;
+    const Bs = this._baseNcB!;
+    const N = Ls.length;
+    if (L <= Ls[0]) return [As[0], Bs[0]];
+    if (L >= Ls[N - 1]) return [As[N - 1], Bs[N - 1]];
+    let lo = 0, hi = N - 1;
+    while (hi - lo > 1) {
+      const mid = (lo + hi) >> 1;
+      if (Ls[mid] <= L) lo = mid; else hi = mid;
+    }
+    const t = (L - Ls[lo]) / (Ls[lo + 1] - Ls[lo]);
+    return [
+      As[lo] + t * (As[lo + 1] - As[lo]),
+      Bs[lo] + t * (Bs[lo + 1] - Bs[lo]),
+    ];
+  }
+
   // ── Distance ───────────────────────────────────────────────────
 
   distance(lab1: Lab, lab2: Lab): number {
