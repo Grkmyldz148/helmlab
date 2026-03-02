@@ -8,7 +8,7 @@ Helmlab is a family of purpose-built color spaces: **MetricSpace** (72-parameter
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
 [![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
 
-**[Interactive Demo](https://grkmyldz148.github.io/helmlab/demo.html)** | **[Tools](https://grkmyldz148.github.io/helmlab/tools.html)** | **[Documentation](https://grkmyldz148.github.io/helmlab/)** | **[Paper](https://arxiv.org/abs/2602.23010)**
+**[Website](https://helmlab.space)** | **[Documentation](https://grkmyldz148.github.io/helmlab/)** | **[Paper](https://arxiv.org/abs/2602.23010)**
 
 ## Key Features
 
