@@ -290,6 +290,26 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <tr><td><code>info(hex)</code></td><td>Returns dict with hex, sRGB, XYZ, Lab, L, C, H, luminance</td></tr>
 </table>
 
+<h3>GenSpace Conversion</h3>
+<table>
+<tr><th>Method</th><th>Description</th></tr>
+<tr><td><code>gen_from_hex(hex)</code></td><td><code>"#rrggbb"</code> &rarr; GenSpace Lab</td></tr>
+<tr><td><code>gen_to_hex(lab)</code></td><td>GenSpace Lab &rarr; <code>"#rrggbb"</code> (gamut mapped)</td></tr>
+<tr><td><code>gen_from_srgb(rgb)</code></td><td>sRGB [0,1] &rarr; GenSpace Lab</td></tr>
+<tr><td><code>gen_to_srgb(lab)</code></td><td>GenSpace Lab &rarr; sRGB [0,1] (gamut mapped)</td></tr>
+</table>
+<div class="note">GenSpace is optimized for generation (gradients, palettes). MetricSpace (default) is optimized for perceptual distance. Use <code>gen_*</code> methods when producing colors, default methods when measuring differences.</div>
+
+<h3>Gradient &amp; Distance</h3>
+<div class="method">
+  <div class="method-sig"><code><span class="name">gradient</span>(<span class="param">start_hex</span>, <span class="param">end_hex</span>, <span class="param">steps</span><span class="type">=16</span>) &rarr; <span class="ret">list[str]</span></code></div>
+  <div class="method-desc">Perfectly uniform gradient via GenSpace + CIEDE2000 arc-length reparameterization. CV &asymp; 0% on any color pair.</div>
+</div>
+<div class="method">
+  <div class="method-sig"><code><span class="name">delta_e</span>(<span class="param">hex1</span>, <span class="param">hex2</span>) &rarr; <span class="ret">float</span></code></div>
+  <div class="method-desc">Euclidean distance in MetricSpace Lab between two hex colors.</div>
+</div>
+
 <h3>Gamut Checking</h3>
 <table>
 <tr><th>Method</th><th>Description</th></tr>
@@ -350,6 +370,26 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <tr><td><code>to_hex_p3(lab)</code></td><td>Lab \u2192 <code>color(display-p3 r g b)</code></td></tr>
 <tr><td><code>info(hex)</code></td><td>hex, sRGB, XYZ, Lab, L, C, H, luminans i\u00e7eren dict d\u00f6ner</td></tr>
 </table>
+
+<h3>GenSpace D\u00f6n\u00fc\u015f\u00fcm\u00fc</h3>
+<table>
+<tr><th>Metot</th><th>A\u00e7\u0131klama</th></tr>
+<tr><td><code>gen_from_hex(hex)</code></td><td><code>"#rrggbb"</code> &rarr; GenSpace Lab</td></tr>
+<tr><td><code>gen_to_hex(lab)</code></td><td>GenSpace Lab &rarr; <code>"#rrggbb"</code> (gamut haritalanm\u0131\u015f)</td></tr>
+<tr><td><code>gen_from_srgb(rgb)</code></td><td>sRGB [0,1] &rarr; GenSpace Lab</td></tr>
+<tr><td><code>gen_to_srgb(lab)</code></td><td>GenSpace Lab &rarr; sRGB [0,1] (gamut haritalanm\u0131\u015f)</td></tr>
+</table>
+<div class="note">GenSpace \u00fcretim i\u00e7in optimize edilmi\u015ftir (gradient, palet). MetricSpace (varsay\u0131lan) alg\u0131sal mesafe i\u00e7indir. Renk \u00fcretirken <code>gen_*</code> metodlar\u0131n\u0131, fark \u00f6l\u00e7erken varsay\u0131lan metodlar\u0131 kullan\u0131n.</div>
+
+<h3>Gradient ve Mesafe</h3>
+<div class="method">
+  <div class="method-sig"><code><span class="name">gradient</span>(<span class="param">start_hex</span>, <span class="param">end_hex</span>, <span class="param">steps</span><span class="type">=16</span>) &rarr; <span class="ret">list[str]</span></code></div>
+  <div class="method-desc">GenSpace + CIEDE2000 yay uzunlu\u011fu yeniden parametrizasyonu ile m\u00fckemmel e\u015fit gradient. Her renk \u00e7ifti i\u00e7in CV &asymp; 0%.</div>
+</div>
+<div class="method">
+  <div class="method-sig"><code><span class="name">delta_e</span>(<span class="param">hex1</span>, <span class="param">hex2</span>) &rarr; <span class="ret">float</span></code></div>
+  <div class="method-desc">MetricSpace Lab\u2019da iki hex renk aras\u0131ndaki \u00d6klid mesafesi.</div>
+</div>
 
 <h3>Gamut Kontrol\u00fc</h3>
 <table>
