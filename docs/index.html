@@ -303,7 +303,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <h3>Gradient &amp; Distance</h3>
 <div class="method">
   <div class="method-sig"><code><span class="name">gradient</span>(<span class="param">start_hex</span>, <span class="param">end_hex</span>, <span class="param">steps</span><span class="type">=16</span>) &rarr; <span class="ret">list[str]</span></code></div>
-  <div class="method-desc">Perfectly uniform gradient via GenSpace + CIEDE2000 arc-length reparameterization. CV &asymp; 0% on any color pair.</div>
+  <div class="method-desc">Uniform gradient via CIEDE2000 arc-length reparameterization (CV &asymp; 0% on any color pair). Interpolates in GenSpace Lab, then redistributes steps for equal perceptual spacing.</div>
 </div>
 <div class="method">
   <div class="method-sig"><code><span class="name">delta_e</span>(<span class="param">hex1</span>, <span class="param">hex2</span>) &rarr; <span class="ret">float</span></code></div>
@@ -384,7 +384,7 @@ d = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span
 <h3>Gradient ve Mesafe</h3>
 <div class="method">
   <div class="method-sig"><code><span class="name">gradient</span>(<span class="param">start_hex</span>, <span class="param">end_hex</span>, <span class="param">steps</span><span class="type">=16</span>) &rarr; <span class="ret">list[str]</span></code></div>
-  <div class="method-desc">GenSpace + CIEDE2000 yay uzunlu\u011fu yeniden parametrizasyonu ile m\u00fckemmel e\u015fit gradient. Her renk \u00e7ifti i\u00e7in CV &asymp; 0%.</div>
+  <div class="method-desc">CIEDE2000 yay uzunlu\u011fu yeniden parametrizasyonu ile e\u015fit gradient (her renk \u00e7ifti i\u00e7in CV &asymp; 0%). GenSpace Lab'da interpolasyon yapar, ard\u0131ndan ad\u0131mlar\u0131 e\u015fit alg\u0131sal aral\u0131klara yeniden da\u011f\u0131t\u0131r.</div>
 </div>
 <div class="method">
   <div class="method-sig"><code><span class="name">delta_e</span>(<span class="param">hex1</span>, <span class="param">hex2</span>) &rarr; <span class="ret">float</span></code></div>

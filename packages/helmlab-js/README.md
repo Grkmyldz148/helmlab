@@ -89,7 +89,7 @@ hl.paletteHues(0.6, 0.15, 12);   // → 12 evenly-spaced hues
 
 | Method | Description |
 |--------|-------------|
-| `gradient(start, end, steps)` | Perfectly uniform gradient (GenSpace + CIEDE2000 arc-length) |
+| `gradient(start, end, steps)` | Uniform gradient via CIEDE2000 arc-length reparameterization (CV ≈ 0%) |
 | `palette(hex, steps)` | Lightness ramp from base color |
 | `semanticScale(hex)` | Tailwind-style 50–950 scale |
 | `paletteHues(L, C, steps)` | Hue ring at fixed L and chroma |
@@ -131,7 +131,20 @@ XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
 + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
-MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses Phase1H-optimized matrices for 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS). Arc-length reparameterization ensures CV ≈ 0% gradient uniformity on any color pair.
+MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses Phase1H-optimized matrices for 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS).
+
+### Gradient Uniformity
+
+CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
+
+| Method | Red→Blue | Orange→Cyan | Black→White | Technique |
+|--------|----------|-------------|-------------|-----------|
+| **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
+| Helmlab GenSpace | 3.1% | 33.2% | 41.0% | linear interpolation |
+| Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
+| CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
+
+> **Note:** `gradient()` achieves ≈ 0% via CIEDE2000 arc-length reparameterization — an algorithm that redistributes steps to equal perceptual spacing. The same technique could be applied to any space; Helmlab ships it built-in.
 
 <details>
 <summary><strong>How was STRESS 23.30 measured?</strong></summary>

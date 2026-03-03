@@ -90,11 +90,13 @@ STRESS on COMBVD (3,813 color pairs), lower is better:
 - CIE Lab dE76: 42.80
 - Oklab: 47.46
 
-### Gradient Uniformity (GenSpace + arc-length)
+### Gradient Uniformity
 CV of CIEDE2000 step sizes, lower is better:
-- Helmlab: ~0% on any color pair
-- Oklab: 25-40%
-- CIE Lab: 40-60%
+- Helmlab gradient(): ~0% on any color pair (arc-length reparameterization)
+- Helmlab GenSpace linear: 3.1% / 33.2% / 41.0% (Red-Blue / Orange-Cyan / Black-White)
+- Oklab linear: 31.5% / 41.4% / 41.2%
+- CIE Lab linear: 44.8% / 52.3% / 61.5%
+Note: gradient()'s ~0% comes from CIEDE2000 arc-length reparameterization, not the space itself. The same technique could be applied to any space; Helmlab ships it built-in.
 
 ## Package Details
 - JavaScript: ~12KB gzipped, zero dependencies, ESM + CJS, full TypeScript types
