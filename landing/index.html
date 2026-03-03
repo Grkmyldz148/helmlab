@@ -358,8 +358,8 @@
     <section id="gradient-demo" class="section">
       <div class="container">
         <h2>Gradient Tool</h2>
-        <p class="section-intro designer-text">Helmlab produces perfectly uniform gradients &mdash; every step is equally spaced perceptually. Pick any two colors and compare. The CV score measures step evenness (lower = smoother).</p>
-        <p class="section-intro developer-text">GenSpace path (M1&rarr;&gamma;=&#8531;&rarr;M2) + CIEDE2000 arc-length reparameterization. Steps are redistributed along the color path so each perceptual step is equal. CV &asymp; 0% on any pair.</p>
+        <p class="section-intro designer-text">Helmlab's <code>gradient()</code> produces perfectly uniform gradients &mdash; every step is equally spaced perceptually. Pick any two colors and compare. The CV score measures step evenness (lower = smoother). Other tools use naive linear interpolation, which creates uneven steps.</p>
+        <p class="section-intro developer-text"><code>gradient()</code> interpolates linearly in GenSpace Lab, then redistributes steps via CIEDE2000 arc-length reparameterization so each perceptual step is equal (CV &asymp; 0%). Oklab/CIE Lab values below reflect naive linear interpolation (no reparameterization). The same technique could be applied to any space; Helmlab ships it built-in.</p>
 
         <div class="demo-controls">
           <div class="color-pick">
@@ -827,7 +827,7 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
             <summary class="faq-q">How is Helmlab different from Oklab?</summary>
             <div class="faq-a">
               <p>Oklab is a hand-designed color space that's built into CSS Color Level 4. It's good for smooth gradients, but it was never trained on human perception data. Its distance measurements are unreliable &mdash; it scores worse than even 50-year-old CIE Lab (STRESS 47.46 vs 42.80).</p>
-              <p>Helmlab's gradient pipeline combines GenSpace (6&times; better hue accuracy: 5.2&deg; vs 30.1&deg;) with CIEDE2000 arc-length reparameterization for perfectly uniform steps (CV &asymp; 0% on any color pair, vs Oklab's 25&ndash;40%). And Helmlab's MetricSpace does what Oklab can't: accurate perceptual distance (STRESS 23.30, trained on 3,813 human judgments) with embedded Helmholtz&ndash;Kohlrausch correction.</p>
+              <p>Helmlab's <code>gradient()</code> uses CIEDE2000 arc-length reparameterization for perfectly uniform steps (CV &asymp; 0% on any color pair). Oklab's 25&ndash;40% CV comes from naive linear interpolation without reparameterization &mdash; the same technique could be applied to Oklab, but Helmlab ships it built-in. GenSpace's real advantage is 6&times; better hue accuracy (5.2&deg; vs 30.1&deg; RMS), meaning the gradient path passes through more natural intermediate colors. And Helmlab's MetricSpace does what Oklab can't: accurate perceptual distance (STRESS 23.30, trained on 3,813 human judgments) with embedded Helmholtz&ndash;Kohlrausch correction.</p>
             </div>
           </details>
 

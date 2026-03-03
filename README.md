@@ -13,7 +13,7 @@ Helmlab is a family of purpose-built color spaces: **MetricSpace** (72-parameter
 ## Key Features
 
 - **State-of-the-art color difference prediction** — STRESS 23.30 vs CIEDE2000's 29.18 (MetricSpace)
-- **Perfectly uniform gradients** — CIEDE2000 arc-length reparameterization, CV ≈ 0% on any pair (GenSpace)
+- **Perfectly uniform gradients** — Built-in CIEDE2000 arc-length reparameterization in `gradient()`, CV ≈ 0% on any pair
 - **Achromatic guarantee** — Grays map to C < 10⁻⁶ via neutral correction (no color artifacts in gradients)
 - **Free hue improvement** — Rigid rotation reduces hue error (RMS 16.1°) at zero cost to the distance metric
 - **Embedded Helmholtz-Kohlrausch** — Lightness is chroma-dependent, learned from data
@@ -131,15 +131,17 @@ Scale: 0 = perfect, 100 = no correlation. Helmlab's 72 parameters were optimized
 
 </details>
 
-### Gradient Uniformity (GenSpace + arc-length)
+### Gradient Uniformity
 
 CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
 
-| Method | Red→Blue | Orange→Cyan | Black→White |
-|--------|----------|-------------|-------------|
-| **Helmlab** | **≈ 0%** | **≈ 0%** | **≈ 0%** |
-| Oklab | 31.5% | 41.4% | 41.2% |
-| CIE Lab | 44.8% | 52.3% | 61.5% |
+| Method | Red→Blue | Orange→Cyan | Black→White | Technique |
+|--------|----------|-------------|-------------|-----------|
+| **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
+| Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
+| CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
+
+> **Note:** Helmlab's `gradient()` achieves ≈ 0% via CIEDE2000 arc-length reparameterization — an algorithm that redistributes steps to equal perceptual spacing. Oklab and CIE Lab values reflect naive linear interpolation, which is how most libraries use them. The same reparameterization technique could be applied to any space; Helmlab ships it built-in.
 
 ## Project Structure
 

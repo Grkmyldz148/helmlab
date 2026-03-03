@@ -11,7 +11,7 @@ A data-driven analytical color space for UI design systems. Two purpose-built sp
 - ESM + CJS dual output with full TypeScript types
 - Trained on 64,000+ human color-difference judgments
 - MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 (20% better)
-- GenSpace + arc-length: perfectly uniform gradients (CV ≈ 0% on any pair)
+- `gradient()` with CIEDE2000 arc-length reparameterization (CV ≈ 0% on any pair)
 
 **[Website](https://helmlab.space)** · **[Documentation](https://grkmyldz148.github.io/helmlab/)** · **[npm](https://www.npmjs.com/package/helmlab)**
 
