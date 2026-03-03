@@ -863,6 +863,18 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
           </details>
 
           <details class="faq-item">
+            <summary class="faq-q">How was STRESS 23.30 actually measured?</summary>
+            <div class="faq-a">
+              <p><strong>The data:</strong> COMBVD is a combined visual-difference dataset of 3,813 color pairs compiled from 6 independent psychophysical experiments (Luo &amp; Rigg 1986, RIT-DuPont, Witt, Leeds, BFD, and He et al. 2022). In each experiment, human observers viewed pairs of physical color samples under controlled D65 lighting and rated the perceived difference between them. The aggregate dataset contains over 64,000 individual human judgments.</p>
+              <p><strong>The metric:</strong> STRESS is a standardized goodness-of-fit measure defined by the CIE (Commission Internationale de l'&Eacute;clairage). For each pair <em>i</em>, let &Delta;V<sub>i</sub> be the human-reported visual difference and &Delta;E<sub>i</sub> be the formula's predicted distance. STRESS finds the optimal scaling factor <em>F</em> that minimizes the residual, then computes:</p>
+              <p style="text-align:center; font-family:'SF Mono','Fira Code',monospace; font-size:0.92em; color:#e4e4e7; margin:12px 0;">STRESS = 100 &times; &radic;( &Sigma;(&Delta;E<sub>i</sub> &minus; F&middot;&Delta;V<sub>i</sub>)&sup2; / &Sigma;(&Delta;E<sub>i</sub>)&sup2; )</p>
+              <p>The scale is 0&ndash;100: 0 = perfect prediction, 100 = no correlation. This is the same formula used by the CIE to evaluate CIEDE2000, CIE94, and every other color difference formula in the literature.</p>
+              <p><strong>The evaluation:</strong> Helmlab's 72 parameters were optimized using L-BFGS-B with 8 random restarts on an 80/20 train-test split (seed=42). The reported STRESS of 23.30 is the <em>full-dataset</em> value. 5-fold cross-validation confirms generalization (mean CV STRESS &asymp; 23.5). Bootstrap analysis (10,000 iterations) gives a 95% CI of [22.50, 23.93] for Helmlab vs [27.64, 30.84] for CIEDE2000 &mdash; zero overlap, p&nbsp;&lt;&nbsp;10<sup>&minus;4</sup>.</p>
+              <p>Full details, ablation study, and reproducible code: <a href="https://arxiv.org/abs/2602.23010">arXiv:2602.23010</a></p>
+            </div>
+          </details>
+
+          <details class="faq-item">
             <summary class="faq-q">Why not just use CIEDE2000?</summary>
             <div class="faq-a">
               <p>CIEDE2000 is a distance formula, not a color space. It takes two CIE Lab colors and computes a "perceptual distance" using hand-tuned corrections (SL, SC, SH, RT). It's good &mdash; but it was designed in 2001 with only 5 tunable parameters.</p>

@@ -1467,6 +1467,12 @@ footer {
 
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .container {
+    padding: 0 16px;
+  }
+  .section-intro {
+    max-width: 100%;
+  }
   .space-cards {
     grid-template-columns: 1fr;
   }
@@ -1485,21 +1491,28 @@ footer {
     grid-template-columns: 1fr;
   }
   .hero {
-    padding: 100px 0 40px;
+    padding: 80px 0 32px;
   }
   .hero-logo {
-    width: 200px;
+    width: 180px;
   }
   .hero-subtitle {
-    font-size: 1em;
+    font-size: 0.95em;
+    padding: 0 8px;
+  }
+  .section {
+    padding: 40px 0;
   }
   .section h2 {
-    font-size: 1.5em;
+    font-size: 1.4em;
   }
   .footer-inner {
     flex-direction: column;
     gap: 8px;
     text-align: center;
+  }
+  .nav-inner {
+    padding: 0 16px;
   }
   .nav-links {
     display: none;
@@ -1525,16 +1538,36 @@ footer {
     display: flex;
   }
   .gradient-row {
-    grid-template-columns: 70px 1fr 60px;
-    gap: 8px;
+    grid-template-columns: 60px 1fr 54px;
+    gap: 6px;
+  }
+  .gradient-label {
+    font-size: 0.75em;
+  }
+  .cv-badge {
+    font-size: 0.72em;
+    padding: 2px 6px;
   }
   .stress-row {
-    grid-template-columns: 80px 1fr 50px;
-    gap: 8px;
+    grid-template-columns: 72px 1fr 48px;
+    gap: 6px;
+  }
+  .stress-name {
+    font-size: 0.78em;
+  }
+  .stress-val {
+    font-size: 0.78em;
   }
   .blue-band-stats {
     flex-direction: column;
     gap: 16px;
+  }
+  .bb-stat {
+    min-width: auto;
+    width: 100%;
+  }
+  .bb-val {
+    font-size: 1.8em;
   }
   .bb-arrow {
     transform: rotate(90deg);
@@ -1549,24 +1582,35 @@ footer {
   .hk-meters {
     grid-template-columns: 1fr;
   }
+  .hk-swatch {
+    width: 48px;
+    height: 48px;
+  }
   .metric-features {
     grid-template-columns: 1fr;
   }
   .compare-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .compare-table {
-    min-width: 400px;
+    min-width: 380px;
   }
   .mini-row {
-    grid-template-columns: 80px 1fr 42px 42px;
-    gap: 6px;
+    grid-template-columns: 70px 1fr 40px 40px;
+    gap: 4px;
   }
   .mini-name {
-    font-size: 0.75em;
+    font-size: 0.72em;
+  }
+  .mini-val, .mini-badge, .mini-pct {
+    font-size: 0.65em;
   }
   .advantage-card {
-    padding: 20px 18px;
+    padding: 18px 16px;
+  }
+  .adv-desc {
+    max-width: 100%;
   }
   .usecase-grid {
     grid-template-columns: 1fr;
@@ -1584,16 +1628,70 @@ footer {
   .palette-labels {
     display: none;
   }
+  .paper-card {
+    padding: 20px 18px;
+  }
+  .paper-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .paper-link {
+    text-align: center;
+  }
+  .paper-cite code {
+    font-size: 0.7em;
+    overflow-x: auto;
+    display: block;
+  }
+  .code-tabs pre {
+    padding: 14px 16px;
+    font-size: 0.82em;
+  }
+  .pipe-scroll {
+    margin: 24px -16px 0;
+    padding: 0 16px 12px;
+  }
   .faq-q {
-    padding: 14px 18px;
-    font-size: 0.9em;
+    padding: 14px 16px;
+    font-size: 0.88em;
   }
   .faq-a {
-    padding: 0 18px 14px;
+    padding: 0 16px 14px;
+  }
+  .faq-a p {
+    font-size: 0.85em;
+  }
+  .space-card {
+    padding: 20px;
+  }
+  .space-card .card-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .space-card .card-methods {
+    gap: 6px;
+  }
+  .space-card .card-method {
+    font-size: 0.72em;
+  }
+  /* Tables: allow horizontal scroll */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    min-width: 500px;
+  }
+  th, td {
+    padding: 10px 12px;
+    font-size: 0.82em;
   }
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 0 12px;
+  }
   .install-commands {
     flex-direction: column;
     align-items: center;
@@ -1603,8 +1701,54 @@ footer {
     max-width: 300px;
     justify-content: space-between;
   }
+  .install-cmd code {
+    font-size: 0.82em;
+  }
   .mode-btn {
     font-size: 0.82em;
     padding: 7px 14px;
+  }
+  .hero {
+    padding: 72px 0 24px;
+  }
+  .hero-logo {
+    width: 160px;
+  }
+  .section h2 {
+    font-size: 1.25em;
+  }
+  .gradient-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .gradient-label {
+    text-align: left;
+    font-size: 0.78em;
+  }
+  .gradient-strip {
+    height: 32px;
+  }
+  .gradient-meta {
+    text-align: left;
+  }
+  .stress-row {
+    grid-template-columns: 60px 1fr 44px;
+    gap: 4px;
+  }
+  .stress-name {
+    font-size: 0.72em;
+  }
+  .mini-row {
+    grid-template-columns: 60px 1fr 36px 36px;
+    gap: 3px;
+  }
+  .mini-name {
+    font-size: 0.68em;
+  }
+  .problem-card {
+    padding: 18px;
+  }
+  .problem-desc {
+    font-size: 0.85em;
   }
 }

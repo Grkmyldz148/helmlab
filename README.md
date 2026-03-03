@@ -116,6 +116,21 @@ STRESS on COMBVD (3,813 pairs). Each method uses its standard distance formula. 
 
 Bootstrap (10,000 iterations): Helmlab 95% CI [22.50, 23.93], CIEDE2000 95% CI [27.64, 30.84]. Zero overlap, p < 10⁻⁴.
 
+<details>
+<summary><strong>How was STRESS measured?</strong></summary>
+
+STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is a combined visual-difference dataset of 3,813 color pairs from 6 independent psychophysical experiments (Luo & Rigg 1986, RIT-DuPont, Witt, Leeds, BFD, He et al. 2022), containing 64,000+ individual human judgments. In each experiment, observers viewed color pairs under controlled D65 lighting and rated perceived differences.
+
+For each pair *i*, let ΔVᵢ = human visual difference, ΔEᵢ = predicted distance. STRESS finds the optimal scale *F* minimizing residuals:
+
+```
+STRESS = 100 × √( Σ(ΔEᵢ − F·ΔVᵢ)² / Σ(ΔEᵢ)² )
+```
+
+Scale: 0 = perfect, 100 = no correlation. Helmlab's 72 parameters were optimized with L-BFGS-B (8 random restarts, 80/20 split, seed=42). 5-fold CV confirms generalization (mean ≈ 23.5). Full methodology: [arXiv:2602.23010](https://arxiv.org/abs/2602.23010).
+
+</details>
+
 ### Gradient Uniformity (GenSpace + arc-length)
 
 CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.

@@ -133,6 +133,13 @@ XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
 
 MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses Phase1H-optimized matrices for 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS). Arc-length reparameterization ensures CV ≈ 0% gradient uniformity on any color pair.
 
+<details>
+<summary><strong>How was STRESS 23.30 measured?</strong></summary>
+
+STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is a combined dataset of 3,813 color pairs from 6 psychophysical experiments (64,000+ human judgments). Observers viewed color pairs under controlled D65 lighting and rated perceived differences. STRESS = 100 × √( Σ(ΔEᵢ − F·ΔVᵢ)² / Σ(ΔEᵢ)² ), where 0 = perfect and 100 = no correlation. Helmlab's 72 parameters were optimized with L-BFGS-B (8 random restarts). 5-fold CV confirms generalization (mean ≈ 23.5). Bootstrap 95% CI: Helmlab [22.50, 23.93] vs CIEDE2000 [27.64, 30.84] — zero overlap, p < 10⁻⁴. Full methodology: [arXiv:2602.23010](https://arxiv.org/abs/2602.23010).
+
+</details>
+
 ## License
 
 MIT
