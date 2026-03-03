@@ -1,6 +1,6 @@
 {
   "name": "helmlab",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Perceptual color space for UI design — human-tuned Lab with WCAG contrast, gamut mapping, and palette generation",
   "type": "module",
   "main": "./dist/index.cjs",
