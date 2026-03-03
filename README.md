@@ -138,6 +138,7 @@ CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
 | Method | Red→Blue | Orange→Cyan | Black→White | Technique |
 |--------|----------|-------------|-------------|-----------|
 | **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
+| Helmlab GenSpace | 3.1% | 33.2% | 41.0% | linear interpolation |
 | Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
 | CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
 
