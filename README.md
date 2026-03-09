@@ -47,6 +47,28 @@ hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950
 
 ~12KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
 
+### PostCSS
+
+[![npm version](https://img.shields.io/npm/v/postcss-helmlab.svg)](https://www.npmjs.com/package/postcss-helmlab)
+
+Use Helmlab color spaces directly in CSS — transformed to `rgb()` at build time:
+
+```bash
+npm install postcss-helmlab
+```
+
+```css
+/* Input */
+.card { color: helmlab(0.78 0.52 -0.20); }
+.bg   { background: linear-gradient(in helmgen, #e63946, #457b9d); }
+
+/* Output */
+.card { color: rgb(255, 76, 119); }
+.bg   { background: linear-gradient(#e63946 0.0%, ..., #457b9d 100.0%); }
+```
+
+Supports `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()`, alpha, `linear-gradient(in helmgen, ...)`, and `color-mix(in helmlab, ...)`. See [postcss-helmlab](packages/postcss-helmlab/).
+
 ### Python (pip)
 
 [![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
@@ -172,6 +194,7 @@ src/helmlab/
 └── feedback/               # Human feedback collection tools
 
 packages/helmlab-js/        # npm package (TypeScript)
+packages/postcss-helmlab/   # PostCSS plugin
 docs/                       # Documentation + interactive demo
 paper/                      # LaTeX paper + figures
 tests/                      # 337 tests (233 Python + 104 JavaScript)

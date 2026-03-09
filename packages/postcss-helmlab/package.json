@@ -1,0 +1,43 @@
+{
+  "name": "postcss-helmlab",
+  "version": "0.1.0",
+  "description": "PostCSS plugin to use Helmlab color spaces in CSS — helmlab(), helmlch(), helmgen(), helmgenlch() with fallback to rgb()",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "postcss",
+    "postcss-plugin",
+    "css",
+    "color",
+    "helmlab",
+    "color-space",
+    "perceptual"
+  ],
+  "author": "Görkem Yıldız (https://github.com/Grkmyldz148)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Grkmyldz148/helmlab",
+    "directory": "packages/postcss-helmlab"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "postcss": "^8.0.0"
+  },
+  "dependencies": {
+    "helmlab": "^0.6.0"
+  },
+  "devDependencies": {
+    "postcss": "^8.4.0"
+  },
+  "scripts": {
+    "test": "node test.js"
+  }
+}

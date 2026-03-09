@@ -153,6 +153,21 @@ STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for eva
 
 </details>
 
+## PostCSS Plugin
+
+Use Helmlab color spaces directly in your CSS:
+
+```bash
+npm install postcss-helmlab
+```
+
+```css
+.card { color: helmlab(0.78 0.52 -0.20); }
+.bg   { background: linear-gradient(in helmgen, #e63946, #457b9d); }
+```
+
+Transforms to `rgb()` at build time. Supports all four spaces, alpha, gradients, and `color-mix()`. See [postcss-helmlab](https://www.npmjs.com/package/postcss-helmlab).
+
 ## License
 
 MIT
