@@ -5,7 +5,7 @@
  * NC LUT boundaries, extreme inputs, and round-trip stress tests.
  */
 import { describe, it, expect } from 'vitest';
-import { Helmlab, GenSpace, compileGenParams, getDefaultGenParams, hexToSrgb, srgbToXyz, xyzToSrgb } from '../src/index.js';
+import { Helmlab, GenSpace, compileGenParams, getDefaultGenParams, hexToSrgb, srgbToXyz, xyzToSrgb, displayP3ToXyz } from '../src/index.js';
 import type { XYZ, Lab } from '../src/index.js';
 
 const hl = new Helmlab();
@@ -371,5 +371,107 @@ describe('Web-safe 216 colors stress test', () => {
       }
     }
     expect(maxErr).toBeLessThan(1e-6);
+  });
+});
+
+// ── refRange validation ────────────────────────────────────────────
+
+describe('refRange validation', () => {
+  // These match the Color.js refRange values for CSS percentage mapping.
+  // L range must cover D65 white, a/b range must cover Display P3 gamut.
+  const METRIC_L_MAX = 1.144;
+  const METRIC_AB_MAX = 1.0;
+  const GEN_L_MAX = 1.169;
+  const GEN_AB_MAX = 0.4;
+
+  it('MetricSpace: D65 white L within refRange', () => {
+    const lab = hl.fromXYZ(D65);
+    expect(lab[0]).toBeGreaterThan(0);
+    expect(lab[0]).toBeLessThanOrEqual(METRIC_L_MAX);
+  });
+
+  it('GenSpace: D65 white L within refRange', () => {
+    const lab = gen.fromXYZ(D65);
+    expect(lab[0]).toBeGreaterThan(0);
+    expect(lab[0]).toBeLessThanOrEqual(GEN_L_MAX);
+  });
+
+  it('MetricSpace: sRGB primaries within ab refRange', () => {
+    const primaries = [
+      '#ff0000', '#00ff00', '#0000ff',
+      '#ffff00', '#ff00ff', '#00ffff',
+    ];
+    for (const hex of primaries) {
+      const xyz = srgbToXyz(hexToSrgb(hex));
+      const lab = hl.fromXYZ(xyz);
+      expect(Math.abs(lab[1])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
+      expect(Math.abs(lab[2])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
+    }
+  });
+
+  it('GenSpace: sRGB primaries within ab refRange', () => {
+    const primaries = [
+      '#ff0000', '#00ff00', '#0000ff',
+      '#ffff00', '#ff00ff', '#00ffff',
+    ];
+    for (const hex of primaries) {
+      const xyz = srgbToXyz(hexToSrgb(hex));
+      const lab = gen.fromXYZ(xyz);
+      expect(Math.abs(lab[1])).toBeLessThanOrEqual(GEN_AB_MAX + 0.001);
+      expect(Math.abs(lab[2])).toBeLessThanOrEqual(GEN_AB_MAX + 0.001);
+    }
+  });
+
+  it('MetricSpace: Display P3 primaries within ab refRange', () => {
+    // Display P3 primaries at full saturation
+    const p3Primaries: [number, number, number][] = [
+      [1, 0, 0], [0, 1, 0], [0, 0, 1],
+      [1, 1, 0], [1, 0, 1], [0, 1, 1],
+    ];
+    for (const p3 of p3Primaries) {
+      const xyz = displayP3ToXyz(p3);
+      const lab = hl.fromXYZ(xyz);
+      expect(Math.abs(lab[1])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
+      expect(Math.abs(lab[2])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
+    }
+  });
+
+  it('GenSpace: Display P3 primaries within ab refRange', () => {
+    const p3Primaries: [number, number, number][] = [
+      [1, 0, 0], [0, 1, 0], [0, 0, 1],
+      [1, 1, 0], [1, 0, 1], [0, 1, 1],
+    ];
+    for (const p3 of p3Primaries) {
+      const xyz = displayP3ToXyz(p3);
+      const lab = gen.fromXYZ(xyz);
+      expect(Math.abs(lab[1])).toBeLessThanOrEqual(GEN_AB_MAX + 0.001);
+      expect(Math.abs(lab[2])).toBeLessThanOrEqual(GEN_AB_MAX + 0.001);
+    }
+  });
+
+  it('MetricSpace: sRGB primaries L within refRange', () => {
+    const primaries = [
+      '#ff0000', '#00ff00', '#0000ff',
+      '#ffff00', '#ff00ff', '#00ffff',
+    ];
+    for (const hex of primaries) {
+      const xyz = srgbToXyz(hexToSrgb(hex));
+      const lab = hl.fromXYZ(xyz);
+      expect(lab[0]).toBeGreaterThanOrEqual(0);
+      expect(lab[0]).toBeLessThanOrEqual(METRIC_L_MAX + 0.001);
+    }
+  });
+
+  it('GenSpace: sRGB primaries L within refRange', () => {
+    const primaries = [
+      '#ff0000', '#00ff00', '#0000ff',
+      '#ffff00', '#ff00ff', '#00ffff',
+    ];
+    for (const hex of primaries) {
+      const xyz = srgbToXyz(hexToSrgb(hex));
+      const lab = gen.fromXYZ(xyz);
+      expect(lab[0]).toBeGreaterThanOrEqual(0);
+      expect(lab[0]).toBeLessThanOrEqual(GEN_L_MAX + 0.001);
+    }
   });
 });

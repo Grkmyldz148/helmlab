@@ -9,7 +9,7 @@ import pytest
 
 from helmlab.spaces.metric import MetricSpace
 from helmlab.spaces.gen import GenSpace
-from helmlab.utils.srgb_convert import hex_to_srgb, sRGB_to_XYZ, XYZ_to_sRGB
+from helmlab.utils.srgb_convert import hex_to_srgb, sRGB_to_XYZ, XYZ_to_sRGB, DisplayP3_to_XYZ
 
 D65 = np.array([0.95047, 1.0, 1.08883])
 
@@ -424,3 +424,99 @@ class TestDistanceEdgeCases:
         black = np.array([[0.0, 0.0, 0.0]])
         d = gs.distance(black, black)
         assert d[0] == pytest.approx(0.0, abs=1e-15)
+
+
+# ── refRange validation ──────────────────────────────────────────────
+
+class TestRefRange:
+    """Lab ranges must cover D65 white and both sRGB + Display P3 gamuts.
+
+    These tests ensure that the refRange values declared in Color.js
+    space definitions are correct. CSS percentage values (100%) map to
+    refRange upper bound, so white must be within range.
+    """
+
+    # Expected refRange values (must match Color.js space definitions)
+    HELMLAB_L_MAX = 1.144
+    HELMLAB_AB_MAX = 1.0
+    HELMGEN_L_MAX = 1.169
+    HELMGEN_AB_MAX = 0.4
+
+    def _gamut_corners(self):
+        """All 8 corners of sRGB and Display P3 gamuts."""
+        corners = np.array([[r, g, b]
+                            for r in [0, 1] for g in [0, 1] for b in [0, 1]],
+                           dtype=np.float64)
+        srgb_xyz = np.array([sRGB_to_XYZ(c) for c in corners])
+        p3_xyz = np.array([DisplayP3_to_XYZ(c) for c in corners])
+        return srgb_xyz, p3_xyz
+
+    def test_metric_white_within_L_range(self, ms):
+        """D65 white L must be within declared refRange."""
+        lab = ms.from_XYZ(D65)
+        assert lab[0] <= self.HELMLAB_L_MAX, (
+            f"D65 white L={lab[0]:.6f} exceeds refRange max {self.HELMLAB_L_MAX}")
+        assert lab[0] > 0
+
+    def test_gen_white_within_L_range(self, gs):
+        lab = gs.from_XYZ(D65)
+        assert lab[0] <= self.HELMGEN_L_MAX, (
+            f"D65 white L={lab[0]:.6f} exceeds refRange max {self.HELMGEN_L_MAX}")
+        assert lab[0] > 0
+
+    def test_metric_srgb_within_ab_range(self, ms):
+        """All sRGB corners must have a,b within declared refRange."""
+        srgb_xyz, _ = self._gamut_corners()
+        labs = ms.from_XYZ(srgb_xyz)
+        a_max = np.max(np.abs(labs[:, 1]))
+        b_max = np.max(np.abs(labs[:, 2]))
+        assert a_max <= self.HELMLAB_AB_MAX, (
+            f"sRGB |a| max={a_max:.6f} exceeds {self.HELMLAB_AB_MAX}")
+        assert b_max <= self.HELMLAB_AB_MAX, (
+            f"sRGB |b| max={b_max:.6f} exceeds {self.HELMLAB_AB_MAX}")
+
+    def test_metric_p3_within_ab_range(self, ms):
+        """All Display P3 corners must have a,b within declared refRange."""
+        _, p3_xyz = self._gamut_corners()
+        labs = ms.from_XYZ(p3_xyz)
+        a_max = np.max(np.abs(labs[:, 1]))
+        b_max = np.max(np.abs(labs[:, 2]))
+        assert a_max <= self.HELMLAB_AB_MAX, (
+            f"P3 |a| max={a_max:.6f} exceeds {self.HELMLAB_AB_MAX}")
+        assert b_max <= self.HELMLAB_AB_MAX, (
+            f"P3 |b| max={b_max:.6f} exceeds {self.HELMLAB_AB_MAX}")
+
+    def test_gen_srgb_within_ab_range(self, gs):
+        srgb_xyz, _ = self._gamut_corners()
+        labs = gs.from_XYZ(srgb_xyz)
+        a_max = np.max(np.abs(labs[:, 1]))
+        b_max = np.max(np.abs(labs[:, 2]))
+        assert a_max <= self.HELMGEN_AB_MAX, (
+            f"sRGB |a| max={a_max:.6f} exceeds {self.HELMGEN_AB_MAX}")
+        assert b_max <= self.HELMGEN_AB_MAX, (
+            f"sRGB |b| max={b_max:.6f} exceeds {self.HELMGEN_AB_MAX}")
+
+    def test_gen_p3_within_ab_range(self, gs):
+        _, p3_xyz = self._gamut_corners()
+        labs = gs.from_XYZ(p3_xyz)
+        a_max = np.max(np.abs(labs[:, 1]))
+        b_max = np.max(np.abs(labs[:, 2]))
+        assert a_max <= self.HELMGEN_AB_MAX, (
+            f"P3 |a| max={a_max:.6f} exceeds {self.HELMGEN_AB_MAX}")
+        assert b_max <= self.HELMGEN_AB_MAX, (
+            f"P3 |b| max={b_max:.6f} exceeds {self.HELMGEN_AB_MAX}")
+
+    def test_metric_srgb_within_L_range(self, ms):
+        """All sRGB corners L must be within [0, L_MAX]."""
+        srgb_xyz, _ = self._gamut_corners()
+        labs = ms.from_XYZ(srgb_xyz)
+        assert np.all(labs[:, 0] >= 0), "Negative L found"
+        assert np.all(labs[:, 0] <= self.HELMLAB_L_MAX), (
+            f"sRGB L max={labs[:,0].max():.6f} exceeds {self.HELMLAB_L_MAX}")
+
+    def test_gen_srgb_within_L_range(self, gs):
+        srgb_xyz, _ = self._gamut_corners()
+        labs = gs.from_XYZ(srgb_xyz)
+        assert np.all(labs[:, 0] >= 0), "Negative L found"
+        assert np.all(labs[:, 0] <= self.HELMGEN_L_MAX), (
+            f"sRGB L max={labs[:,0].max():.6f} exceeds {self.HELMGEN_L_MAX}")
