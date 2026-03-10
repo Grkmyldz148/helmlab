@@ -26,6 +26,11 @@ function findIndex(L: number): number {
 
 /** Get achromatic error (a_err, b_err) at given L via linear interpolation. */
 export function neutralError(L: number): [number, number] {
+  if (L <= 0) return [0, 0];
+  if (L < L_LUT[0]) {
+    const t = L / L_LUT[0];
+    return [A_LUT[0] * t, B_LUT[0] * t];
+  }
   const i = findIndex(L);
   if (i >= N - 1) return [A_LUT[N - 1], B_LUT[N - 1]];
   const t = (L - L_LUT[i]) / (L_LUT[i + 1] - L_LUT[i]);

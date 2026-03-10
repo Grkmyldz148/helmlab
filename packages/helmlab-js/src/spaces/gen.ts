@@ -201,7 +201,11 @@ export class GenSpace {
     const As = this.ncA!;
     const Bs = this.ncB!;
     const N = Ls.length;
-    if (L <= Ls[0]) return [As[0], Bs[0]];
+    if (L <= 0) return [0, 0];
+    if (L < Ls[0]) {
+      const t = L / Ls[0];
+      return [As[0] * t, Bs[0] * t];
+    }
     if (L >= Ls[N - 1]) return [As[N - 1], Bs[N - 1]];
     let lo = 0, hi = N - 1;
     while (hi - lo > 1) {

@@ -259,6 +259,7 @@ class GenSpace(ColorSpace):
         from scipy.interpolate import PchipInterpolator
 
         Y_vals = np.concatenate([
+            [0.0],  # black point anchor: NC error is zero at L=0
             np.linspace(0.001, 0.01, 10),
             np.linspace(0.01, 0.1, 20),
             np.linspace(0.1, 2.0, n_samples - 30),
