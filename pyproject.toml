@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helmlab"
-version = "0.6.3"
+version = "0.6.4"
 description = "A data-driven analytical color space trained on 64,000 human color-difference observations"
 readme = "README.md"
 requires-python = ">=3.10"
