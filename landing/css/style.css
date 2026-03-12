@@ -1153,8 +1153,7 @@ code { color: #e4e4e7; }
 /* ── Community ────────────────────────────────────────── */
 .testimonial-track-wrapper {
   overflow: hidden;
-  margin: 0 -28px 32px;
-  padding: 0 28px;
+  margin: 0 0 32px;
 }
 .testimonial-track {
   display: flex;
