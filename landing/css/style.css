@@ -1086,7 +1086,7 @@ code { color: #e4e4e7; }
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #f97316;
+  color: #60a5fa;
   margin-bottom: 8px;
 }
 .section-desc {
@@ -1133,9 +1133,9 @@ code { color: #e4e4e7; }
 .integration-badge {
   font-size: 0.72em;
   font-weight: 600;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
   border-radius: 6px;
   padding: 2px 8px;
 }
@@ -1249,7 +1249,7 @@ code { color: #e4e4e7; }
   color: #52525b;
 }
 .form-submit {
-  background: #f97316;
+  background: #60a5fa;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -1260,7 +1260,7 @@ code { color: #e4e4e7; }
   transition: background 0.15s;
 }
 .form-submit:hover {
-  background: #ea580c;
+  background: #3b82f6;
 }
 .form-submit:disabled {
   opacity: 0.5;
