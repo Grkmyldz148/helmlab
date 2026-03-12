@@ -920,6 +920,70 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
         </div>
       </div>
     </section>
+
+    <!-- Integrated In -->
+    <section id="integrated-in" class="section">
+      <div class="container">
+        <span class="section-label">ECOSYSTEM</span>
+        <h2>Integrated In</h2>
+        <p class="section-desc">Libraries and tools that ship Helmlab as a built-in color space.</p>
+        <div class="integration-grid">
+          <a href="https://github.com/facelessuser/coloraide" class="integration-card">
+            <div class="integration-header">
+              <span class="integration-name">ColorAide</span>
+              <img src="https://img.shields.io/github/stars/facelessuser/coloraide?style=flat-square&color=f59e0b&label=stars" alt="GitHub stars" loading="lazy">
+            </div>
+            <p class="integration-desc">A Python color library for color manipulation, conversion, and delta E. Helmlab, HelmGen, and HelmGenLCh available as built-in spaces.</p>
+            <span class="integration-author">by Isaac Muse</span>
+          </a>
+          <a href="https://github.com/color-js/color.js/pull/722" class="integration-card integration-pending">
+            <div class="integration-header">
+              <span class="integration-name">Color.js</span>
+              <span class="integration-badge">PR pending</span>
+            </div>
+            <p class="integration-desc">The CSS Color Level 4/5 reference library by the W3C CSS Color spec editors. Helmlab and HelmGen spaces with deltaE method.</p>
+            <span class="integration-author">by Lea Verou &amp; Chris Lilley</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Community -->
+    <section id="community" class="section">
+      <div class="container">
+        <span class="section-label">COMMUNITY</span>
+        <h2>Add your voice.</h2>
+        <p class="section-desc">Share your experience with Helmlab &mdash; what worked, what surprised you, how you're using it.</p>
+
+        <!-- Testimonial carousel -->
+        <div class="testimonial-track-wrapper">
+          <div class="testimonial-track" id="testimonialTrack">
+            <!-- Populated by JS from approved comments -->
+          </div>
+        </div>
+        <div class="testimonial-empty" id="testimonialEmpty" style="display:none;">
+          <p>No comments yet. Be the first to share your experience.</p>
+        </div>
+
+        <!-- Submit form -->
+        <div class="community-form-wrap">
+          <form id="communityForm" class="community-form">
+            <div class="form-row">
+              <input type="text" name="name" placeholder="Name or handle" required class="form-input">
+              <input type="email" name="email" placeholder="Email (optional)" class="form-input">
+            </div>
+            <textarea name="message" placeholder="How are you using Helmlab? What do you think about the color space?" required class="form-textarea" rows="4"></textarea>
+            <div class="form-footer">
+              <span class="form-note">Comments appear after review.</span>
+              <button type="submit" class="form-submit" id="communitySubmit">Submit</button>
+            </div>
+          </form>
+          <div class="form-success" id="formSuccess" style="display:none;">
+            Thank you! Your comment will appear after review.
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>

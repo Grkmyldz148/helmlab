@@ -31,3 +31,6 @@ notebooks/
 # OS
 .DS_Store
 Thumbs.db
+
+# Landing API data (sensitive)
+landing/api/comments.json

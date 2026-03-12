@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helmlab Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #09090b;
+      color: #a1a1aa;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    h1 { color: #fafafa; font-size: 1.5em; margin-bottom: 8px; }
+    .subtitle { color: #52525b; font-size: 0.9em; margin-bottom: 32px; }
+
+    /* Login */
+    .login-wrap {
+      max-width: 360px;
+      margin: 120px auto 0;
+      background: #111113;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 32px;
+    }
+    .login-wrap h1 { text-align: center; margin-bottom: 24px; }
+    .login-input {
+      width: 100%;
+      background: #09090b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #fafafa;
+      font-family: inherit;
+      font-size: 0.92em;
+      margin-bottom: 12px;
+    }
+    .login-input:focus { outline: none; border-color: #3f3f46; }
+    .login-input::placeholder { color: #52525b; }
+    .login-btn {
+      width: 100%;
+      background: #f97316;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.92em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .login-btn:hover { background: #ea580c; }
+    .login-error {
+      color: #ef4444;
+      font-size: 0.85em;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Dashboard */
+    .dashboard { display: none; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab {
+      background: transparent;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 8px 20px;
+      color: #a1a1aa;
+      font-size: 0.88em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab:hover { border-color: #3f3f46; }
+    .tab.active { background: #27272a; color: #fafafa; border-color: #3f3f46; }
+    .tab .count {
+      display: inline-block;
+      background: #f97316;
+      color: #fff;
+      font-size: 0.75em;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 6px;
+    }
+
+    /* Comment cards */
+    .comment-list { display: flex; flex-direction: column; gap: 12px; }
+    .comment-card {
+      background: #111113;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .comment-name { color: #fafafa; font-weight: 600; font-size: 0.95em; }
+    .comment-date { color: #52525b; font-size: 0.8em; }
+    .comment-email { color: #52525b; font-size: 0.8em; margin-bottom: 10px; }
+    .comment-message {
+      color: #d4d4d8;
+      font-size: 0.92em;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+    .comment-actions { display: flex; gap: 8px; }
+    .btn {
+      border: none;
+      border-radius: 6px;
+      padding: 6px 16px;
+      font-size: 0.82em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-approve { background: #22c55e; color: #fff; }
+    .btn-reject { background: #ef4444; color: #fff; }
+    .btn-delete { background: #52525b; color: #fff; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: #52525b;
+    }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      padding: 6px 14px;
+      color: #71717a;
+      font-size: 0.82em;
+      cursor: pointer;
+    }
+    .logout-btn:hover { border-color: #3f3f46; color: #a1a1aa; }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div class="login-wrap" id="loginView">
+    <h1>Helmlab Admin</h1>
+    <form id="loginForm">
+      <input type="text" class="login-input" id="loginUser" placeholder="Username" autocomplete="username" required>
+      <input type="password" class="login-input" id="loginPass" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit" class="login-btn">Sign in</button>
+      <div class="login-error" id="loginError">Invalid credentials</div>
+    </form>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="container dashboard" id="dashboardView">
+    <div class="top-bar">
+      <div>
+        <h1>Community Comments</h1>
+        <p class="subtitle">Review and moderate user submissions.</p>
+      </div>
+      <button class="logout-btn" id="logoutBtn">Sign out</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-status="pending">Pending <span class="count" id="pendingCount">0</span></button>
+      <button class="tab" data-status="approved">Approved</button>
+      <button class="tab" data-status="rejected">Rejected</button>
+    </div>
+
+    <div class="comment-list" id="commentList"></div>
+  </div>
+
+  <script>
+    const API = 'https://helmlab.space/api';
+    let token = sessionStorage.getItem('admin_token') || '';
+    let currentStatus = 'pending';
+
+    // Login
+    const loginForm = document.getElementById('loginForm');
+    const loginView = document.getElementById('loginView');
+    const dashboard = document.getElementById('dashboardView');
+
+    if (token) showDashboard();
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+
+      try {
+        const res = await fetch(API + '/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass }),
+        });
+        if (!res.ok) throw new Error('Auth failed');
+        const data = await res.json();
+        token = data.token;
+        sessionStorage.setItem('admin_token', token);
+        showDashboard();
+      } catch {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      token = '';
+      sessionStorage.removeItem('admin_token');
+      dashboard.style.display = 'none';
+      loginView.style.display = 'block';
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentStatus = tab.dataset.status;
+        loadComments();
+      });
+    });
+
+    function showDashboard() {
+      loginView.style.display = 'none';
+      dashboard.style.display = 'block';
+      loadComments();
+    }
+
+    async function loadComments() {
+      const list = document.getElementById('commentList');
+      list.innerHTML = '<div class="empty-state">Loading...</div>';
+
+      try {
+        const res = await fetch(API + '/admin/comments?status=' + currentStatus, {
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+        if (res.status === 401) {
+          token = '';
+          sessionStorage.removeItem('admin_token');
+          dashboard.style.display = 'none';
+          loginView.style.display = 'block';
+          return;
+        }
+        const comments = await res.json();
+
+        // Update pending count
+        if (currentStatus === 'pending') {
+          document.getElementById('pendingCount').textContent = comments.length;
+        }
+
+        if (!comments.length) {
+          list.innerHTML = '<div class="empty-state">No ' + currentStatus + ' comments.</div>';
+          return;
+        }
+
+        list.innerHTML = comments.map(c => `
+          <div class="comment-card" data-id="${c.id}">
+            <div class="comment-header">
+              <span class="comment-name">${esc(c.name)}</span>
+              <span class="comment-date">${new Date(c.created_at).toLocaleDateString()}</span>
+            </div>
+            ${c.email ? `<div class="comment-email">${esc(c.email)}</div>` : ''}
+            <div class="comment-message">${esc(c.message)}</div>
+            <div class="comment-actions">
+              ${currentStatus !== 'approved' ? `<button class="btn btn-approve" onclick="updateComment('${c.id}','approved')">Approve</button>` : ''}
+              ${currentStatus !== 'rejected' ? `<button class="btn btn-reject" onclick="updateComment('${c.id}','rejected')">Reject</button>` : ''}
+              <button class="btn btn-delete" onclick="deleteComment('${c.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch {
+        list.innerHTML = '<div class="empty-state">Failed to load. Is the API running?</div>';
+      }
+    }
+
+    async function updateComment(id, status) {
+      await fetch(API + '/admin/comments/' + id, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      loadComments();
+    }
+
+    async function deleteComment(id) {
+      if (!confirm('Delete this comment permanently?')) return;
+      await fetch(API + '/admin/comments/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token },
+      });
+      loadComments();
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

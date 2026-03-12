@@ -625,6 +625,82 @@
     initScrollReveal();
     initGradientDemo();
     initFaqAccordion();
+    initCommunity();
+  }
+
+  /* ── Community section ────────────────────────────────── */
+  const COMMUNITY_API = 'https://helmlab.space/api/comments';
+
+  function initCommunity() {
+    loadTestimonials();
+    const form = document.getElementById('communityForm');
+    if (!form) return;
+    form.addEventListener('submit', handleCommentSubmit);
+  }
+
+  async function loadTestimonials() {
+    const track = document.getElementById('testimonialTrack');
+    const empty = document.getElementById('testimonialEmpty');
+    if (!track) return;
+
+    try {
+      const res = await fetch(COMMUNITY_API + '?status=approved');
+      if (!res.ok) throw new Error('Failed to load');
+      const comments = await res.json();
+
+      if (!comments.length) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      track.innerHTML = comments.map(c => `
+        <div class="testimonial-card">
+          <q>${escapeHtml(c.message)}</q>
+          <div class="testimonial-meta">&mdash; ${escapeHtml(c.name)} &middot; ${formatDate(c.created_at)}</div>
+        </div>
+      `).join('');
+    } catch {
+      // API not configured yet — show empty state
+      empty.style.display = 'block';
+    }
+  }
+
+  async function handleCommentSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('communitySubmit');
+    const data = Object.fromEntries(new FormData(form));
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(COMMUNITY_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) throw new Error('Submit failed');
+
+      form.style.display = 'none';
+      document.getElementById('formSuccess').style.display = 'block';
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+      alert('Something went wrong. Please try again.');
+    }
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 
   if (document.readyState === 'loading') {
