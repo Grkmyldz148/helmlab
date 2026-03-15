@@ -16,9 +16,12 @@ const PORT = process.env.PORT || 3847;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || '';
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
-const MONGO_URI = process.env.MONGO_URI || 'REDACTED_MONGO_URI';
+const MONGO_URI = process.env.MONGO_URI;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/ismailyagci/web/helmlab.space/public_html/uploads/blog';
-const BLOG_SECRET = process.env.BLOG_SECRET || 'REDACTED_BLOG_SECRET';
+const BLOG_SECRET = process.env.BLOG_SECRET;
+
+if (!MONGO_URI) { console.error('MONGO_URI env variable is required'); process.exit(1); }
+if (!BLOG_SECRET) { console.error('BLOG_SECRET env variable is required'); process.exit(1); }
 
 // ── MongoDB ───────────────────────────────────────────────
 const { MongoClient, ObjectId } = require('mongodb');
