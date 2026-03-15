@@ -18,6 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install numpy scipy pytest
+      - run: pip install -e .
       - run: python -m pytest tests/ -x -q
 
   test-js:
