@@ -34,3 +34,5 @@ Thumbs.db
 
 # Landing API data (sensitive)
 landing/api/comments.json
+.env
+*.env

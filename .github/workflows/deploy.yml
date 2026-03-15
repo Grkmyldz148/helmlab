@@ -49,6 +49,7 @@ jobs:
           rsync -avz --delete \
             --exclude='api/comments.json' \
             --exclude='api/node_modules' \
+            --exclude='api/.env' \
             --exclude='uploads' \
             --exclude='.DS_Store' \
             -e "ssh -i ~/.ssh/deploy_key" \
@@ -61,10 +62,20 @@ jobs:
             cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
           "
 
-      - name: Restart helmlab-api
+      - name: Configure & restart helmlab-api
         run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
-            "pm2 restart helmlab-api 2>/dev/null || true"
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
+            cat > /home/ismailyagci/web/helmlab.space/public_html/api/.env << 'ENVEOF'
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          BLOG_SECRET=${{ secrets.BLOG_SECRET }}
+          ENVEOF
+            chmod 600 /home/ismailyagci/web/helmlab.space/public_html/api/.env
+            chown ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/api/.env
+            cd /home/ismailyagci/web/helmlab.space/public_html/api
+            pm2 delete helmlab-api 2>/dev/null || true
+            pm2 start server.js --name helmlab-api --env-file .env
+            pm2 save
+          "
 
       - name: Fix permissions
         run: |
