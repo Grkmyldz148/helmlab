@@ -84,7 +84,7 @@ export class Helmlab {
 
     const gp = compileGenParams(opts.genParams ?? getDefaultGenParams());
     this.gcp = gp;
-    this.gen = new GenSpace(gp, { neutralCorrection: true });
+    this.gen = new GenSpace(gp);
 
     // Cache white L for palette/scale range
     const D65: XYZ = [0.95047, 1.0, 1.08883];

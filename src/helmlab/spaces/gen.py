@@ -137,7 +137,7 @@ class GenSpace(ColorSpace):
     name = "Gen"
 
     def __init__(self, params: GenParams | None = None,
-                 neutral_correction: bool = True):
+                 neutral_correction: bool = False):
         if params is not None:
             self.params = params
         elif _PARAMS_PATH.exists():

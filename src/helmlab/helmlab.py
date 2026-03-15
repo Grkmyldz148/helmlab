@@ -53,9 +53,9 @@ class Helmlab:
         # GenSpace for generation (palette, gradient, gamut map)
         if gen_params_path is not None:
             gen_p = GenParams.load(gen_params_path)
-            self._gen = GenSpace(gen_p, neutral_correction=True)
+            self._gen = GenSpace(gen_p)
         else:
-            self._gen = GenSpace(neutral_correction=True)
+            self._gen = GenSpace()
 
         # Backward compat: expose _space as metric
         self._space = self._metric

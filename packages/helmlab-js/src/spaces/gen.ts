@@ -33,7 +33,7 @@ export class GenSpace {
 
   constructor(params: CompiledGenParams, opts: GenSpaceOptions = {}) {
     this.p = params;
-    this.nc = opts.neutralCorrection ?? true;
+    this.nc = opts.neutralCorrection ?? false;
   }
 
   // ── Forward transform ──────────────────────────────────────────
