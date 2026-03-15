@@ -12,6 +12,15 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Load .env file if present (zero-dependency dotenv)
+const envPath = path.join(__dirname, '.env');
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf8').split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+    if (match && !process.env[match[1]]) process.env[match[1]] = (match[2] || '').replace(/^['"]|['"]$/g, '');
+  });
+}
+
 const PORT = process.env.PORT || 3847;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || '';

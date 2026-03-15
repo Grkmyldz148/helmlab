@@ -62,30 +62,15 @@ jobs:
             cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
           "
 
-      - name: Configure & restart helmlab-api
+      - name: Write .env and restart helmlab-api
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
-            cat > /home/ismailyagci/web/helmlab.space/public_html/api/.env << 'ENVEOF'
-          MONGO_URI=${{ secrets.MONGO_URI }}
-          BLOG_SECRET=${{ secrets.BLOG_SECRET }}
-          ENVEOF
-            chmod 600 /home/ismailyagci/web/helmlab.space/public_html/api/.env
-            chown ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/api/.env
             cd /home/ismailyagci/web/helmlab.space/public_html/api
+            printf 'MONGO_URI=${{ secrets.MONGO_URI }}\nBLOG_SECRET=${{ secrets.BLOG_SECRET }}\n' > .env
+            chmod 600 .env
+            chown ismailyagci:www-data .env
             pm2 delete helmlab-api 2>/dev/null || true
-            cat > ecosystem.config.js << ECOEOF
-          module.exports = {
-            apps: [{
-              name: 'helmlab-api',
-              script: 'server.js',
-              env: {
-                MONGO_URI: '$(grep MONGO_URI .env | cut -d= -f2-)',
-                BLOG_SECRET: '$(grep BLOG_SECRET .env | cut -d= -f2-)'
-              }
-            }]
-          };
-          ECOEOF
-            pm2 start ecosystem.config.js
+            pm2 start server.js --name helmlab-api
             pm2 save
           "
 
