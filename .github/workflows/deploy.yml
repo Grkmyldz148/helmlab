@@ -62,6 +62,37 @@ jobs:
             cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
           "
 
+      - name: Scan & replace old MongoDB password on entire server
+        run: |
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 '
+            echo "=== Full server scan for old MongoDB password ==="
+            echo "--- Searching ALL files under /home/ ---"
+            grep -rl "Grkmyldz14892525" /home/ /root/ /etc/ 2>/dev/null || echo "(none found)"
+            echo ""
+            echo "--- Replacing in all text files ---"
+            find /home/ /root/ -type f -size -5M 2>/dev/null | while read f; do
+              if file "$f" | grep -q text 2>/dev/null; then
+                if grep -q "Grkmyldz14892525" "$f" 2>/dev/null; then
+                  echo "  REPLACING in: $f"
+                  sed -i "s/Grkmyldz14892525/Ecrinmina14892525/g" "$f"
+                fi
+              fi
+            done
+            echo ""
+            echo "--- Also checking .env files specifically ---"
+            find /home/ /root/ -name ".env" -o -name "*.env" 2>/dev/null | while read f; do
+              echo "  ENV FILE: $f"
+              grep -n "MONGO\|mongo\|mongodb" "$f" 2>/dev/null | sed "s/Ecrinmina14892525/***MASKED***/g" || true
+            done
+            echo ""
+            echo "--- Verify: any old password remaining? ---"
+            grep -rl "Grkmyldz14892525" /home/ /root/ 2>/dev/null || echo "ALL CLEAN - no old credentials remain"
+            echo ""
+            echo "--- Restart ALL pm2 apps to pick up changes ---"
+            pm2 restart all
+            pm2 save
+          '
+
       - name: Write .env and restart helmlab-api
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
