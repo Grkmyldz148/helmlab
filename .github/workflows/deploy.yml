@@ -1,0 +1,149 @@
+name: Test, Deploy & Publish
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─── 1. Test ────────────────────────────────────────────
+  test-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install numpy scipy
+      - run: python -m pytest tests/ -x -q
+
+  test-js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: cd packages/helmlab-js && npm ci && npx vitest run
+
+  # ─── 2. Deploy landing to server ───────────────────────
+  deploy-landing:
+    needs: [test-python, test-js]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 89.252.184.6 >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy landing
+        run: |
+          rsync -avz --delete \
+            --exclude='api/comments.json' \
+            --exclude='.DS_Store' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            landing/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/
+
+      - name: Update server repo
+        run: |
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
+            "cd /home/ismailyagci/helmlab-repo && git fetch origin && git reset --hard origin/main"
+
+      - name: Restart helmlab-api
+        run: |
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
+            "pm2 restart helmlab-api 2>/dev/null || true"
+
+      - name: Fix permissions
+        run: |
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
+            "chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/"
+
+  # ─── 3. Publish npm (only when version changes) ────────
+  publish-npm:
+    needs: [test-python, test-js]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if JS version changed
+        id: version-check
+        run: |
+          OLD=$(git show HEAD~1:packages/helmlab-js/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])" 2>/dev/null || echo "0.0.0")
+          NEW=$(python3 -c "import json; print(json.load(open('packages/helmlab-js/package.json'))['version'])")
+          echo "old=$OLD" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$OLD" != "$NEW" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.version-check.outputs.changed == 'true'
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Build & publish to npm
+        if: steps.version-check.outputs.changed == 'true'
+        run: cd packages/helmlab-js && npm ci && npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # ─── 4. Publish PyPI (only when version changes) ───────
+  publish-pypi:
+    needs: [test-python, test-js]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if Python version changed
+        id: version-check
+        run: |
+          OLD=$(git show HEAD~1:pyproject.toml 2>/dev/null | python3 -c "
+          import sys
+          for line in sys.stdin:
+              if line.strip().startswith('version'):
+                  print(line.split('\"')[1])
+                  break
+          " 2>/dev/null || echo "0.0.0")
+          NEW=$(python3 -c "
+          for line in open('pyproject.toml'):
+              if line.strip().startswith('version'):
+                  print(line.split('\"')[1])
+                  break
+          ")
+          echo "old=$OLD" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$OLD" != "$NEW" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.version-check.outputs.changed == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Build & publish to PyPI
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          pip install build twine
+          python -m build
+          python -m twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
