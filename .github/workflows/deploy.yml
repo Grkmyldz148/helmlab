@@ -62,32 +62,6 @@ jobs:
             cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
           "
 
-      - name: Replace old MongoDB password on entire server
-        run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 '
-            echo "=== Targeted replace of old password ==="
-            for f in \
-              /root/gorkemyildizcom/.env.local \
-              /root/ismailyagcicom/.env.local \
-              /root/optical-center-study/prod-server.mjs \
-              /root/secrets/.env.ismail \
-              /root/secrets/.env.gorkem \
-              /home/ismailyagci/helmlab-repo/.github/workflows/deploy.yml \
-              /root/.bash_history; do
-              if [ -f "$f" ] && grep -q "Grkmyldz14892525" "$f" 2>/dev/null; then
-                echo "  REPLACING in: $f"
-                sed -i "s/Grkmyldz14892525/Ecrinmina14892525/g" "$f"
-              fi
-            done
-            echo ""
-            echo "=== Verify: grep for old password ==="
-            grep -rl "Grkmyldz14892525" /home/ /root/ --include="*.env*" --include="*.js" --include="*.mjs" --include="*.json" --include="*.yml" --include="*.local" --include="*.sh" 2>/dev/null || echo "ALL CLEAN"
-            echo ""
-            echo "=== Restart all pm2 apps ==="
-            pm2 restart all
-            pm2 save
-          '
-
       - name: Write .env and restart helmlab-api
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
