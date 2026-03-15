@@ -151,6 +151,15 @@ class TestFeedbackDataset:
 # Bidirectional Cost Function
 # ═══════════════════════════════════════════════════════════════════════
 
+_HAS_SCRIPTS = False
+try:
+    from scripts.optimize_bidirectional import make_objective_with_feedback  # noqa: F401
+    _HAS_SCRIPTS = True
+except (ImportError, ModuleNotFoundError):
+    pass
+
+
+@pytest.mark.skipif(not _HAS_SCRIPTS, reason="scripts/optimize_bidirectional.py not available")
 class TestBidirectionalCost:
     """Tests for extended cost function."""
 
