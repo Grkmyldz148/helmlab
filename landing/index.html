@@ -981,6 +981,14 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
 
   <!-- Helmlab JS (IIFE from CDN, exposes window.helmlab) -->
   <script src="https://cdn.jsdelivr.net/npm/helmlab@latest/dist/index.global.js"></script>
+  <script>
+  if (window.helmlab && window.helmlab.VERSION) {
+    console.log('helmlab v' + window.helmlab.VERSION + ' loaded from CDN');
+    var h = new window.helmlab.Helmlab();
+    var w = h.fromHex('#ffffff');
+    console.log('  GenSpace white L = ' + w.gen[0].toFixed(6) + ' (expected: 1.000000)');
+  }
+  </script>
   <script src="js/main.js"></script>
   <script>
   // Load latest blog posts for preview
