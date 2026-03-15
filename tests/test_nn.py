@@ -1,7 +1,7 @@
 """Tests for neural network models."""
 
-import torch
 import pytest
+torch = pytest.importorskip("torch", reason="PyTorch not installed")
 
 from helmlab.config import TrainConfig
 from helmlab.nn.inn import ColorINN

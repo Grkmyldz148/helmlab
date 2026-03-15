@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+colour = pytest.importorskip("colour", reason="colour-science not installed")
+
 from helmlab.spaces.registry import get_space, all_spaces
 
 
