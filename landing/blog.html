@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Helmlab</title>
+  <meta name="description" content="Helmlab blog — release notes, color science insights, and development updates.">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="canonical" href="https://helmlab.space/blog.html">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://helmlab.space/blog.html">
+  <meta property="og:title" content="Blog — Helmlab">
+  <meta property="og:description" content="Helmlab blog — release notes, color science insights, and development updates.">
+  <meta property="og:image" content="https://helmlab.space/assets/social-media-card.png">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #09090b; color: #a1a1aa; line-height: 1.7; min-height: 100vh;
+    }
+    a { color: #60a5fa; text-decoration: none; } a:hover { text-decoration: underline; }
+
+    /* Nav */
+    .nav { position: sticky; top: 0; background: rgba(9,9,11,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1a1a1e; z-index: 100; padding: 0 24px; }
+    .nav-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+    .nav-logo img { height: 22px; }
+    .nav-links { display: flex; gap: 24px; font-size: 0.88em; }
+    .nav-links a { color: #71717a; } .nav-links a:hover { color: #fafafa; text-decoration: none; }
+
+    /* Container */
+    .container { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+    h1 { color: #fafafa; font-size: 2em; margin-bottom: 8px; }
+    .page-desc { color: #71717a; margin-bottom: 40px; }
+
+    /* Blog list */
+    .blog-grid { display: flex; flex-direction: column; gap: 24px; }
+    .blog-card {
+      background: #111113; border: 1px solid #1f1f23; border-radius: 12px;
+      overflow: hidden; transition: border-color 0.2s; cursor: pointer;
+    }
+    .blog-card:hover { border-color: #3f3f46; }
+    .blog-card a { text-decoration: none; color: inherit; }
+    .blog-cover { width: 100%; height: 220px; object-fit: cover; display: block; background: #18181b; }
+    .blog-body { padding: 24px; }
+    .blog-tags { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .blog-tag {
+      background: #1e293b; color: #60a5fa; font-size: 0.75em; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .blog-title { color: #fafafa; font-size: 1.25em; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+    .blog-excerpt { color: #a1a1aa; font-size: 0.92em; margin-bottom: 14px; }
+    .blog-meta { color: #52525b; font-size: 0.82em; }
+
+    /* Single post */
+    .post-view { display: none; }
+    .post-back { color: #71717a; font-size: 0.88em; margin-bottom: 24px; display: inline-block; }
+    .post-back:hover { color: #fafafa; }
+    .post-header { margin-bottom: 32px; }
+    .post-title { color: #fafafa; font-size: 2.2em; font-weight: 800; line-height: 1.3; margin-bottom: 12px; }
+    .post-meta-bar { display: flex; gap: 16px; color: #52525b; font-size: 0.88em; align-items: center; flex-wrap: wrap; }
+    .post-cover { width: 100%; max-height: 400px; object-fit: cover; border-radius: 12px; margin-bottom: 32px; }
+    .post-content { color: #d4d4d8; font-size: 1.02em; line-height: 1.8; }
+    .post-content h2 { color: #fafafa; font-size: 1.4em; margin: 32px 0 12px; }
+    .post-content h3 { color: #e4e4e7; font-size: 1.15em; margin: 24px 0 8px; }
+    .post-content p { margin-bottom: 16px; }
+    .post-content img { max-width: 100%; border-radius: 8px; margin: 16px 0; }
+    .post-content code { background: #1e1e22; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+    .post-content pre { background: #111113; border: 1px solid #27272a; border-radius: 8px; padding: 16px; overflow-x: auto; margin: 16px 0; }
+    .post-content pre code { background: none; padding: 0; }
+    .post-content ul, .post-content ol { margin: 0 0 16px 24px; }
+    .post-content blockquote { border-left: 3px solid #3f3f46; padding-left: 16px; margin: 16px 0; color: #a1a1aa; font-style: italic; }
+    .post-content a { color: #60a5fa; }
+
+    /* Pagination */
+    .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 40px; }
+    .page-btn {
+      background: #111113; border: 1px solid #27272a; border-radius: 8px;
+      padding: 8px 16px; color: #a1a1aa; font-size: 0.88em; cursor: pointer;
+    }
+    .page-btn:hover { border-color: #3f3f46; color: #fafafa; }
+    .page-btn.active { background: #27272a; color: #fafafa; }
+    .page-btn:disabled { opacity: 0.4; cursor: default; }
+
+    .loading { text-align: center; padding: 60px; color: #52525b; }
+    .empty { text-align: center; padding: 80px 20px; color: #52525b; }
+
+    @media (max-width: 600px) {
+      .blog-cover { height: 160px; }
+      .post-title { font-size: 1.6em; }
+      h1 { font-size: 1.5em; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="assets/logo-horizontal.svg" alt="Helmlab" height="22"></a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/blog.html" style="color:#fafafa">Blog</a>
+        <a href="/palette.html">Palette</a>
+        <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Blog list view -->
+    <div id="listView">
+      <h1>Blog & News</h1>
+      <p class="page-desc">Release notes, color science insights, and development updates.</p>
+      <div class="blog-grid" id="blogGrid">
+        <div class="loading">Loading...</div>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Single post view -->
+    <div class="post-view" id="postView">
+      <a href="/blog.html" class="post-back">&larr; Back to blog</a>
+      <div class="post-header">
+        <div class="blog-tags" id="postTags"></div>
+        <h1 class="post-title" id="postTitle"></h1>
+        <div class="post-meta-bar" id="postMeta"></div>
+      </div>
+      <img class="post-cover" id="postCover" style="display:none" alt="">
+      <div class="post-content" id="postContent"></div>
+    </div>
+  </div>
+
+<script>
+const API = 'https://helmlab.space/api';
+let currentPage = 1;
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+async function loadBlogs(page) {
+  currentPage = page;
+  const grid = document.getElementById('blogGrid');
+  grid.innerHTML = '<div class="loading">Loading...</div>';
+
+  try {
+    const res = await fetch(API + '/blogs?page=' + page + '&limit=10');
+    const data = await res.json();
+
+    if (!data.blogs || data.blogs.length === 0) {
+      grid.innerHTML = '<div class="empty">No blog posts yet.</div>';
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    grid.innerHTML = data.blogs.map(b => `
+      <div class="blog-card" onclick="location.href='/blog.html?slug=${esc(b.slug)}'">
+        ${b.cover_image ? `<img class="blog-cover" src="${esc(b.cover_image)}" alt="${esc(b.title)}" loading="lazy">` : ''}
+        <div class="blog-body">
+          <div class="blog-tags">${(b.tags || []).map(t => `<span class="blog-tag">${esc(t)}</span>`).join('')}</div>
+          <div class="blog-title">${esc(b.title)}</div>
+          <div class="blog-excerpt">${esc(b.excerpt)}</div>
+          <div class="blog-meta">${esc(b.author || 'Helmlab')} &middot; ${formatDate(b.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Pagination
+    const pag = document.getElementById('pagination');
+    if (data.pages > 1) {
+      let html = '';
+      if (page > 1) html += `<button class="page-btn" onclick="loadBlogs(${page-1})">&laquo; Prev</button>`;
+      for (let i = 1; i <= data.pages; i++) {
+        html += `<button class="page-btn ${i===page?'active':''}" onclick="loadBlogs(${i})">${i}</button>`;
+      }
+      if (page < data.pages) html += `<button class="page-btn" onclick="loadBlogs(${page+1})">Next &raquo;</button>`;
+      pag.innerHTML = html;
+    } else {
+      pag.innerHTML = '';
+    }
+  } catch (e) {
+    grid.innerHTML = '<div class="empty">Failed to load blog posts.</div>';
+  }
+}
+
+async function loadPost(slug) {
+  document.getElementById('listView').style.display = 'none';
+  const pv = document.getElementById('postView');
+  pv.style.display = 'block';
+
+  try {
+    const res = await fetch(API + '/blogs/' + slug);
+    if (!res.ok) throw new Error('Not found');
+    const post = await res.json();
+
+    // Update page meta
+    document.title = post.title + ' — Helmlab Blog';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) metaDesc.content = post.excerpt || post.title;
+
+    document.getElementById('postTitle').textContent = post.title;
+    document.getElementById('postTags').innerHTML = (post.tags || []).map(t => `<span class="blog-tag">${esc(t)}</span>`).join('');
+    document.getElementById('postMeta').innerHTML = `<span>${esc(post.author || 'Helmlab')}</span><span>${formatDate(post.created_at)}</span>`;
+
+    const cover = document.getElementById('postCover');
+    if (post.cover_image) { cover.src = post.cover_image; cover.style.display = 'block'; cover.alt = post.title; }
+    else { cover.style.display = 'none'; }
+
+    document.getElementById('postContent').innerHTML = post.content;
+  } catch {
+    document.getElementById('postContent').innerHTML = '<div class="empty">Post not found.</div>';
+  }
+}
+
+// Route
+const params = new URLSearchParams(location.search);
+const slug = params.get('slug');
+if (slug) {
+  loadPost(slug);
+} else {
+  loadBlogs(1);
+}
+</script>
+</body>
+</html>

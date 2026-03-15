@@ -29,8 +29,8 @@ jobs:
           node-version: 20
       - run: cd packages/helmlab-js && npm ci && npx vitest run
 
-  # ─── 2. Deploy landing to server ───────────────────────
-  deploy-landing:
+  # ─── 2. Deploy landing + docs to server ────────────────
+  deploy:
     needs: [test-python, test-js]
     runs-on: ubuntu-latest
     steps:
@@ -47,14 +47,27 @@ jobs:
         run: |
           rsync -avz --delete \
             --exclude='api/comments.json' \
+            --exclude='api/node_modules' \
+            --exclude='uploads' \
             --exclude='.DS_Store' \
             -e "ssh -i ~/.ssh/deploy_key" \
             landing/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/
 
-      - name: Update server repo
+      - name: Deploy docs
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
-            "cd /home/ismailyagci/helmlab-repo && git fetch origin && git reset --hard origin/main"
+            "mkdir -p /home/ismailyagci/web/helmlab.space/public_html/docs"
+          rsync -avz --delete \
+            --exclude='.DS_Store' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            docs/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/docs/
+
+      - name: Update server repo & install API deps
+        run: |
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
+            cd /home/ismailyagci/helmlab-repo && git fetch origin && git reset --hard origin/main
+            cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
+          "
 
       - name: Restart helmlab-api
         run: |
@@ -63,8 +76,11 @@ jobs:
 
       - name: Fix permissions
         run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
-            "chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/"
+          ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
+            chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/
+            mkdir -p /home/ismailyagci/web/helmlab.space/public_html/uploads/blog
+            chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/uploads/
+          "
 
   # ─── 3. Publish npm (only when version changes) ────────
   publish-npm:
@@ -147,3 +163,53 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+  # ─── 5. Auto blog post on version change ───────────────
+  blog-release:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check version change & post blog
+        run: |
+          OLD=$(git show HEAD~1:pyproject.toml 2>/dev/null | python3 -c "
+          import sys
+          for line in sys.stdin:
+              if line.strip().startswith('version'):
+                  print(line.split('\"')[1])
+                  break
+          " 2>/dev/null || echo "0.0.0")
+          NEW=$(python3 -c "
+          for line in open('pyproject.toml'):
+              if line.strip().startswith('version'):
+                  print(line.split('\"')[1])
+                  break
+          ")
+
+          if [ "$OLD" = "$NEW" ]; then
+            echo "No version change, skipping blog post"
+            exit 0
+          fi
+
+          echo "Version changed: $OLD → $NEW"
+
+          # Get commit messages since last version
+          CHANGES=$(git log HEAD~1..HEAD --pretty=format:"<li>%s</li>" | head -20)
+
+          curl -s -X POST "https://helmlab.space/api/ci/blog" \
+            -H "Content-Type: application/json" \
+            -H "X-Blog-Secret: ${{ secrets.BLOG_CI_SECRET }}" \
+            -d "$(python3 -c "
+          import json, sys
+          changes = '''$CHANGES'''
+          print(json.dumps({
+              'title': 'Helmlab v$NEW Released',
+              'excerpt': 'Helmlab v$NEW is now available on npm and PyPI.',
+              'content': '<h2>What\\'s New in v$NEW</h2><ul>' + changes + '</ul><h2>Install</h2><pre><code>pip install helmlab==$NEW\nnpm install helmlab@$NEW</code></pre>',
+              'tags': ['release', 'v$NEW'],
+              'author': 'Helmlab CI'
+          }))
+          ")"

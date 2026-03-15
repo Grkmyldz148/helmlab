@@ -947,6 +947,20 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
       </div>
     </section>
 
+    <!-- Blog & News -->
+    <section id="blog" class="section">
+      <div class="container">
+        <h2>Blog & News</h2>
+        <p class="section-desc">Release notes, color science insights, and development updates.</p>
+        <div id="blogPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:24px">
+          <div style="color:#52525b;text-align:center;padding:40px;grid-column:1/-1">Loading latest posts...</div>
+        </div>
+        <div style="text-align:center;margin-top:24px">
+          <a href="/blog.html" style="color:#60a5fa;font-size:0.92em;font-weight:600">View all posts &rarr;</a>
+        </div>
+      </div>
+    </section>
+
     <!-- Community -->
     <section id="community" class="section">
       <div class="container">
@@ -1000,7 +1014,27 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
   </footer>
 
   <!-- Helmlab JS (IIFE from CDN, exposes window.helmlab) -->
-  <script src="https://cdn.jsdelivr.net/npm/helmlab@0.6.0/dist/index.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/helmlab@latest/dist/index.global.js"></script>
   <script src="js/main.js"></script>
+  <script>
+  // Load latest blog posts for preview
+  (function() {
+    fetch('https://helmlab.space/api/blogs?limit=3').then(r => r.json()).then(data => {
+      const el = document.getElementById('blogPreview');
+      if (!data.blogs || !data.blogs.length) { el.innerHTML = '<div style="color:#52525b;text-align:center;padding:40px;grid-column:1/-1">No posts yet.</div>'; return; }
+      el.innerHTML = data.blogs.map(b => {
+        const date = new Date(b.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
+        return '<a href="/blog.html?slug=' + b.slug + '" style="background:#111113;border:1px solid #1f1f23;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;transition:border-color 0.2s"'
+          + ' onmouseover="this.style.borderColor=\'#3f3f46\'" onmouseout="this.style.borderColor=\'#1f1f23\'">'
+          + (b.cover_image ? '<img src="' + b.cover_image + '" style="width:100%;height:140px;object-fit:cover;display:block" alt="" loading="lazy">' : '')
+          + '<div style="padding:16px">'
+          + '<div style="color:#fafafa;font-weight:700;font-size:1em;margin-bottom:6px;line-height:1.4">' + b.title + '</div>'
+          + '<div style="color:#a1a1aa;font-size:0.85em;margin-bottom:8px">' + (b.excerpt||'').substring(0,100) + '</div>'
+          + '<div style="color:#52525b;font-size:0.78em">' + date + '</div>'
+          + '</div></a>';
+      }).join('');
+    }).catch(() => {});
+  })();
+  </script>
 </body>
 </html>
