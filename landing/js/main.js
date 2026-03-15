@@ -104,16 +104,16 @@
   }
 
   // ── GenSpace (inline, M1→cbrt→M2) ──────────────────────
-  // Hardcoded Phase1H-optimized matrices (gen_params.json)
+  // Hardcoded v14 CMA-ES optimized matrices (gen_params.json)
   var GEN_M1 = [
-    [0.4407, 0.4091, 0.1869],
-    [0.1231, 0.5571, 0.1927],
-    [-0.2302, 0.9278, 0.4854]
+    [0.7583, 0.3838, -0.0961],
+    [0.1267, 0.8422, 0.0343],
+    [0.0764, 0.2590, 0.6141]
   ];
   var GEN_M2 = [
-    [0.2779, 0.2118, 0.6372],
-    [1.7549, -0.9793, -0.7761],
-    [-2.4187, 3.9820, -1.2834]
+    [0.0934, 0.9431, -0.1079],
+    [2.1931, -2.2668, 0.0737],
+    [0.0424, 0.7603, -0.8026]
   ];
   // Inverse matrices (precomputed)
   var GEN_M1_INV = invertMatrix3(GEN_M1);

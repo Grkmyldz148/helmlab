@@ -92,7 +92,7 @@
         </div>
 
         <p class="hero-subtitle designer-text">Two purpose-built color spaces: one for creating beautiful gradients and palettes, one for measuring how your eyes actually see color.</p>
-        <p class="hero-subtitle developer-text">Two spaces: MetricSpace (STRESS 23.30, 72 params) for measurement &middot; GenSpace + arc-length (CV &asymp; 0%, hue 5.2&deg;) for generation.</p>
+        <p class="hero-subtitle developer-text">Two spaces: MetricSpace (STRESS 23.30, 72 params) for measurement &middot; GenSpace + arc-length (CV &asymp; 0%, 28/43 wins) for generation.</p>
 
         <div class="install-commands">
           <div class="install-cmd">
@@ -123,7 +123,7 @@
             <span class="space-badge gen">GenSpace</span>
             <h3>For Creating Colors</h3>
             <p class="designer-text">Optimized for smooth gradients, perceptually even palettes, and clean color generation. Arc-length reparameterization makes every gradient step perfectly equal.</p>
-            <p class="developer-text">Phase1H-optimized M1/M2 (&gamma;=&frac13;) + CIEDE2000 arc-length. Best hue linearity of any cbrt space (5.2&deg; RMS), perfectly uniform steps.</p>
+            <p class="developer-text">v14 CMA-ES optimized M1/M2 (&gamma;=&frac13;) + CIEDE2000 arc-length. Wins 28/43 benchmarks vs OKLab (6/43), perfectly uniform steps.</p>
             <div class="card-stats">
               <span class="card-stat">CV <strong>&asymp; 0%</strong></span>
               <span class="card-stat">Hue <strong>5.2&deg;</strong></span>
@@ -408,7 +408,7 @@
           <div class="gen-compare-stats">
             <div class="gen-compare-stat">
               <span class="label">Color path</span>
-              <span class="values">GenSpace Lab (optimized M1/M2, hue 5.2&deg;)</span>
+              <span class="values">GenSpace Lab (v14 optimized M1/M2, 28/43 wins)</span>
             </div>
             <div class="gen-compare-stat">
               <span class="label">Step distribution</span>
@@ -568,7 +568,7 @@
     <section id="pipeline" class="section only-developer">
       <div class="container">
         <h2>The Pipeline</h2>
-        <p class="section-intro">Two pipelines for two objectives. MetricSpace: 11-stage enriched transform (72 params). GenSpace: 3-stage pure transform (21 params) + arc-length reparameterization for gradient().</p>
+        <p class="section-intro">Two pipelines for two objectives. MetricSpace: 11-stage enriched transform (72 params). GenSpace: 3-stage pure transform (18 params) + arc-length reparameterization for gradient().</p>
         <div class="pipe-scroll">
           <div class="pipe-track">
             <div class="pipe-stage">
@@ -646,7 +646,7 @@
         <h3 style="color:#71717a;font-size:0.88em;font-weight:700;margin-top:32px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">MetricSpace <span class="space-tag metric" style="font-size:0.85em;">72 params</span></h3>
         <p style="font-size:0.82em;color:#52525b;margin-bottom:16px;">Full enriched pipeline &mdash; XYZ &rarr; M<sub>1</sub> &rarr; &gamma; &rarr; M<sub>2</sub> &rarr; Hue &rarr; H-K &rarr; L &rarr; C &rarr; HL &rarr; NC &rarr; &phi;</p>
 
-        <h3 style="color:#71717a;font-size:0.88em;font-weight:700;margin-top:24px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">GenSpace <span class="space-tag gen" style="font-size:0.85em;">21 params</span></h3>
+        <h3 style="color:#71717a;font-size:0.88em;font-weight:700;margin-top:24px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">GenSpace <span class="space-tag gen" style="font-size:0.85em;">18 params</span></h3>
         <div class="pipe-scroll">
           <div class="pipe-track">
             <div class="pipe-stage">

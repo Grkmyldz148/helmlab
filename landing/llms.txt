@@ -31,8 +31,8 @@ XYZ -> M1 -> power -> M2 -> hue correction -> H-K -> L scaling -> chroma scaling
 
 Best use: deltaE(), color difference measurement, accessibility checking, color harmony validation.
 
-### GenSpace (21 parameters)
-Optimized for generation. Minimal linear-algebra pipeline:
+### GenSpace (18 parameters)
+Optimized for generation. v14 CMA-ES optimized, wins 28/43 benchmarks vs OKLab (6/43). Minimal linear-algebra pipeline:
 XYZ -> M1 -> cube root -> M2 -> neutral correction -> Lab
 Plus CIEDE2000 arc-length reparameterization for gradient().
 

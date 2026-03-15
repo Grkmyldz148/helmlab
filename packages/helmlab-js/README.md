@@ -125,13 +125,13 @@ Helmlab is a family of two purpose-built color spaces:
 XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
 ```
 
-**GenSpace** (21 parameters) — optimized for generation (gradients, palettes):
+**GenSpace** (18 parameters) — optimized for generation (gradients, palettes):
 ```
 XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
 + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
-MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses Phase1H-optimized matrices for 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS).
+MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses v14 CMA-ES optimized matrices — wins 28/43 perceptual benchmarks vs OKLab (6/43) and CIE Lab (9/43), with sky-blue Blue→White gradients (no purple shift).
 
 ### Gradient Uniformity
 
@@ -140,7 +140,7 @@ CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
 | Method | Red→Blue | Orange→Cyan | Black→White | Technique |
 |--------|----------|-------------|-------------|-----------|
 | **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
-| Helmlab GenSpace | 3.1% | 33.2% | 41.0% | linear interpolation |
+| Helmlab GenSpace | 30.3% | 26.5% | 40.7% | linear interpolation |
 | Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
 | CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
 

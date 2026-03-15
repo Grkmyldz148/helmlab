@@ -10,7 +10,7 @@
 Helmlab is a data-driven color space family trained on 64,000+ human color perception observations. It provides two spaces:
 
 - **MetricSpace** — 20% lower STRESS than CIEDE2000 on perceptual distance measurement
-- **GenSpace** — 6× better hue accuracy than Oklab for color generation
+- **GenSpace** — wins 28/43 perceptual benchmarks vs OKLab (6/43) for color generation
 
 This plugin lets you use Helmlab color spaces in CSS today, without waiting for browser support.
 

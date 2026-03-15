@@ -117,7 +117,7 @@ Helmlab (UI layer)
 
 **MetricSpace** (72 parameters) is jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation.
 
-**GenSpace** (21 parameters) uses Phase1H-optimized M1/M2 matrices with shared γ=⅓. No enrichment stages — pure linear-algebra pipeline, fast and invertible. 6× better hue accuracy than Oklab (5.2° vs 30.1° RMS).
+**GenSpace** (18 parameters) uses CMA-ES optimized M1/M2 matrices with shared γ=⅓. No enrichment stages — pure linear-algebra pipeline, fast and invertible. Wins 28/43 perceptual benchmarks vs OKLab (6/43) and CIE Lab (9/43), with sky-blue Blue→White gradients (no purple shift).
 
 ## Benchmarks
 
@@ -160,7 +160,7 @@ CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
 | Method | Red→Blue | Orange→Cyan | Black→White | Technique |
 |--------|----------|-------------|-------------|-----------|
 | **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
-| Helmlab GenSpace | 3.1% | 33.2% | 41.0% | linear interpolation |
+| Helmlab GenSpace | 30.3% | 26.5% | 40.7% | linear interpolation |
 | Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
 | CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
 
@@ -188,7 +188,7 @@ src/helmlab/
 │   └── ...                 # Converters, I/O, visualization
 ├── data/
 │   ├── metric_params.json  # MetricSpace params (v20b, STRESS 23.30)
-│   ├── gen_params.json     # GenSpace params (Phase1H optimized)
+│   ├── gen_params.json     # GenSpace params (v14 CMA-ES optimized)
 │   └── ...                 # Dataset loaders (COMBVD, Munsell, etc.)
 ├── export.py               # Token export (CSS, Android, iOS, Tailwind)
 └── feedback/               # Human feedback collection tools
