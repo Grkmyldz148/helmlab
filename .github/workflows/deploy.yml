@@ -62,22 +62,6 @@ jobs:
             cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
           "
 
-      - name: Replace old credentials on entire server
-        run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 '
-            echo "=== Scanning for old MongoDB credential ==="
-            grep -rl "Grkmyldz14892525" /home/ismailyagci/ 2>/dev/null || echo "No matches found"
-            echo "=== Replacing old password with new ==="
-            find /home/ismailyagci/ -type f \( -name "*.js" -o -name "*.json" -o -name "*.env" -o -name "*.sh" -o -name "*.conf" -o -name "*.yml" -o -name "*.yaml" -o -name "*.txt" -o -name "*.cfg" -o -name "*.ini" -o -name "*.toml" \) 2>/dev/null | while read f; do
-              if grep -q "Grkmyldz14892525" "$f" 2>/dev/null; then
-                echo "  FOUND & REPLACING in: $f"
-                sed -i "s/Grkmyldz14892525/Ecrinmina14892525/g" "$f"
-              fi
-            done
-            echo "=== Verify no old credentials remain ==="
-            grep -rl "Grkmyldz14892525" /home/ismailyagci/ 2>/dev/null || echo "All clean!"
-          '
-
       - name: Configure & restart helmlab-api
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
@@ -89,7 +73,19 @@ jobs:
             chown ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/api/.env
             cd /home/ismailyagci/web/helmlab.space/public_html/api
             pm2 delete helmlab-api 2>/dev/null || true
-            pm2 start server.js --name helmlab-api --env-file .env
+            cat > ecosystem.config.js << ECOEOF
+          module.exports = {
+            apps: [{
+              name: 'helmlab-api',
+              script: 'server.js',
+              env: {
+                MONGO_URI: '$(grep MONGO_URI .env | cut -d= -f2-)',
+                BLOG_SECRET: '$(grep BLOG_SECRET .env | cut -d= -f2-)'
+              }
+            }]
+          };
+          ECOEOF
+            pm2 start ecosystem.config.js
             pm2 save
           "
 
