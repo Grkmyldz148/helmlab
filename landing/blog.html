@@ -6,6 +6,7 @@
   <title>Blog — Helmlab</title>
   <meta name="description" content="Helmlab blog — release notes, color science insights, and development updates.">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/components.css">
   <link rel="canonical" href="https://helmlab.space/blog.html">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://helmlab.space/blog.html">
@@ -19,13 +20,6 @@
       background: #09090b; color: #a1a1aa; line-height: 1.7; min-height: 100vh;
     }
     a { color: #60a5fa; text-decoration: none; } a:hover { text-decoration: underline; }
-
-    /* Nav */
-    .nav { position: sticky; top: 0; background: rgba(9,9,11,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1a1a1e; z-index: 100; padding: 0 24px; }
-    .nav-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; }
-    .nav-logo img { height: 22px; }
-    .nav-links { display: flex; gap: 24px; font-size: 0.88em; }
-    .nav-links a { color: #71717a; } .nav-links a:hover { color: #fafafa; text-decoration: none; }
 
     /* Container */
     .container { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
@@ -93,17 +87,7 @@
 </head>
 <body>
 
-  <nav class="nav">
-    <div class="nav-inner">
-      <a href="/" class="nav-logo"><img src="assets/logo-horizontal.svg" alt="Helmlab" height="22"></a>
-      <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/blog.html" style="color:#fafafa">Blog</a>
-        <a href="/palette.html">Palette</a>
-        <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
-      </div>
-    </div>
-  </nav>
+  <div id="site-nav"></div>
 
   <div class="container">
     <!-- Blog list view -->
@@ -126,8 +110,21 @@
       </div>
       <img class="post-cover" id="postCover" style="display:none" alt="">
       <div class="post-content" id="postContent"></div>
+      <div class="post-footer" id="postFooter" style="display:none;margin-top:48px;padding-top:24px;border-top:1px solid #27272a">
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+          <div style="color:#fafafa;font-weight:700;font-size:0.95em"><a href="https://gorkemyildiz.com" style="color:#60a5fa">Gorkem Yildiz</a></div>
+          <span style="color:#3f3f46">&middot;</span>
+          <a href="https://github.com/Grkmyldz148/helmlab" style="color:#71717a;font-size:0.88em">GitHub</a>
+          <span style="color:#3f3f46">&middot;</span>
+          <a href="https://helmlab.space" style="color:#71717a;font-size:0.88em">helmlab.space</a>
+          <span style="color:#3f3f46">&middot;</span>
+          <a href="https://arxiv.org/abs/2602.23010" style="color:#71717a;font-size:0.88em">Paper</a>
+        </div>
+      </div>
     </div>
   </div>
+
+  <div id="site-footer"></div>
 
 <script>
 const API = 'https://helmlab.space/api';
@@ -208,6 +205,7 @@ async function loadPost(slug) {
     else { cover.style.display = 'none'; }
 
     document.getElementById('postContent').innerHTML = post.content;
+    document.getElementById('postFooter').style.display = 'block';
   } catch {
     document.getElementById('postContent').innerHTML = '<div class="empty">Post not found.</div>';
   }
@@ -222,5 +220,6 @@ if (slug) {
   loadBlogs(1);
 }
 </script>
+<script src="js/components.js"></script>
 </body>
 </html>

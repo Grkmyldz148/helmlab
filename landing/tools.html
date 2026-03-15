@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helmlab — Design Tools</title>
+<link rel="stylesheet" href="css/components.css">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', sans-serif;
+    background: #09090b; color: #a1a1aa; line-height: 1.7; font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 28px; }
+
+  /* ── Lang Toggle ─────────────────────────────────────────── */
+
+  /* ── Sticky Nav ──────────────────────────────────────────── */
+  .sticky-nav {
+    position: sticky; top: 56px; z-index: 100; background: rgba(9,9,11,0.92);
+    backdrop-filter: blur(12px); border-bottom: 1px solid #27272a;
+    padding: 10px 0; margin-bottom: 8px;
+  }
+  .sticky-nav .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 28px;
+    display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  }
+  .sticky-nav .nav-inner::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    background: none; border: 1px solid transparent; color: #52525b;
+    padding: 5px 12px; border-radius: 8px; font-size: 0.72em; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap; font-family: inherit; font-weight: 600;
+  }
+  .nav-btn:hover { color: #a1a1aa; border-color: #27272a; }
+  .nav-btn.active { background: #18181b; color: #60a5fa; border-color: #3b82f6; }
+
+  /* ── Hero ──────────────────────────────────────────────────── */
+  .hero { text-align: center; padding: 24px 0 32px; }
+  .hero h1 {
+    font-size: 3.2em; font-weight: 800; letter-spacing: -2px; line-height: 1;
+    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero .tagline {
+    color: #71717a; font-size: 1em; max-width: 600px; margin: 12px auto 0;
+    line-height: 1.6;
+  }
+  .blue { color: #60a5fa; }
+  .green { color: #34d399; }
+  .purple { color: #a78bfa; }
+  .red { color: #f87171; }
+  .amber { color: #fbbf24; }
+
+  /* ── Sections ──────────────────────────────────────────────── */
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin: 48px 0 8px; opacity: 0; transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .section-header.visible { opacity: 1; transform: translateY(0); }
+  .section-num {
+    background: #60a5fa; color: #09090b; width: 32px; height: 32px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8em; font-weight: 800; flex-shrink: 0;
+  }
+  .section-title { font-size: 1.35em; font-weight: 700; color: #fafafa; }
+  .section-desc {
+    font-size: 0.88em; color: #52525b; margin-bottom: 16px; max-width: 850px;
+    line-height: 1.65;
+  }
+  .card {
+    background: #111113; border: 1px solid #27272a; border-radius: 16px;
+    padding: 28px; margin-bottom: 16px;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .card.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── Controls ────────────────────────────────────────────── */
+  .controls {
+    display: flex; gap: 14px; align-items: center; margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .controls label { font-size: 0.82em; color: #71717a; }
+  .controls input[type="color"] {
+    width: 48px; height: 36px; border: 2px solid #5b5b63; border-radius: 8px;
+    cursor: pointer; background: none; padding: 2px;
+  }
+  .controls input[type="range"] {
+    width: 120px; accent-color: #60a5fa;
+  }
+  .preset-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  .preset-btn {
+    background: #18181b; border: 1px solid #27272a; color: #71717a;
+    padding: 5px 12px; border-radius: 8px; font-size: 0.72em; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .preset-btn:hover { background: #27272a; color: #d4d4d8; border-color: #3f3f46; }
+  .preset-btn.active { border-color: #3b82f6; color: #60a5fa; }
+
+  /* ── Export Buttons ──────────────────────────────────────── */
+  .export-row {
+    display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .export-btn {
+    background: #18181b; border: 1px solid #27272a; color: #a1a1aa;
+    padding: 6px 14px; border-radius: 8px; font-size: 0.72em; cursor: pointer;
+    transition: all 0.2s; font-family: inherit; font-weight: 600;
+  }
+  .export-btn:hover { background: #27272a; color: #fafafa; border-color: #3f3f46; }
+  .export-btn.copied { background: #064e3b; border-color: #34d399; color: #34d399; }
+
+  /* ── Palette Link Banner ─────────────────────────────────── */
+  .palette-link-banner {
+    display: flex; align-items: center; gap: 10px;
+    background: #18181b; border: 1px solid #27272a; border-radius: 12px;
+    padding: 14px 20px; margin: 32px 0 8px; font-size: 0.88em;
+  }
+  .palette-link-banner a {
+    color: #60a5fa; text-decoration: none; font-weight: 600;
+    border-bottom: 1px solid transparent; transition: border-color 0.15s;
+  }
+  .palette-link-banner a:hover { border-bottom-color: #60a5fa; }
+
+  /* ── Gradient ────────────────────────────────────────────── */
+  .grad-method { margin-bottom: 18px; }
+  .grad-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .grad-name { font-size: 0.82em; font-weight: 700; width: 90px; }
+  .grad-cv { font-family: 'SF Mono',monospace; font-size: 0.72em; color: #52525b; }
+  .grad-strip { display: flex; height: 48px; border-radius: 10px; overflow: hidden; border: 1px solid #27272a; }
+  .grad-step { flex: 1; }
+  .grad-bars { display: flex; height: 24px; gap: 1px; margin-top: 3px; align-items: flex-end; }
+  .grad-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; }
+
+  /* ── Contrast Checker ────────────────────────────────────── */
+  .contrast-display {
+    text-align: center; padding: 32px 16px; border-radius: 12px;
+    border: 1px solid #27272a; margin-bottom: 16px;
+  }
+  .contrast-ratio {
+    font-size: 3.5em; font-weight: 800; letter-spacing: -2px;
+    font-family: 'SF Mono',monospace;
+  }
+  .contrast-badges { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .badge {
+    padding: 4px 12px; border-radius: 6px; font-size: 0.72em; font-weight: 700;
+    border: 1px solid;
+  }
+  .badge.pass { background: #064e3b; border-color: #34d399; color: #34d399; }
+  .badge.fail { background: #450a0a; border-color: #f87171; color: #f87171; }
+  .contrast-preview {
+    padding: 20px; border-radius: 12px; border: 1px solid #27272a; margin-top: 16px;
+  }
+  .preview-text { font-size: 1.1em; margin-bottom: 8px; }
+  .preview-text-sm { font-size: 0.82em; }
+  .preview-btn {
+    display: inline-block; padding: 8px 20px; border-radius: 8px; font-weight: 600;
+    font-size: 0.88em; margin-top: 8px; border: none;
+  }
+
+  /* ── Harmony ─────────────────────────────────────────────── */
+  .harmony-types { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .harmony-swatches {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .harmony-swatch {
+    width: 72px; height: 72px; border-radius: 12px; border: 1px solid #27272a;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+    font-size: 0.6em; font-weight: 600; cursor: pointer; transition: transform 0.15s;
+  }
+  .harmony-swatch:hover { transform: scale(1.08); }
+  .hue-ring-svg { display: block; margin: 0 auto; }
+
+  /* ── Hue Ring ────────────────────────────────────────────── */
+  .hue-ring-row {
+    display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
+  }
+  .hue-ring-col { text-align: center; }
+  .hue-ring-label { font-size: 0.82em; font-weight: 700; margin-bottom: 8px; }
+
+  /* ── Inspector ───────────────────────────────────────────── */
+  .inspector-layout { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .inspector-left { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .inspector-left input[type="color"] {
+    width: 120px; height: 120px; border: 2px solid #5b5b63; border-radius: 16px;
+    cursor: pointer; background: none; padding: 4px;
+  }
+  .hex-disp {
+    font-family: 'SF Mono',monospace; font-size: 0.9em; color: #a1a1aa;
+    background: #18181b; padding: 6px 16px; border-radius: 8px; border: 1px solid #27272a;
+  }
+  .inspector-right { flex: 1; min-width: 300px; }
+  .sp-block { margin-bottom: 14px; }
+  .sp-title { font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+  .sp-vals { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sp-val {
+    background: #18181b; border: 1px solid #27272a; border-radius: 8px;
+    padding: 6px 10px; text-align: center; min-width: 72px;
+  }
+  .sp-val .k { font-size: 0.6em; color: #52525b; text-transform: uppercase; }
+  .sp-val .v { font-size: 0.95em; font-weight: 600; font-family: 'SF Mono',monospace; margin-top: 2px; }
+
+  /* ── Dark/Light Adapter ──────────────────────────────────── */
+  .adapter-inputs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .adapter-color-input {
+    display: flex; align-items: center; gap: 6px;
+    background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 4px 10px;
+  }
+  .adapter-color-input input[type="color"] {
+    width: 32px; height: 28px; border: 1px solid #3f3f46; border-radius: 6px;
+    cursor: pointer; background: none; padding: 1px;
+  }
+  .adapter-color-input .mono { font-size: 0.75em; }
+  .adapter-previews {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .adapter-card {
+    border-radius: 12px; padding: 20px; border: 1px solid #27272a;
+  }
+  .adapter-card-title {
+    font-size: 0.72em; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 12px;
+  }
+  .adapter-swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .adapter-swatch {
+    width: 48px; height: 48px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.55em; font-weight: 700; font-family: 'SF Mono',monospace;
+  }
+
+  /* ── Distance ────────────────────────────────────────────── */
+  .distance-swatches {
+    display: flex; gap: 16px; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+  }
+  .distance-swatch {
+    width: 100px; height: 100px; border-radius: 16px; border: 1px solid #27272a;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;
+    font-size: 0.72em; font-weight: 600;
+  }
+  .distance-vs { font-size: 1.5em; color: #3f3f46; font-weight: 700; }
+  .distance-bars { margin-top: 16px; }
+  .dist-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+    padding: 6px 10px; border-radius: 10px;
+  }
+  .dist-label { font-size: 0.82em; font-weight: 600; min-width: 100px; flex-shrink: 0; }
+  .dist-bar-wrap {
+    flex: 1; background: #18181b; border-radius: 6px; height: 28px;
+    position: relative; overflow: hidden;
+  }
+  .dist-bar {
+    height: 100%; border-radius: 6px; display: flex; align-items: center;
+    padding-left: 12px; font-size: 0.78em; font-weight: 700; color: #fff;
+    transition: width 0.5s ease;
+  }
+  .dist-bar.helmlab { background: linear-gradient(90deg, #1e3a5f, #3b82f6); }
+  .dist-bar.oklab { background: linear-gradient(90deg, #064e3b, #10b981); }
+  .dist-bar.cielab { background: linear-gradient(90deg, #4c1d95, #8b5cf6); }
+  .jnd-text { font-size: 0.82em; color: #71717a; margin-top: 12px; }
+
+  .note { font-size: 0.78em; color: #52525b; margin-top: 14px; font-style: italic; line-height: 1.6; }
+
+  /* ── Responsive ──────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 2.2em; letter-spacing: -1px; }
+    .card { padding: 18px; }
+    .adapter-previews { grid-template-columns: 1fr; }
+    .inspector-left input[type="color"] { width: 80px; height: 80px; }
+    .distance-swatch { width: 72px; height: 72px; }
+    .contrast-ratio { font-size: 2.5em; }
+  }
+</style>
+</head>
+<body>
+
+<div id="site-nav"></div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- LANG TOGGLE                                                 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- STICKY NAV                                                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="sticky-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="scrollToTool('contrast')" data-i18n-nav="nav_contrast"></button>
+    <button class="nav-btn" onclick="scrollToTool('harmony')" data-i18n-nav="nav_harmony"></button>
+    <button class="nav-btn" onclick="scrollToTool('huering')" data-i18n-nav="nav_huering"></button>
+    <button class="nav-btn" onclick="scrollToTool('gradient')" data-i18n-nav="nav_gradient"></button>
+    <button class="nav-btn" onclick="scrollToTool('inspector')" data-i18n-nav="nav_inspector"></button>
+    <button class="nav-btn" onclick="scrollToTool('adapter')" data-i18n-nav="nav_adapter"></button>
+    <button class="nav-btn" onclick="scrollToTool('distance')" data-i18n-nav="nav_distance"></button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- HERO                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="hero">
+    <h1>Helmlab Tools</h1>
+    <p class="tagline" data-i18n="hero_tagline"></p>
+  </div>
+
+  <!-- Palette link banner -->
+  <div class="palette-link-banner" data-i18n="palette_banner">
+  </div>
+
+  <!-- 2. CONTRAST CHECKER -->
+  <div id="tool-contrast">
+    <div class="section-header" data-reveal>
+      <div class="section-num">2</div>
+      <div class="section-title" data-i18n="s2_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s2_desc"></p>
+    <div class="card" data-reveal>
+      <div class="controls">
+        <label data-i18n="lbl_fg"></label>
+        <input type="color" id="contrastFg" value="#FFFFFF">
+        <label data-i18n="lbl_bg"></label>
+        <input type="color" id="contrastBg" value="#1E3A5F">
+        <button class="preset-btn" onclick="autoFixContrast()" data-i18n="btn_autofix"></button>
+      </div>
+      <div id="contrastArea"></div>
+    </div>
+  </div>
+
+  <!-- 3. COLOR HARMONY -->
+  <div id="tool-harmony">
+    <div class="section-header" data-reveal>
+      <div class="section-num">3</div>
+      <div class="section-title" data-i18n="s3_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s3_desc"></p>
+    <div class="card" data-reveal>
+      <div class="controls">
+        <label data-i18n="lbl_base"></label>
+        <input type="color" id="harmonyBase" value="#3B82F6">
+        <div class="harmony-types" id="harmonyTypes"></div>
+      </div>
+      <div id="harmonyArea"></div>
+    </div>
+  </div>
+
+  <!-- 4. HUE RING -->
+  <div id="tool-huering">
+    <div class="section-header" data-reveal>
+      <div class="section-num">4</div>
+      <div class="section-title" data-i18n="s4_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s4_desc"></p>
+    <div class="card" data-reveal>
+      <div class="controls">
+        <label>L:</label>
+        <input type="range" id="hueL" min="15" max="95" value="60">
+        <span class="mono" id="hueLVal" style="font-size:0.78em;min-width:36px">0.60</span>
+        <label>C:</label>
+        <input type="range" id="hueC" min="5" max="30" value="15">
+        <span class="mono" id="hueCVal" style="font-size:0.78em;min-width:36px">0.15</span>
+        <label>N:</label>
+        <input type="range" id="hueN" min="6" max="24" value="12" step="1">
+        <span class="mono" id="hueNVal" style="font-size:0.78em;min-width:24px">12</span>
+      </div>
+      <div id="hueRingArea"></div>
+    </div>
+  </div>
+
+  <!-- 5. GRADIENT BUILDER -->
+  <div id="tool-gradient">
+    <div class="section-header" data-reveal>
+      <div class="section-num">5</div>
+      <div class="section-title" data-i18n="s5_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s5_desc"></p>
+    <div class="card" data-reveal>
+      <div class="controls">
+        <label data-i18n="lbl_start"></label>
+        <input type="color" id="gradFrom" value="#ff6b00">
+        <label data-i18n="lbl_end"></label>
+        <input type="color" id="gradTo" value="#00d4ff">
+        <label data-i18n="lbl_steps"></label>
+        <input type="range" id="gradSteps" min="5" max="50" value="21">
+        <span class="mono" id="gradStepsVal" style="font-size:0.78em">21</span>
+      </div>
+      <div id="gradArea"></div>
+      <div class="export-row">
+        <button class="export-btn" onclick="exportGradient()" data-i18n="exp_gradient"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. COLOR INSPECTOR -->
+  <div id="tool-inspector">
+    <div class="section-header" data-reveal>
+      <div class="section-num">6</div>
+      <div class="section-title" data-i18n="s6_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s6_desc"></p>
+    <div class="card" data-reveal>
+      <div class="inspector-layout">
+        <div class="inspector-left">
+          <input type="color" id="inspector" value="#3B82F6">
+          <div class="hex-disp mono" id="inspHex">#3B82F6</div>
+        </div>
+        <div class="inspector-right" id="inspArea"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. DARK/LIGHT MODE ADAPTER -->
+  <div id="tool-adapter">
+    <div class="section-header" data-reveal>
+      <div class="section-num">7</div>
+      <div class="section-title" data-i18n="s7_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s7_desc"></p>
+    <div class="card" data-reveal>
+      <div class="adapter-inputs" id="adapterInputs"></div>
+      <div id="adapterArea"></div>
+    </div>
+  </div>
+
+  <!-- 8. PERCEPTUAL DISTANCE -->
+  <div id="tool-distance">
+    <div class="section-header" data-reveal>
+      <div class="section-num">8</div>
+      <div class="section-title" data-i18n="s8_title"></div>
+    </div>
+    <p class="section-desc" data-i18n="s8_desc"></p>
+    <div class="card" data-reveal>
+      <div class="controls">
+        <label data-i18n="lbl_color1"></label>
+        <input type="color" id="distC1" value="#3B82F6">
+        <label data-i18n="lbl_color2"></label>
+        <input type="color" id="distC2" value="#EF4444">
+      </div>
+      <div id="distArea"></div>
+    </div>
+  </div>
+
+  <div id="site-footer"></div>
+
+</div>
+
+<script src="js/components.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// Helmlab v20b params (production)
+// ═══════════════════════════════════════════════════════════════
+const Q = {
+  M1: [[0.7342943222452644,0.24049249952372878,-0.15763751765949208],[-0.3298489081190054,1.2349200319947062,-0.00011401053364536622],[0.08633204542081865,0.3414453053380001,0.8320187908189167]],
+  gamma: [0.38922300523380954,0.4163225224600994,0.424136411390728],
+  M2: [[-0.4201444325131867,0.4846067800936122,0.641671081311568],[1.9328411649568151,-2.7178725296509234,0.7639609115884012],[0.0056138814291964425,1.6281620091666282,-1.2607966751966067]],
+  hk_weight: 0.3887364763408459, hk_power: 0.8487498478929875, hk_hue_mod: -0.49403221483739856,
+  hk_sin1: 0.3427500673096532, hk_cos2: 0.5057917724092752, hk_sin2: 1.2531214183133925,
+  L_corr_p1: 0.22209286485816096, L_corr_p2: -0.726689699330081, L_corr_p3: 0.6948410518667059,
+  Lh_cos1: -0.08921959945592077, Lh_sin1: -0.03417192933375745,
+  lp_dark: 0.5350532994803492, lp_dark_hcos: 0.01510453094801519, lp_dark_hsin: 0.012001697695947553,
+  cs_cos1: -0.4120602979458365, cs_sin1: 0.3800513618890033, cs_cos2: -0.2528251369568942, cs_sin2: 0.657402155150853,
+  cs_cos3: -0.44403582186509966, cs_sin3: 0.38312823859541884, cs_cos4: 0.10052079558164836, cs_sin4: 0.23091452352663336,
+  cp_cos1: -0.45285545866406535, cp_sin1: -0.402686329735538, cp_cos2: -0.06806724448657032, cp_sin2: 0.33642259938164853,
+  lc1: -0.46309182275553784, lc2: -0.7907362486190921,
+  hlc_cos1: 0.10838825831361108, hlc_sin1: 0.5912853085941397, hlc_cos2: 0.2890874556971346, hlc_sin2: -0.26510357924924527,
+  hl_cos1: 0.07697580724849687, hl_sin1: 0.12261651723570662, hl_cos2: -0.041189966586526024, hl_sin2: -0.012540514326587596,
+  hue_cos1: 0.23826555017017817, hue_sin1: -0.47457402184732383, hue_cos2: 0.015763095458215106, hue_sin2: 0.08210977205919093,
+  hue_cos3: 0.12885828370119579, hue_sin3: -0.08835184701121743, hue_cos4: -0.07188519624223008, hue_sin4: -0.013626221336494375,
+  dist_power: 0.804265429185275, dist_wC: 1.0458243890301122, dist_compress: 1.5903206798028005, dist_post_power: 1.1
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Math utilities
+// ═══════════════════════════════════════════════════════════════
+function srgbToLin(c) { return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function linToSrgb(c) { return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(c, 0), 1/2.4) - 0.055; }
+function srgbToXYZ(r,g,b) {
+  const R=srgbToLin(r), G=srgbToLin(g), B=srgbToLin(b);
+  return [0.4124564*R+0.3575761*G+0.1804375*B, 0.2126729*R+0.7151522*G+0.0721750*B, 0.0193339*R+0.1191920*G+0.9503041*B];
+}
+function xyzToSrgb(X,Y,Z) {
+  return [linToSrgb(3.2404542*X-1.5371385*Y-0.4985314*Z), linToSrgb(-0.9692660*X+1.8760108*Y+0.0415560*Z), linToSrgb(0.0556434*X-0.2040259*Y+1.0572252*Z)];
+}
+// Display P3 (same transfer function as sRGB, wider primaries)
+function xyzToP3Lin(X,Y,Z) {
+  return [2.4934969*X-0.9313836*Y-0.4027108*Z, -0.8294890*X+1.7626641*Y+0.0236247*Z, 0.0358458*X-0.0761724*Y+0.9568845*Z];
+}
+function xyzToP3(X,Y,Z) { const lin=xyzToP3Lin(X,Y,Z); return [linToSrgb(lin[0]),linToSrgb(lin[1]),linToSrgb(lin[2])]; }
+function inP3(p3) { return p3[0]>=-0.005&&p3[0]<=1.005&&p3[1]>=-0.005&&p3[1]<=1.005&&p3[2]>=-0.005&&p3[2]<=1.005; }
+const hasP3 = typeof window!=='undefined' && window.matchMedia && window.matchMedia('(color-gamut: p3)').matches;
+function mat3(M,v) { return [M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2], M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2], M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]]; }
+function spow(x,g) { return x >= 0 ? Math.pow(x,g) : -Math.pow(-x,g); }
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+function hexToRgb(h) { return [parseInt(h.slice(1,3),16)/255, parseInt(h.slice(3,5),16)/255, parseInt(h.slice(5,7),16)/255]; }
+function rgbToHex(r,g,b) { const c=v=>Math.round(clamp01(v)*255).toString(16).padStart(2,'0'); return '#'+c(r)+c(g)+c(b); }
+function lerp(a,b,t) { return a+(b-a)*t; }
+function inGamut(rgb) { return rgb[0]>=-0.005&&rgb[0]<=1.005&&rgb[1]>=-0.005&&rgb[1]<=1.005&&rgb[2]>=-0.005&&rgb[2]<=1.005; }
+
+function mat3inv(M) {
+  const a=M[0][0],b=M[0][1],c=M[0][2],d=M[1][0],e=M[1][1],f=M[1][2],g=M[2][0],h=M[2][1],i=M[2][2];
+  const det=a*(e*i-f*h)-b*(d*i-f*g)+c*(d*h-e*g); const id=1/det;
+  return [[(e*i-f*h)*id,(c*h-b*i)*id,(b*f-c*e)*id],[(f*g-d*i)*id,(a*i-c*g)*id,(c*d-a*f)*id],[(d*h-e*g)*id,(b*g-a*h)*id,(a*e-b*d)*id]];
+}
+// MetricSpace inverses (for distance computation only)
+const Q_M1_inv = mat3inv(Q.M1), Q_M2_inv = mat3inv(Q.M2), Q_inv_gamma = Q.gamma.map(g => 1/g);
+
+// GenSpace v14 — used for all generation tools (hue ring, gradient, palette, inspector)
+const GEN_M1 = [[0.7583243160447798,0.38377540398311993,-0.09607398603310499],[0.12671636243626094,0.8421789393331481,0.03434889386155031],[0.07641790227005364,0.25903052200023363,0.6141202194225033]];
+const GEN_M2 = [[0.09340675018178585,0.9431249028043406,-0.10786998254946822],[2.193136162645944,-2.2668262484061774,0.07374624241234994],[0.042397034475253816,0.7603347230325462,-0.8026457678265072]];
+const GEN_M1_inv = mat3inv(GEN_M1), GEN_M2_inv = mat3inv(GEN_M2);
+const GEN_GAMMA = 1/3, GEN_INV_GAMMA = 3;
+
+// Base Lab: GenSpace M1→cbrt→M2. Used for gradient, hue ring, palette, inspector.
+function baseLabFwd(X, Y, Z) {
+  let l = mat3(GEN_M1, [X, Y, Z]);
+  l = [spow(l[0], GEN_GAMMA), spow(l[1], GEN_GAMMA), spow(l[2], GEN_GAMMA)];
+  return mat3(GEN_M2, l);
+}
+function baseLabInv(L, a, b) {
+  let lms = mat3(GEN_M2_inv, [L, a, b]);
+  lms = [spow(lms[0], GEN_INV_GAMMA), spow(lms[1], GEN_INV_GAMMA), spow(lms[2], GEN_INV_GAMMA)];
+  return mat3(GEN_M1_inv, lms);
+}
+// Legacy aliases for MetricSpace inverse
+const M1_inv = Q_M1_inv, M2_inv = Q_M2_inv, inv_gamma = Q_inv_gamma;
+function baseLabFwdSrgb(r, g, b) { return baseLabFwd(...srgbToXYZ(r, g, b)); }
+function baseLabToCSS(L, a, b) {
+  const xyz = baseLabInv(L, a, b);
+  if (hasP3) {
+    const p3 = xyzToP3(xyz[0], xyz[1], xyz[2]);
+    if (inP3(p3)) return `color(display-p3 ${clamp01(p3[0]).toFixed(4)} ${clamp01(p3[1]).toFixed(4)} ${clamp01(p3[2]).toFixed(4)})`;
+    // P3 gamut map: reduce chroma until in-gamut
+    const h=Math.atan2(b,a), C=Math.sqrt(a*a+b*b);
+    let lo=0,hi=C;
+    for(let i=0;i<20;i++){const mid=(lo+hi)/2;const tp=xyzToP3(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inP3(tp))lo=mid;else hi=mid;}
+    const pf=xyzToP3(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    return `color(display-p3 ${clamp01(pf[0]).toFixed(4)} ${clamp01(pf[1]).toFixed(4)} ${clamp01(pf[2]).toFixed(4)})`;
+  }
+  const srgb = xyzToSrgb(xyz[0], xyz[1], xyz[2]);
+  if (inGamut(srgb)) return rgbToHex(srgb[0], srgb[1], srgb[2]);
+  // sRGB gamut map: reduce chroma until in-gamut
+  const h=Math.atan2(b,a), C=Math.sqrt(a*a+b*b);
+  let lo=0,hi=C;
+  for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inGamut(ts))lo=mid;else hi=mid;}
+  const sf=xyzToSrgb(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+  return rgbToHex(clamp01(sf[0]), clamp01(sf[1]), clamp01(sf[2]));
+}
+
+function relativeLuminance(rgb) {
+  return 0.2126*srgbToLin(rgb[0]) + 0.7152*srgbToLin(rgb[1]) + 0.0722*srgbToLin(rgb[2]);
+}
+function wcagCR(rgb1, rgb2) {
+  const l1 = relativeLuminance(rgb1), l2 = relativeLuminance(rgb2);
+  return (Math.max(l1,l2)+0.05) / (Math.min(l1,l2)+0.05);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Helmlab v20b forward (raw, without NC)
+// ═══════════════════════════════════════════════════════════════
+function pFwdRaw(X, Y, Z) {
+  let l = mat3(Q.M1, [X, Y, Z]);
+  l = [spow(l[0], Q.gamma[0]), spow(l[1], Q.gamma[1]), spow(l[2], Q.gamma[2])];
+  let r = mat3(Q.M2, l), L = r[0], a = r[1], b = r[2];
+  let h = Math.atan2(b, a), C = Math.sqrt(a*a + b*b);
+  let d = Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h);
+  a = C*Math.cos(h+d); b = C*Math.sin(h+d);
+  C = Math.sqrt(a*a+b*b); h = Math.atan2(b, a);
+  let hf = 1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
+  L += Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
+  h = Math.atan2(b, a);
+  let Lh = Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h);
+  let t2 = L*(1-L);
+  L = L+Q.L_corr_p1*t2+Q.L_corr_p2*t2*(0.5-L)+Q.L_corr_p3*t2*t2+t2*Lh;
+  let dp = Q.lp_dark+Q.lp_dark_hcos*Math.cos(h)+Q.lp_dark_hsin*Math.sin(h);
+  L = L*Math.exp(Math.max(-30,Math.min(30,dp*L*(1-L)*(1-L))));
+  h = Math.atan2(b, a);
+  let ls = Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
+  a *= Math.exp(ls); b *= Math.exp(ls);
+  h = Math.atan2(b, a); C = Math.sqrt(a*a+b*b);
+  let cp = 1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
+  if (C > 0) { let Cn = Math.pow(C,cp); a = Cn*Math.cos(h); b = Cn*Math.sin(h); }
+  let dL = L-0.5;
+  let T = Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL)));
+  a *= T; b *= T;
+  h = Math.atan2(b, a);
+  let hlcF = Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
+  let hlc = Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF)));
+  a *= hlc; b *= hlc;
+  h = Math.atan2(b, a);
+  L *= Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
+  return [L, a, b];
+}
+
+// NC LUT
+const NC_SIZE = 256, nc_L = [], nc_a = [], nc_b = [];
+function buildNCLut() {
+  for (let i = 0; i < NC_SIZE; i++) {
+    const Y = i/(NC_SIZE-1), X = 0.95047*Y, Z = 1.08883*Y;
+    const lab = pFwdRaw(X, Y, Z);
+    nc_L.push(lab[0]); nc_a.push(lab[1]); nc_b.push(lab[2]);
+  }
+}
+buildNCLut();
+
+function ncInterp(L_val) {
+  if (nc_L.length === 0) return [0, 0];
+  if (L_val <= nc_L[0]) return [nc_a[0], nc_b[0]];
+  if (L_val >= nc_L[NC_SIZE-1]) return [nc_a[NC_SIZE-1], nc_b[NC_SIZE-1]];
+  let lo = 0, hi = NC_SIZE - 1;
+  while (hi - lo > 1) { const mid = (lo+hi)>>1; if (nc_L[mid] <= L_val) lo = mid; else hi = mid; }
+  const t = (L_val - nc_L[lo]) / (nc_L[hi] - nc_L[lo] || 1e-20);
+  return [lerp(nc_a[lo], nc_a[hi], t), lerp(nc_b[lo], nc_b[hi], t)];
+}
+
+const AB_ROT_DEG = -28.2, AB_ROT_RAD = AB_ROT_DEG*Math.PI/180;
+const AB_ROT_COS = Math.cos(AB_ROT_RAD), AB_ROT_SIN = Math.sin(AB_ROT_RAD);
+
+function pFwd(X, Y, Z) {
+  let lab = pFwdRaw(X, Y, Z), L = lab[0], a = lab[1], b = lab[2];
+  const [a_err, b_err] = ncInterp(L);
+  a -= a_err; b -= b_err;
+  return [L, a*AB_ROT_COS - b*AB_ROT_SIN, a*AB_ROT_SIN + b*AB_ROT_COS];
+}
+function pFwdSrgb(r, g, b) { return pFwd(...srgbToXYZ(r, g, b)); }
+
+function pInv(L, a, b) {
+  let a2 = a*AB_ROT_COS + b*AB_ROT_SIN, b2 = -a*AB_ROT_SIN + b*AB_ROT_COS;
+  const [a_err, b_err] = ncInterp(L); a2 += a_err; b2 += b_err;
+  let h, C;
+  h = Math.atan2(b2, a2);
+  L /= Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
+  let hlcF = Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
+  let hlcS = Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF))); a2 /= hlcS; b2 /= hlcS;
+  let dL = L-0.5, T = Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL))); a2 /= T; b2 /= T;
+  h = Math.atan2(b2, a2); C = Math.sqrt(a2*a2+b2*b2);
+  let cp = 1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
+  if (C > 0) { let Cn = Math.pow(C,1/cp); a2 = Cn*Math.cos(h); b2 = Cn*Math.sin(h); }
+  h = Math.atan2(b2, a2);
+  let ls = Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
+  a2 /= Math.exp(ls); b2 /= Math.exp(ls);
+  h = Math.atan2(b2, a2);
+  let dp = Q.lp_dark+Q.lp_dark_hcos*Math.cos(h)+Q.lp_dark_hsin*Math.sin(h), Ltar = L;
+  for (let i = 0; i < 15; i++) { let u=L*(1-L)*(1-L), eu=Math.exp(Math.max(-30,Math.min(30,dp*u))), f=L*eu-Ltar, du2=(1-L)*(1-3*L), fp=eu*(1+dp*L*du2); if(Math.abs(fp)>1e-20) L-=f/fp; }
+  Ltar = L;
+  for (let i = 0; i < 15; i++) { let Lh2=Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h), t2=L*(1-L), Lout=L+Q.L_corr_p1*t2+Q.L_corr_p2*t2*(0.5-L)+Q.L_corr_p3*t2*t2+t2*Lh2, dt=1-2*L, dLout=1+Q.L_corr_p1*dt+Q.L_corr_p2*(dt*(0.5-L)+t2*(-1))+Q.L_corr_p3*2*t2*dt+dt*Lh2; if(Math.abs(dLout)>1e-20) L-=(Lout-Ltar)/dLout; }
+  C = Math.sqrt(a2*a2+b2*b2); h = Math.atan2(b2, a2);
+  let hf = 1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
+  L -= Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
+  let htar = Math.atan2(b2, a2); h = htar;
+  for (let i = 0; i < 10; i++) { let delta=Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h); let dd=-Q.hue_cos1*Math.sin(h)+Q.hue_sin1*Math.cos(h)-2*Q.hue_cos2*Math.sin(2*h)+2*Q.hue_sin2*Math.cos(2*h)-3*Q.hue_cos3*Math.sin(3*h)+3*Q.hue_sin3*Math.cos(3*h)-4*Q.hue_cos4*Math.sin(4*h)+4*Q.hue_sin4*Math.cos(4*h); let fp2=1+dd; if(Math.abs(fp2)>1e-20) h-=(h+delta-htar)/fp2; }
+  C = Math.sqrt(a2*a2+b2*b2); a2 = C*Math.cos(h); b2 = C*Math.sin(h);
+  let lms = mat3(M2_inv, [L, a2, b2]);
+  lms = [spow(lms[0],inv_gamma[0]), spow(lms[1],inv_gamma[1]), spow(lms[2],inv_gamma[2])];
+  return mat3(M1_inv, lms);
+}
+function pInvSrgb(L, a, b) { return xyzToSrgb(...pInv(L, a, b)); }
+function pInvP3(L, a, b) { return xyzToP3(...pInv(L, a, b)); }
+
+// Color output: prefer P3 CSS string for wider gamut, fall back to sRGB hex
+function colorCSS(L, aa, bb) {
+  const xyz = pInv(L, aa, bb);
+  if (hasP3) {
+    const p3 = xyzToP3(xyz[0], xyz[1], xyz[2]);
+    if (inP3(p3)) return `color(display-p3 ${clamp01(p3[0]).toFixed(4)} ${clamp01(p3[1]).toFixed(4)} ${clamp01(p3[2]).toFixed(4)})`;
+    const h = Math.atan2(bb, aa), C = Math.sqrt(aa*aa+bb*bb);
+    let lo=0, hi=C;
+    for (let i=0;i<20;i++) { const mid=(lo+hi)/2; const p=xyzToP3(...pInv(L,mid*Math.cos(h),mid*Math.sin(h))); if(inP3(p))lo=mid;else hi=mid; }
+    const pf = xyzToP3(...pInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    return `color(display-p3 ${clamp01(pf[0]).toFixed(4)} ${clamp01(pf[1]).toFixed(4)} ${clamp01(pf[2]).toFixed(4)})`;
+  }
+  const srgb = xyzToSrgb(xyz[0], xyz[1], xyz[2]);
+  if (inGamut(srgb)) return rgbToHex(srgb[0], srgb[1], srgb[2]);
+  const h = Math.atan2(bb, aa), C = Math.sqrt(aa*aa+bb*bb);
+  const rgb = gamutMapHelmlab(L, h, C);
+  return rgbToHex(clamp01(rgb[0]), clamp01(rgb[1]), clamp01(rgb[2]));
+}
+function helmlabLChCSS(L, C, h) { return baseLabToCSS(L, C*Math.cos(h), C*Math.sin(h)); }
+
+// Oklab
+const Ok1 = [[0.8189330101,0.3618667424,-0.1288597137],[0.0329845436,0.9293118715,0.0361456387],[0.0482003018,0.2643662691,0.6338517070]];
+const Ok2 = [[0.2104542553,0.7936177850,-0.0040720468],[1.9779984951,-2.4285922050,0.4505937099],[0.0259040371,0.7827717662,-0.8086757660]];
+function okFwd(X,Y,Z) { let l=mat3(Ok1,[X,Y,Z]); l=[Math.cbrt(l[0]),Math.cbrt(l[1]),Math.cbrt(l[2])]; return mat3(Ok2,l); }
+function okFromSRGB(r,g,b) { return okFwd(...srgbToXYZ(r,g,b)); }
+function okToXYZ(L,a,b) {
+  let l=[L+0.3963377774*a+0.2158037573*b, L-0.1055613458*a-0.0638541728*b, L-0.0894841775*a-1.2914855480*b];
+  l=[l[0]**3,l[1]**3,l[2]**3];
+  return mat3([[1.2270138511035211,-0.5577999806518222,0.2812561489664678],[-0.0405801784232806,1.1122568696168302,-0.0716766786656012],[-0.0763812845057069,-0.4214819784180127,1.5861632204407947]], l);
+}
+
+// CIE Lab
+const D65 = [0.95047, 1, 1.08883];
+function labF(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787*t + 16/116; }
+function cieFromXYZ(X,Y,Z) { const fx=labF(X/D65[0]),fy=labF(Y/D65[1]),fz=labF(Z/D65[2]); return [116*fy-16, 500*(fx-fy), 200*(fy-fz)]; }
+function cieFromSRGB(r,g,b) { return cieFromXYZ(...srgbToXYZ(r,g,b)); }
+
+// HSL
+function rgbToHsl(r, g, b) {
+  const max=Math.max(r,g,b), min=Math.min(r,g,b); let h,s,l=(max+min)/2;
+  if (max===min) { h=s=0; } else {
+    const d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+    if(max===r)h=((g-b)/d+(g<b?6:0))/6; else if(max===g)h=((b-r)/d+2)/6; else h=((r-g)/d+4)/6;
+  } return [h,s,l];
+}
+function hslToRgb(h, s, l) {
+  if (s===0) return [l,l,l];
+  function hue2rgb(p,q,t) { if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p; }
+  const q2=l<0.5?l*(1+s):l+s-l*s, p=2*l-q2;
+  return [hue2rgb(p,q2,h+1/3), hue2rgb(p,q2,h), hue2rgb(p,q2,h-1/3)];
+}
+
+// Interpolation
+function interpSRGB(c1,c2,t) { return [lerp(c1[0],c2[0],t),lerp(c1[1],c2[1],t),lerp(c1[2],c2[2],t)]; }
+function interpOklab(c1,c2,t) {
+  const a=okFromSRGB(...c1), b2=okFromSRGB(...c2);
+  const xyz=okToXYZ(lerp(a[0],b2[0],t),lerp(a[1],b2[1],t),lerp(a[2],b2[2],t));
+  const rgb=xyzToSrgb(...xyz); return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+function interpCIELab(c1,c2,t) {
+  const a=cieFromSRGB(...c1), b2=cieFromSRGB(...c2);
+  const L=lerp(a[0],b2[0],t), aa=lerp(a[1],b2[1],t), bb=lerp(a[2],b2[2],t);
+  const fy=(L+16)/116, fx=aa/500+fy, fz=fy-bb/200;
+  const fi=v=>v>0.206893?v*v*v:(v-16/116)/7.787;
+  const xyz=[fi(fx)*D65[0], fi(fy)*D65[1], fi(fz)*D65[2]];
+  const rgb=xyzToSrgb(...xyz); return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+function interpHelmlab(c1,c2,t) {
+  // Base Lab interpolation (M1→power→M2 only, smooth like Oklab)
+  const bl1=baseLabFwdSrgb(...c1), bl2=baseLabFwdSrgb(...c2);
+  const L=lerp(bl1[0],bl2[0],t), a=lerp(bl1[1],bl2[1],t), b=lerp(bl1[2],bl2[2],t);
+  const rgb=xyzToSrgb(...baseLabInv(L,a,b));
+  return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+}
+// Batch gradient: base Lab interpolation (M1→power→M2 only, no enrichment).
+// The enrichment pipeline creates folds in Lab→XYZ mapping that cause brightness
+// spikes during interpolation. Base Lab is structurally identical to Oklab
+// (matrix→power→matrix) and produces equally smooth gradients.
+function interpHelmlabBatchCSS(c1, c2, N) {
+  const bl1=baseLabFwdSrgb(...c1), bl2=baseLabFwdSrgb(...c2);
+  return Array.from({length:N}, (_,i) => {
+    const t=i/(N-1);
+    const L=lerp(bl1[0],bl2[0],t), a=lerp(bl1[1],bl2[1],t), b=lerp(bl1[2],bl2[2],t);
+    return baseLabToCSS(L, a, b);
+  });
+}
+// Helmlab distance
+function pDist(rgb1, rgb2) {
+  const a=pFwdSrgb(...rgb1), b2=pFwdSrgb(...rgb2);
+  const dL=a[0]-b2[0],da=a[1]-b2[1],db=a[2]-b2[2], pw=Q.dist_power;
+  const raw=Math.pow(Math.abs(dL)**pw+Q.dist_wC*(Math.abs(da)**pw+Math.abs(db)**pw),1/pw);
+  return Math.pow(raw/(1+Q.dist_compress*raw), Q.dist_post_power);
+}
+
+// Gamut mapping
+function gamutMapHelmlab(L, h, maxC) {
+  let lo=0, hi=maxC;
+  for (let i=0;i<20;i++) { let mid=(lo+hi)/2, rgb=pInvSrgb(L,mid*Math.cos(h),mid*Math.sin(h)); if(inGamut(rgb))lo=mid;else hi=mid; }
+  return pInvSrgb(L,lo*Math.cos(h),lo*Math.sin(h));
+}
+
+// ensureContrast: adjust fg lightness to meet min contrast against bg
+function ensureContrast(fgHex, bgHex, minRatio) {
+  minRatio = minRatio || 4.5;
+  const fgRgb = hexToRgb(fgHex), bgRgb = hexToRgb(bgHex);
+  if (wcagCR(fgRgb, bgRgb) >= minRatio) return fgHex;
+  const fgLab = baseLabFwdSrgb(...fgRgb), origL = fgLab[0];
+  const h = Math.atan2(fgLab[2], fgLab[1]), C = Math.sqrt(fgLab[1]**2+fgLab[2]**2);
+  // Search with buffer to survive hex quantization (8-bit rounding)
+  const target = minRatio + 0.15;
+  let bestHex = fgHex, bestRatio = 0, bestL = origL;
+  for (const dir of ['darken','lighten']) {
+    let lo = dir==='darken'?0:origL, hi = dir==='darken'?origL:1.0;
+    for (let i=0;i<40;i++) {
+      const mid=(lo+hi)/2;
+      // Gamut map: reduce chroma if out of gamut at this L
+      let tc=C, srgb=xyzToSrgb(...baseLabInv(mid,tc*Math.cos(h),tc*Math.sin(h)));
+      if(!inGamut(srgb)){let clo=0,chi=tc;for(let j=0;j<16;j++){const cm=(clo+chi)/2;const ts=xyzToSrgb(...baseLabInv(mid,cm*Math.cos(h),cm*Math.sin(h)));if(inGamut(ts))clo=cm;else chi=cm;}tc=clo;srgb=xyzToSrgb(...baseLabInv(mid,tc*Math.cos(h),tc*Math.sin(h)));}
+      srgb=srgb.map(clamp01);
+      const ratio=wcagCR(srgb,bgRgb);
+      if(dir==='darken'){if(ratio>=target)lo=mid;else hi=mid;}
+      else{if(ratio>=target)hi=mid;else lo=mid;}
+    }
+    const safeL = dir==='darken'?lo:hi;
+    // Get gamut-mapped color at safeL
+    let tc=C, out=xyzToSrgb(...baseLabInv(safeL,tc*Math.cos(h),tc*Math.sin(h)));
+    if(!inGamut(out)){let clo=0,chi=tc;for(let j=0;j<16;j++){const cm=(clo+chi)/2;const ts=xyzToSrgb(...baseLabInv(safeL,cm*Math.cos(h),cm*Math.sin(h)));if(inGamut(ts))clo=cm;else chi=cm;}out=xyzToSrgb(...baseLabInv(safeL,clo*Math.cos(h),clo*Math.sin(h)));}
+    const hex=rgbToHex(clamp01(out[0]),clamp01(out[1]),clamp01(out[2]));
+    const ratio=wcagCR(hexToRgb(hex),bgRgb);
+    if(ratio>=minRatio) { const dist=Math.abs(safeL-origL),bestDist=Math.abs(bestL-origL); if(bestRatio<minRatio||dist<bestDist){bestHex=hex;bestRatio=ratio;bestL=safeL;} }
+  }
+  if (bestRatio < minRatio) { return wcagCR([0,0,0],bgRgb) > wcagCR([1,1,1],bgRgb) ? '#000000' : '#ffffff'; }
+  return bestHex;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Scroll reveal & nav highlight
+// ═══════════════════════════════════════════════════════════════
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+
+function scrollToTool(id) {
+  document.getElementById('tool-'+id).scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// Highlight active nav button on scroll
+const toolSections = ['contrast','harmony','huering','gradient','inspector','adapter','distance'];
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const id = e.target.id.replace('tool-','');
+      document.querySelectorAll('.nav-btn').forEach((btn,i) => {
+        btn.classList.toggle('active', toolSections[i] === id);
+      });
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-80px 0px -50% 0px' });
+toolSections.forEach(id => { const el=document.getElementById('tool-'+id); if(el) navObserver.observe(el); });
+
+// ═══════════════════════════════════════════════════════════════
+// i18n
+// ═══════════════════════════════════════════════════════════════
+let currentLang = 'en';
+const I = {
+  page_title: { tr:'Helmlab — Tasarım Araçları', en:'Helmlab — Design Tools' },
+  hero_tagline: { tr:'Algısal renk bilimini tasarım iş akışınıza taşıyan interaktif araçlar', en:'Interactive tools that bring perceptual color science to your design workflow' },
+  link_demo: { tr:'Teknik Demo →', en:'Technical Demo →' },
+
+  // Nav
+  nav_contrast: { tr:'Kontrast', en:'Contrast' },
+  nav_harmony: { tr:'Harmoni', en:'Harmony' },
+  nav_huering: { tr:'Hue Ring', en:'Hue Ring' },
+  nav_gradient: { tr:'Gradient', en:'Gradient' },
+  nav_inspector: { tr:'İnceleme', en:'Inspector' },
+  nav_adapter: { tr:'Dark/Light', en:'Dark/Light' },
+  nav_distance: { tr:'Mesafe', en:'Distance' },
+
+  // Labels
+  lbl_base: { tr:'Baz renk:', en:'Base color:' },
+  lbl_fg: { tr:'Ön plan:', en:'Foreground:' },
+  lbl_bg: { tr:'Arka plan:', en:'Background:' },
+  lbl_start: { tr:'Başlangıç:', en:'Start:' },
+  lbl_end: { tr:'Bitiş:', en:'End:' },
+  lbl_steps: { tr:'Adım:', en:'Steps:' },
+  lbl_color1: { tr:'Renk 1:', en:'Color 1:' },
+  lbl_color2: { tr:'Renk 2:', en:'Color 2:' },
+  btn_autofix: { tr:'Otomatik Düzelt', en:'Auto-fix' },
+
+  // Palette banner
+  palette_banner: { tr:'Palet oluşturucu mu arıyorsunuz? <a href="palette.html">palette.html &rarr;</a>', en:'Looking for palette generation? <a href="palette.html">palette.html &rarr;</a>' },
+
+  // Section 2
+  s2_title: { tr:'Kontrast Denetleyici & Düzeltici', en:'Contrast Checker & Fixer' },
+  s2_desc: { tr:'İki renk arasındaki WCAG kontrast oranını kontrol edin. AA/AAA geçiş durumu ve otomatik düzeltme: Helmlab, tonu koruyarak L ayarlar.', en:'Check WCAG contrast ratio between two colors. AA/AAA pass/fail status and auto-fix: Helmlab adjusts L while preserving hue.' },
+
+  // Section 3
+  s3_title: { tr:'Renk Harmonisi', en:'Color Harmony' },
+  s3_desc: { tr:'Helmlab Lab uzayında hue angle hesaplayarak harmonik renk paletleri. Complementary, Analogous, Triadic, Tetradic ve Split-complementary.', en:'Harmonic color palettes computed via hue angles in Helmlab Lab space. Complementary, Analogous, Triadic, Tetradic, and Split-complementary.' },
+
+  // Section 4
+  s4_title: { tr:'Hue Ring', en:'Hue Ring' },
+  s4_desc: { tr:'Sabit lightness ve chroma\'da dairesel hue halkası. Helmlab vs Oklab yan yana. Tıklayarak hex kopyalayın.', en:'Circular hue ring at fixed lightness and chroma. Helmlab vs Oklab side by side. Click to copy hex.' },
+
+  // Section 5
+  s5_title: { tr:'Gradient Oluşturucu', en:'Gradient Builder' },
+  s5_desc: { tr:'İki renk arasında 4 yöntemle interpolasyon. CV% düzgünlük karşılaştırması ve CSS gradient export.', en:'Interpolation between two colors using 4 methods. CV% uniformity comparison and CSS gradient export.' },
+
+  // Section 6
+  s6_title: { tr:'Renk İnceleyici', en:'Color Inspector' },
+  s6_desc: { tr:'Bir rengin tüm koordinatları: Helmlab Lab/LCh, Oklab, CIE Lab, sRGB, HSL, XYZ. Gamut bilgisi ve round-trip hatası.', en:'All coordinates of a color: Helmlab Lab/LCh, Oklab, CIE Lab, sRGB, HSL, XYZ. Gamut info and round-trip error.' },
+
+  // Section 7
+  s7_title: { tr:'Dark/Light Mode Adaptör', en:'Dark/Light Mode Adapter' },
+  s7_desc: { tr:'1-5 renk girin, light ve dark mode versiyonları otomatik üretilsin. Her modda kontrast oranları gösterilir.', en:'Enter 1-5 colors and get automatic light and dark mode versions. Contrast ratios shown for each mode.' },
+
+  // Section 8
+  s8_title: { tr:'Algısal Mesafe Hesaplayıcı', en:'Perceptual Distance Calculator' },
+  s8_desc: { tr:'İki renk arasındaki Helmlab ΔE, Oklab ΔE ve CIE Lab ΔE76 mesafelerini karşılaştırın. JND (fark eşiği) yorumu.', en:'Compare Helmlab ΔE, Oklab ΔE, and CIE Lab ΔE76 distances between two colors. JND (just noticeable difference) interpretation.' },
+
+  // Export
+  exp_gradient: { tr:'CSS Gradient Kopyala', en:'Copy CSS Gradient' },
+
+  // Contrast
+  contrast_aa_normal: { tr:'AA Normal', en:'AA Normal' },
+  contrast_aa_large: { tr:'AA Büyük', en:'AA Large' },
+  contrast_aaa_normal: { tr:'AAA Normal', en:'AAA Normal' },
+  contrast_aaa_large: { tr:'AAA Büyük', en:'AAA Large' },
+  contrast_sample: { tr:'Örnek metin — bu renk kombinasyonunun okunabilirliğini test edin.', en:'Sample text — test the readability of this color combination.' },
+  contrast_btn_text: { tr:'Buton Örneği', en:'Button Example' },
+  contrast_fixed: { tr:'Düzeltildi →', en:'Fixed →' },
+
+  // Harmony types
+  harm_comp: { tr:'Tamamlayıcı', en:'Complementary' },
+  harm_analog: { tr:'Analog', en:'Analogous' },
+  harm_triad: { tr:'Üçlü', en:'Triadic' },
+  harm_tetrad: { tr:'Dörtlü', en:'Tetradic' },
+  harm_split: { tr:'Bölünmüş', en:'Split-comp' },
+
+  // Adapter
+  adapter_light: { tr:'Light Mode', en:'Light Mode' },
+  adapter_dark: { tr:'Dark Mode', en:'Dark Mode' },
+  adapter_card_title: { tr:'Kart Başlığı', en:'Card Title' },
+  adapter_card_text: { tr:'Bu bir örnek kart metnidir. Renklerin okunabilirliğini test edin.', en:'This is sample card text. Test the readability of colors.' },
+
+  // Distance
+  dist_jnd_identical: { tr:'Neredeyse aynı — ayırt edilemez', en:'Nearly identical — indistinguishable' },
+  dist_jnd_subtle: { tr:'İnce fark — dikkatli bakınca görülebilir', en:'Subtle difference — visible on close inspection' },
+  dist_jnd_noticeable: { tr:'Belirgin fark — kolayca ayırt edilebilir', en:'Noticeable difference — easily distinguishable' },
+  dist_jnd_strong: { tr:'Güçlü fark — açıkça farklı', en:'Strong difference — clearly different' },
+  dist_jnd_very_strong: { tr:'Çok güçlü fark — tamamen farklı renkler', en:'Very strong difference — entirely different colors' },
+
+  // Uniformity
+  cv_uniform: { tr:'düzgün', en:'uniform' },
+  cv_moderate: { tr:'orta', en:'moderate' },
+  cv_nonuniform: { tr:'tutarsız', en:'non-uniform' },
+};
+
+function t(key) { return I[key] ? (I[key][currentLang] || I[key].en) : key; }
+
+function applyLang() {
+  document.documentElement.lang = currentLang;
+  document.title = t('page_title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-nav]').forEach(el => { el.textContent = t(el.dataset.i18nNav); });
+  buildContrast(); buildHarmony(); buildHueRing();
+  buildGrad(); updateInspector(); buildAdapter(); buildDistance();
+}
+// ═══════════════════════════════════════════════════════════════
+// 2. CONTRAST CHECKER & FIXER
+// ═══════════════════════════════════════════════════════════════
+function buildContrast() {
+  const fgHex=document.getElementById('contrastFg').value;
+  const bgHex=document.getElementById('contrastBg').value;
+  const fgRgb=hexToRgb(fgHex), bgRgb=hexToRgb(bgHex);
+  const ratio=wcagCR(fgRgb,bgRgb);
+
+  const aaNormal=ratio>=4.5, aaLarge=ratio>=3, aaaNormal=ratio>=7, aaaLarge=ratio>=4.5;
+
+  let html = `<div class="contrast-display" style="background:${bgHex}">`;
+  html += `<div class="contrast-ratio" style="color:${fgHex}">${ratio.toFixed(2)}:1</div>`;
+  html += `<div class="contrast-badges">`;
+  html += `<span class="badge ${aaNormal?'pass':'fail'}">${t('contrast_aa_normal')} ${aaNormal?'PASS':'FAIL'}</span>`;
+  html += `<span class="badge ${aaLarge?'pass':'fail'}">${t('contrast_aa_large')} ${aaLarge?'PASS':'FAIL'}</span>`;
+  html += `<span class="badge ${aaaNormal?'pass':'fail'}">${t('contrast_aaa_normal')} ${aaaNormal?'PASS':'FAIL'}</span>`;
+  html += `<span class="badge ${aaaLarge?'pass':'fail'}">${t('contrast_aaa_large')} ${aaaLarge?'PASS':'FAIL'}</span>`;
+  html += `</div></div>`;
+
+  html += `<div class="contrast-preview" style="background:${bgHex}">`;
+  html += `<div class="preview-text" style="color:${fgHex}">${t('contrast_sample')}</div>`;
+  html += `<div class="preview-text-sm" style="color:${fgHex};opacity:0.8">${fgHex.toUpperCase()} on ${bgHex.toUpperCase()}</div>`;
+  html += `<button class="preview-btn" style="background:${fgHex};color:${bgHex}">${t('contrast_btn_text')}</button>`;
+  html += `</div>`;
+  document.getElementById('contrastArea').innerHTML = html;
+}
+
+function autoFixContrast() {
+  const fgHex=document.getElementById('contrastFg').value;
+  const bgHex=document.getElementById('contrastBg').value;
+  const fixed = ensureContrast(fgHex, bgHex, 4.5);
+  document.getElementById('contrastFg').value = fixed;
+  buildContrast();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 3. COLOR HARMONY
+// ═══════════════════════════════════════════════════════════════
+let currentHarmonyType = 'comp';
+
+function buildHarmonyTypes() {
+  const types = [
+    {id:'comp', key:'harm_comp'},
+    {id:'analog', key:'harm_analog'},
+    {id:'triad', key:'harm_triad'},
+    {id:'tetrad', key:'harm_tetrad'},
+    {id:'split', key:'harm_split'},
+  ];
+  let html = '';
+  for (const tp of types) {
+    html += `<button class="preset-btn${currentHarmonyType===tp.id?' active':''}" onclick="currentHarmonyType='${tp.id}';buildHarmony()">${t(tp.key)}</button>`;
+  }
+  document.getElementById('harmonyTypes').innerHTML = html;
+}
+
+function buildHarmony() {
+  buildHarmonyTypes();
+  const baseHex=document.getElementById('harmonyBase').value;
+  const baseRgb=hexToRgb(baseHex);
+  const lab=baseLabFwdSrgb(...baseRgb);
+  const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
+  const h=Math.atan2(lab[2],lab[1]);
+  const PI2=Math.PI*2;
+
+  let offsets = [];
+  switch(currentHarmonyType) {
+    case 'comp': offsets=[0,Math.PI]; break;
+    case 'analog': offsets=[-Math.PI/6,0,Math.PI/6]; break;
+    case 'triad': offsets=[0,PI2/3,2*PI2/3]; break;
+    case 'tetrad': offsets=[0,Math.PI/2,Math.PI,3*Math.PI/2]; break;
+    case 'split': offsets=[0,5*Math.PI/6,7*Math.PI/6]; break;
+  }
+
+  const colors = offsets.map(off => {
+    const newH = h + off;
+    const css = baseLabToCSS(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    const xyz = baseLabInv(lab[0], C*Math.cos(newH), C*Math.sin(newH));
+    let rgb = xyzToSrgb(...xyz);
+    if (!inGamut(rgb)) {
+      let lo=0,hi=C;
+      for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(lab[0],mid*Math.cos(newH),mid*Math.sin(newH)));if(inGamut(ts))lo=mid;else hi=mid;}
+      rgb=xyzToSrgb(...baseLabInv(lab[0],lo*Math.cos(newH),lo*Math.sin(newH)));
+    }
+    rgb = rgb.map(clamp01);
+    return { rgb, hex: rgbToHex(rgb[0],rgb[1],rgb[2]), css, angle: ((newH*180/Math.PI)%360+360)%360 };
+  });
+
+  let html = '<div class="harmony-swatches">';
+  for (const c of colors) {
+    const lum = relativeLuminance(c.rgb);
+    const tc = lum>0.18?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
+    html += `<div class="harmony-swatch" style="background:${c.css};color:${tc}" onclick="navigator.clipboard.writeText('${c.hex.toUpperCase()}')" title="${c.hex.toUpperCase()} (${c.angle.toFixed(0)}°)">${c.hex.toUpperCase()}</div>`;
+  }
+  html += '</div>';
+
+  // Hue ring visualization
+  const size=180, cx=size/2, cy=size/2, r=70;
+  html += `<svg width="${size}" height="${size}" class="hue-ring-svg" viewBox="0 0 ${size} ${size}">`;
+  // Draw ring
+  for (let i=0;i<72;i++) {
+    const a1=i/72*PI2, a2=(i+1)/72*PI2;
+    const col=baseLabToCSS(0.6, 0.12*Math.cos(a1), 0.12*Math.sin(a1));
+    const x1=cx+r*Math.cos(a1-Math.PI/2),y1=cy+r*Math.sin(a1-Math.PI/2);
+    const x2=cx+r*Math.cos(a2-Math.PI/2),y2=cy+r*Math.sin(a2-Math.PI/2);
+    const x3=cx+(r-14)*Math.cos(a2-Math.PI/2),y3=cy+(r-14)*Math.sin(a2-Math.PI/2);
+    const x4=cx+(r-14)*Math.cos(a1-Math.PI/2),y4=cy+(r-14)*Math.sin(a1-Math.PI/2);
+    html += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" style="fill:${col}" stroke="none"/>`;
+  }
+  // Draw markers
+  for (let i=0;i<colors.length;i++) {
+    const ang=colors[i].angle*Math.PI/180 - Math.PI/2;
+    const mx=cx+r*Math.cos(ang), my=cy+r*Math.sin(ang);
+    html += `<circle cx="${mx}" cy="${my}" r="8" style="fill:${colors[i].css}" stroke="#fafafa" stroke-width="2.5"/>`;
+  }
+  html += '</svg>';
+  document.getElementById('harmonyArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 4. HUE RING
+// ═══════════════════════════════════════════════════════════════
+function buildHueRing() {
+  const L=parseInt(document.getElementById('hueL').value)/100;
+  const C=parseInt(document.getElementById('hueC').value)/100;
+  const N=parseInt(document.getElementById('hueN').value);
+  document.getElementById('hueLVal').textContent = L.toFixed(2);
+  document.getElementById('hueCVal').textContent = C.toFixed(2);
+  document.getElementById('hueNVal').textContent = N;
+
+  const size=220, cx=size/2, cy=size/2, r=85, PI2=Math.PI*2;
+
+  function makeRing(label, color, toRgbFn, toCSSFn) {
+    let svg = `<div class="hue-ring-col"><div class="hue-ring-label" style="color:${color}">${label}</div>`;
+    svg += `<svg width="${size}" height="${size}" class="hue-ring-svg" viewBox="0 0 ${size} ${size}">`;
+    // Background ring
+    for (let i=0;i<72;i++) {
+      const a1=i/72*PI2, a2=(i+1)/72*PI2;
+      const col = toCSSFn ? toCSSFn(L,C,a1) : (()=>{const rgb=toRgbFn(L,C,a1);return rgbToHex(rgb[0],rgb[1],rgb[2]);})();
+      const x1=cx+r*Math.cos(a1-Math.PI/2),y1=cy+r*Math.sin(a1-Math.PI/2);
+      const x2=cx+r*Math.cos(a2-Math.PI/2),y2=cy+r*Math.sin(a2-Math.PI/2);
+      const x3=cx+(r-20)*Math.cos(a2-Math.PI/2),y3=cy+(r-20)*Math.sin(a2-Math.PI/2);
+      const x4=cx+(r-20)*Math.cos(a1-Math.PI/2),y4=cy+(r-20)*Math.sin(a1-Math.PI/2);
+      svg += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}" style="fill:${col}" stroke="none"/>`;
+    }
+    // Swatch dots
+    for (let i=0;i<N;i++) {
+      const ang=i/N*PI2;
+      const rgb=toRgbFn(L,C,ang);
+      const hex=rgbToHex(rgb[0],rgb[1],rgb[2]);
+      const dotFill = toCSSFn ? toCSSFn(L,C,ang) : hex;
+      const mx=cx+r*Math.cos(ang-Math.PI/2), my=cy+r*Math.sin(ang-Math.PI/2);
+      const lum=relativeLuminance(rgb);
+      const tc=lum>0.18?'#000':'#fff';
+      svg += `<circle cx="${mx}" cy="${my}" r="12" style="fill:${dotFill};cursor:pointer" stroke="#fafafa" stroke-width="2" onclick="navigator.clipboard.writeText('${hex.toUpperCase()}')"/>`;
+    }
+    svg += '</svg></div>';
+    return svg;
+  }
+
+  function helmlabToRgb(L,C,h) {
+    let rgb=xyzToSrgb(...baseLabInv(L,C*Math.cos(h),C*Math.sin(h)));
+    if(!inGamut(rgb)) {
+      let lo=0,hi=C;
+      for(let i=0;i<20;i++){const mid=(lo+hi)/2;const ts=xyzToSrgb(...baseLabInv(L,mid*Math.cos(h),mid*Math.sin(h)));if(inGamut(ts))lo=mid;else hi=mid;}
+      rgb=xyzToSrgb(...baseLabInv(L,lo*Math.cos(h),lo*Math.sin(h)));
+    }
+    return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+  }
+  function oklabToRgb(L,C,h) {
+    let xyz=okToXYZ(L,C*Math.cos(h),C*Math.sin(h)), rgb=xyzToSrgb(...xyz);
+    if(!inGamut(rgb)) { let lo=0,hi=C; for(let i=0;i<20;i++){let mid=(lo+hi)/2;xyz=okToXYZ(L,mid*Math.cos(h),mid*Math.sin(h));rgb=xyzToSrgb(...xyz);if(inGamut(rgb))lo=mid;else hi=mid;} xyz=okToXYZ(L,lo*Math.cos(h),lo*Math.sin(h));rgb=xyzToSrgb(...xyz); }
+    return [clamp01(rgb[0]),clamp01(rgb[1]),clamp01(rgb[2])];
+  }
+
+  let html = '<div class="hue-ring-row">';
+  html += makeRing('Helmlab', '#60a5fa', helmlabToRgb, helmlabLChCSS);
+  html += makeRing('Oklab', '#34d399', oklabToRgb);
+  html += '</div>';
+  document.getElementById('hueRingArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 5. GRADIENT BUILDER
+// ═══════════════════════════════════════════════════════════════
+function buildGrad() {
+  const c1=hexToRgb(document.getElementById('gradFrom').value);
+  const c2=hexToRgb(document.getElementById('gradTo').value);
+  const N=parseInt(document.getElementById('gradSteps').value);
+  document.getElementById('gradStepsVal').textContent = N;
+
+  const methods = [
+    {name:'Helmlab',cls:'p',fn:interpHelmlab,batchCssFn:interpHelmlabBatchCSS,color:'#3b82f6'},
+    {name:'Oklab',cls:'o',fn:interpOklab,color:'#10b981'},
+    {name:'CIE Lab',cls:'c',fn:interpCIELab,color:'#8b5cf6'},
+    {name:'sRGB',cls:'s',fn:interpSRGB,color:'#71717a'},
+  ];
+
+  let html = '';
+  for (const m of methods) {
+    const steps=[]; for(let i=0;i<N;i++) steps.push(m.fn(c1,c2,i/(N-1)));
+    const dists=[]; for(let i=1;i<N;i++) dists.push(pDist(steps[i-1],steps[i]));
+    const mean=dists.reduce((a,b)=>a+b,0)/dists.length;
+    const std=Math.sqrt(dists.reduce((a,b)=>a+(b-mean)**2,0)/dists.length);
+    const cv=mean>0?(std/mean*100):0;
+    const maxD=Math.max(...dists);
+    const cvTag=cv<15?t('cv_uniform'):cv<25?t('cv_moderate'):t('cv_nonuniform');
+
+    // Compute CSS color strings (batch P3 for Helmlab, sRGB hex for others)
+    const cssColors = [];
+    if (m.batchCssFn) { cssColors.push(...m.batchCssFn(c1, c2, N)); }
+    else { for(const s of steps) cssColors.push(rgbToHex(s[0],s[1],s[2])); }
+
+    html += `<div class="grad-method"><div class="grad-head">
+      <div class="grad-name" style="color:${m.color}">${m.name}</div>
+      <div class="grad-cv">CV: <strong>${cv.toFixed(1)}%</strong> (${cvTag})</div>
+    </div><div class="grad-strip">`;
+    for(const col of cssColors) html+=`<div class="grad-step" style="background:${col}"></div>`;
+    html += `</div><div class="grad-bars">`;
+    for(const d of dists){const h2=Math.max(3,d/maxD*22);html+=`<div class="grad-bar" style="height:${h2}px;background:${m.color}"></div>`;}
+    html += `</div></div>`;
+  }
+  document.getElementById('gradArea').innerHTML = html;
+}
+
+function exportGradient() {
+  const c1=hexToRgb(document.getElementById('gradFrom').value);
+  const c2=hexToRgb(document.getElementById('gradTo').value);
+  const N=parseInt(document.getElementById('gradSteps').value);
+  const stops=interpHelmlabBatchCSS(c1,c2,N);
+  const text=`background: linear-gradient(90deg, ${stops.join(', ')});`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=event.target;btn.classList.add('copied');const orig=btn.textContent;btn.textContent='Copied!';
+    setTimeout(()=>{btn.classList.remove('copied');btn.textContent=orig;},1500);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 6. COLOR INSPECTOR
+// ═══════════════════════════════════════════════════════════════
+function updateInspector() {
+  const hex=document.getElementById('inspector').value;
+  const [r,g,b]=hexToRgb(hex);
+  document.getElementById('inspHex').textContent=hex.toUpperCase();
+
+  const xyz=srgbToXYZ(r,g,b);
+  const pg=pFwd(...xyz), ol=okFwd(...xyz), cl=cieFromXYZ(...xyz);
+  const [hh,ss,ll]=rgbToHsl(r,g,b);
+  const pgC=Math.sqrt(pg[1]**2+pg[2]**2), pgH=((Math.atan2(pg[2],pg[1])*180/Math.PI)%360+360)%360;
+  const oC=Math.sqrt(ol[1]**2+ol[2]**2), oH=((Math.atan2(ol[2],ol[1])*180/Math.PI)%360+360)%360;
+  const cC=Math.sqrt(cl[1]**2+cl[2]**2), cH=((Math.atan2(cl[2],cl[1])*180/Math.PI)%360+360)%360;
+
+  // Round-trip
+  const rt=pInvSrgb(...pg);
+  const rtErr=Math.sqrt((r-rt[0])**2+(g-rt[1])**2+(b-rt[2])**2);
+
+  // Gamut check
+  const inSrgb = r>=0&&r<=1&&g>=0&&g<=1&&b>=0&&b<=1;
+
+  let html = '';
+  html += `<div class="sp-block"><div class="sp-title blue">Helmlab v20b (Lab)</div><div class="sp-vals">
+    <div class="sp-val"><div class="k">L</div><div class="v blue mono">${pg[0].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">a</div><div class="v blue mono">${pg[1].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">b</div><div class="v blue mono">${pg[2].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">C</div><div class="v blue mono">${pgC.toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">H</div><div class="v blue mono">${pgH.toFixed(1)}&deg;</div></div>
+  </div></div>`;
+  html += `<div class="sp-block"><div class="sp-title green">Oklab</div><div class="sp-vals">
+    <div class="sp-val"><div class="k">L</div><div class="v green mono">${ol[0].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">a</div><div class="v green mono">${ol[1].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">b</div><div class="v green mono">${ol[2].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">C</div><div class="v green mono">${oC.toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">H</div><div class="v green mono">${oH.toFixed(1)}&deg;</div></div>
+  </div></div>`;
+  html += `<div class="sp-block"><div class="sp-title purple">CIE L*a*b*</div><div class="sp-vals">
+    <div class="sp-val"><div class="k">L*</div><div class="v purple mono">${cl[0].toFixed(2)}</div></div>
+    <div class="sp-val"><div class="k">a*</div><div class="v purple mono">${cl[1].toFixed(2)}</div></div>
+    <div class="sp-val"><div class="k">b*</div><div class="v purple mono">${cl[2].toFixed(2)}</div></div>
+    <div class="sp-val"><div class="k">C*</div><div class="v purple mono">${cC.toFixed(2)}</div></div>
+    <div class="sp-val"><div class="k">h</div><div class="v purple mono">${cH.toFixed(1)}&deg;</div></div>
+  </div></div>`;
+  html += `<div class="sp-block"><div class="sp-title" style="color:#71717a">sRGB / HSL</div><div class="sp-vals">
+    <div class="sp-val"><div class="k">R</div><div class="v mono">${Math.round(r*255)}</div></div>
+    <div class="sp-val"><div class="k">G</div><div class="v mono">${Math.round(g*255)}</div></div>
+    <div class="sp-val"><div class="k">B</div><div class="v mono">${Math.round(b*255)}</div></div>
+    <div class="sp-val"><div class="k">H</div><div class="v mono">${Math.round(hh*360)}&deg;</div></div>
+    <div class="sp-val"><div class="k">S</div><div class="v mono">${Math.round(ss*100)}%</div></div>
+    <div class="sp-val"><div class="k">L</div><div class="v mono">${Math.round(ll*100)}%</div></div>
+  </div></div>`;
+  html += `<div class="sp-block"><div class="sp-title" style="color:#71717a">CIE XYZ</div><div class="sp-vals">
+    <div class="sp-val"><div class="k">X</div><div class="v mono">${xyz[0].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">Y</div><div class="v mono">${xyz[1].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">Z</div><div class="v mono">${xyz[2].toFixed(4)}</div></div>
+    <div class="sp-val"><div class="k">Y<sub>rel</sub></div><div class="v mono">${relativeLuminance([r,g,b]).toFixed(4)}</div></div>
+  </div></div>`;
+  html += `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:0.75em;color:#52525b;margin-top:8px;">`;
+  html += `<span>sRGB: <strong style="color:${inSrgb?'#34d399':'#f87171'}">${inSrgb?'In gamut':'Out of gamut'}</strong></span>`;
+  html += `<span class="mono">RT error: ${rtErr<1e-10?'< 10⁻¹⁰':rtErr<1e-6?'< 10⁻⁶':rtErr.toExponential(2)}</span>`;
+  html += `</div>`;
+  document.getElementById('inspArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 7. DARK/LIGHT MODE ADAPTER
+// ═══════════════════════════════════════════════════════════════
+const adapterColors = ['#3B82F6','#EF4444','#22C55E','#F59E0B','#8B5CF6'];
+
+function buildAdapterInputs() {
+  let html = '';
+  for (let i=0;i<5;i++) {
+    html += `<div class="adapter-color-input">
+      <input type="color" id="adapterC${i}" value="${adapterColors[i]}" oninput="adapterColors[${i}]=this.value;buildAdapter()">
+      <span class="mono" id="adapterL${i}">${adapterColors[i]}</span>
+    </div>`;
+  }
+  document.getElementById('adapterInputs').innerHTML = html;
+}
+
+function buildAdapter() {
+  // Update labels
+  for(let i=0;i<5;i++) {
+    const el=document.getElementById('adapterL'+i);
+    if(el) el.textContent=adapterColors[i].toUpperCase();
+  }
+
+  const lightBg='#FFFFFF', darkBg='#111113';
+  const lightBgRgb=[1,1,1], darkBgRgb=hexToRgb(darkBg);
+
+  let html = '<div class="adapter-previews">';
+
+  // Light mode
+  html += `<div class="adapter-card" style="background:${lightBg};border-color:#e4e4e7">`;
+  html += `<div class="adapter-card-title" style="color:#18181b">${t('adapter_light')}</div>`;
+  html += `<div class="adapter-swatch-row">`;
+  for(let i=0;i<5;i++) {
+    const hex=adapterColors[i];
+    const adjusted=ensureContrast(hex, lightBg, 4.5);
+    const cr=wcagCR(hexToRgb(adjusted),lightBgRgb).toFixed(1);
+    html+=`<div class="adapter-swatch" style="background:${adjusted};color:${lightBg}" title="${cr}:1">${cr}:1</div>`;
+  }
+  html += `</div>`;
+  html += `<div style="margin-top:12px;padding:12px;border-radius:8px;border:1px solid #e4e4e7">`;
+  html += `<div style="font-size:0.82em;font-weight:700;color:#18181b;margin-bottom:4px">${t('adapter_card_title')}</div>`;
+  html += `<div style="font-size:0.75em;color:#52525b">${t('adapter_card_text')}</div>`;
+  html += `<div style="display:flex;gap:6px;margin-top:8px">`;
+  for(let i=0;i<3;i++) {
+    const hex=adapterColors[i];
+    const adjusted=ensureContrast(hex, lightBg, 4.5);
+    html+=`<span style="background:${adjusted};color:#fff;padding:4px 10px;border-radius:6px;font-size:0.7em;font-weight:600">${adjusted.toUpperCase()}</span>`;
+  }
+  html += `</div></div></div>`;
+
+  // Dark mode
+  html += `<div class="adapter-card" style="background:${darkBg};border-color:#27272a">`;
+  html += `<div class="adapter-card-title" style="color:#fafafa">${t('adapter_dark')}</div>`;
+  html += `<div class="adapter-swatch-row">`;
+  for(let i=0;i<5;i++) {
+    const hex=adapterColors[i];
+    const adjusted=ensureContrast(hex, darkBg, 4.5);
+    const cr=wcagCR(hexToRgb(adjusted),darkBgRgb).toFixed(1);
+    html+=`<div class="adapter-swatch" style="background:${adjusted};color:${darkBg}" title="${cr}:1">${cr}:1</div>`;
+  }
+  html += `</div>`;
+  html += `<div style="margin-top:12px;padding:12px;border-radius:8px;border:1px solid #27272a">`;
+  html += `<div style="font-size:0.82em;font-weight:700;color:#fafafa;margin-bottom:4px">${t('adapter_card_title')}</div>`;
+  html += `<div style="font-size:0.75em;color:#a1a1aa">${t('adapter_card_text')}</div>`;
+  html += `<div style="display:flex;gap:6px;margin-top:8px">`;
+  for(let i=0;i<3;i++) {
+    const hex=adapterColors[i];
+    const adjusted=ensureContrast(hex, darkBg, 4.5);
+    html+=`<span style="background:${adjusted};color:#111113;padding:4px 10px;border-radius:6px;font-size:0.7em;font-weight:600">${adjusted.toUpperCase()}</span>`;
+  }
+  html += `</div></div></div>`;
+
+  html += '</div>';
+  document.getElementById('adapterArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 8. PERCEPTUAL DISTANCE
+// ═══════════════════════════════════════════════════════════════
+function buildDistance() {
+  const hex1=document.getElementById('distC1').value;
+  const hex2=document.getElementById('distC2').value;
+  const rgb1=hexToRgb(hex1), rgb2=hexToRgb(hex2);
+
+  // Helmlab ΔE (Euclidean in Lab)
+  const hLab1=pFwdSrgb(...rgb1), hLab2=pFwdSrgb(...rgb2);
+  const hDE=Math.sqrt((hLab1[0]-hLab2[0])**2+(hLab1[1]-hLab2[1])**2+(hLab1[2]-hLab2[2])**2);
+
+  // Oklab ΔE
+  const oLab1=okFromSRGB(...rgb1), oLab2=okFromSRGB(...rgb2);
+  const oDE=Math.sqrt((oLab1[0]-oLab2[0])**2+(oLab1[1]-oLab2[1])**2+(oLab1[2]-oLab2[2])**2);
+
+  // CIE Lab ΔE76
+  const cLab1=cieFromSRGB(...rgb1), cLab2=cieFromSRGB(...rgb2);
+  const cDE=Math.sqrt((cLab1[0]-cLab2[0])**2+(cLab1[1]-cLab2[1])**2+(cLab1[2]-cLab2[2])**2);
+
+  const maxDE = Math.max(hDE, oDE, cDE, 0.01);
+
+  // JND interpretation based on Helmlab DE
+  let jndKey;
+  if (hDE < 0.01) jndKey = 'dist_jnd_identical';
+  else if (hDE < 0.05) jndKey = 'dist_jnd_subtle';
+  else if (hDE < 0.15) jndKey = 'dist_jnd_noticeable';
+  else if (hDE < 0.35) jndKey = 'dist_jnd_strong';
+  else jndKey = 'dist_jnd_very_strong';
+
+  const lum1=relativeLuminance(rgb1), lum2=relativeLuminance(rgb2);
+  const tc1=lum1>0.18?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
+  const tc2=lum2>0.18?'rgba(0,0,0,0.7)':'rgba(255,255,255,0.8)';
+
+  let html = `<div class="distance-swatches">
+    <div class="distance-swatch" style="background:${hex1};color:${tc1}">${hex1.toUpperCase()}</div>
+    <div class="distance-vs">vs</div>
+    <div class="distance-swatch" style="background:${hex2};color:${tc2}">${hex2.toUpperCase()}</div>
+  </div>`;
+
+  html += '<div class="distance-bars">';
+  const bars = [
+    {name:'Helmlab',cls:'helmlab',color:'#60a5fa',val:hDE},
+    {name:'Oklab',cls:'oklab',color:'#34d399',val:oDE},
+    {name:'CIE Lab ΔE76',cls:'cielab',color:'#a78bfa',val:cDE},
+  ];
+  for (const b of bars) {
+    const w = (b.val/maxDE*80+5).toFixed(1);
+    html += `<div class="dist-row"><div class="dist-label" style="color:${b.color}">${b.name}</div>
+      <div class="dist-bar-wrap"><div class="dist-bar ${b.cls}" style="width:${w}%">${b.val.toFixed(4)}</div></div></div>`;
+  }
+  html += '</div>';
+  html += `<div class="jnd-text">${t(jndKey)}</div>`;
+  document.getElementById('distArea').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('contrastFg').addEventListener('input', buildContrast);
+document.getElementById('contrastBg').addEventListener('input', buildContrast);
+document.getElementById('harmonyBase').addEventListener('input', buildHarmony);
+document.getElementById('hueL').addEventListener('input', buildHueRing);
+document.getElementById('hueC').addEventListener('input', buildHueRing);
+document.getElementById('hueN').addEventListener('input', buildHueRing);
+document.getElementById('gradFrom').addEventListener('input', buildGrad);
+document.getElementById('gradTo').addEventListener('input', buildGrad);
+document.getElementById('gradSteps').addEventListener('input', buildGrad);
+document.getElementById('inspector').addEventListener('input', updateInspector);
+document.getElementById('distC1').addEventListener('input', buildDistance);
+document.getElementById('distC2').addEventListener('input', buildDistance);
+
+buildAdapterInputs();
+applyLang();
+
+// Observe reveal elements
+setTimeout(() => {
+  document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+}, 50);
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="canonical" href="https://helmlab.space/palette">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
   <style>
     /* Palette page overrides */
     .palette-hero {
@@ -259,24 +260,7 @@
   </style>
 </head>
 <body>
-  <header>
-    <nav class="nav">
-      <div class="nav-inner">
-        <a href="/" class="nav-logo" aria-label="Helmlab Home">
-          <img src="assets/logo-horizontal.svg" alt="Helmlab" height="24" width="auto">
-        </a>
-        <div class="nav-links">
-          <a href="/">Home</a>
-          <a href="/#gradient-demo">Gradient</a>
-          <a href="https://grkmyldz148.github.io/helmlab/">Docs</a>
-          <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
-        </div>
-        <button type="button" class="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-    </nav>
-  </header>
+  <div id="site-nav"></div>
 
   <main>
     <section class="palette-hero">
@@ -335,24 +319,12 @@
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <div class="footer-left">
-        <span>MIT License</span>
-        <span class="footer-sep">&middot;</span>
-        <span>Gorkem Yildiz</span>
-      </div>
-      <div class="footer-right">
-        <a href="/">helmlab.space</a>
-        <span class="footer-sep">&middot;</span>
-        <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
-      </div>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 
   <!-- Toast -->
   <div class="pal-toast" id="pal-toast">Copied!</div>
 
+  <script src="js/components.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/helmlab@latest/dist/index.global.js"></script>
   <script>
   (function() {
@@ -541,16 +513,6 @@
               btn.classList.remove('copied');
             }, 1500);
           });
-        });
-      }
-
-      // Mobile nav
-      var menuBtn = document.querySelector('.mobile-menu-btn');
-      var navLinks = document.querySelector('.nav-links');
-      if (menuBtn && navLinks) {
-        menuBtn.addEventListener('click', function() {
-          var isOpen = navLinks.classList.toggle('open');
-          menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         });
       }
 

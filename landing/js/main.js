@@ -532,25 +532,6 @@
     }
   }
 
-  // ── Mobile Nav ──────────────────────────────────────────
-  function initMobileNav() {
-    var btn = document.querySelector('.mobile-menu-btn');
-    var links = document.querySelector('.nav-links');
-    if (!btn || !links) return;
-
-    btn.addEventListener('click', function () {
-      var isOpen = links.classList.toggle('open');
-      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-
-    var navLinks = links.querySelectorAll('a');
-    for (var i = 0; i < navLinks.length; i++) {
-      navLinks[i].addEventListener('click', function () {
-        links.classList.remove('open');
-        btn.setAttribute('aria-expanded', 'false');
-      });
-    }
-  }
 
   // ── Smooth Scroll for Anchor Links ──────────────────────
   function initSmoothScroll() {
@@ -620,7 +601,7 @@
     initModeToggle();
     initCodeTabs();
     initCopyButtons();
-    initMobileNav();
+
     initSmoothScroll();
     initScrollReveal();
     initGradientDemo();

@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install numpy scipy
+      - run: pip install numpy scipy pytest
       - run: python -m pytest tests/ -x -q
 
   test-js:
@@ -52,15 +52,6 @@ jobs:
             --exclude='.DS_Store' \
             -e "ssh -i ~/.ssh/deploy_key" \
             landing/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/
-
-      - name: Deploy docs
-        run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 \
-            "mkdir -p /home/ismailyagci/web/helmlab.space/public_html/docs"
-          rsync -avz --delete \
-            --exclude='.DS_Store' \
-            -e "ssh -i ~/.ssh/deploy_key" \
-            docs/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/docs/
 
       - name: Update server repo & install API deps
         run: |

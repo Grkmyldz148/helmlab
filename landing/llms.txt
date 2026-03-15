@@ -9,8 +9,9 @@ Helmlab is a family of two purpose-built color spaces: MetricSpace for perceptua
 - npm: https://www.npmjs.com/package/helmlab
 - PyPI: https://pypi.org/project/helmlab/
 - Paper: https://arxiv.org/abs/2602.23010
-- Documentation: https://grkmyldz148.github.io/helmlab/
-- Interactive Demo: https://grkmyldz148.github.io/helmlab/demo.html
+- Documentation: https://helmlab.space/docs.html
+- Interactive Demo: https://helmlab.space/demo.html
+- Design Tools: https://helmlab.space/tools.html
 - Author: Gorkem Yildiz
 
 ## What It Does

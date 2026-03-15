@@ -111,7 +111,7 @@ Interpolate gradients through Helmlab spaces with perceptually uniform steps:
 
 ## Links
 
-- [Helmlab documentation](https://grkmyldz148.github.io/helmlab/)
+- [Helmlab documentation](https://helmlab.space/docs.html)
 - [GitHub](https://github.com/Grkmyldz148/helmlab)
 - [arXiv paper](https://arxiv.org/abs/2602.23010)
 - [npm: helmlab](https://www.npmjs.com/package/helmlab)

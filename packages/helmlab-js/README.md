@@ -13,7 +13,7 @@ A data-driven analytical color space for UI design systems. Two purpose-built sp
 - MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 (20% better)
 - `gradient()` with CIEDE2000 arc-length reparameterization (CV ≈ 0% on any pair)
 
-**[Website](https://helmlab.space)** · **[Documentation](https://grkmyldz148.github.io/helmlab/)** · **[npm](https://www.npmjs.com/package/helmlab)**
+**[Website](https://helmlab.space)** · **[Documentation](https://helmlab.space/docs.html)** · **[Demo](https://helmlab.space/demo.html)** · **[npm](https://www.npmjs.com/package/helmlab)**
 
 ## Install
 

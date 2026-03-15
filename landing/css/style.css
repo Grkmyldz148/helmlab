@@ -74,6 +74,11 @@ body.mode-developer .metric-feat-desc.developer-text { display: block; }
   align-items: center;
   justify-content: space-between;
 }
+.nav-logo{
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
 .nav-logo img {
   height: 24px;
   width: auto;
@@ -709,8 +714,8 @@ body.mode-developer .mode-slider {
 /* ── Pipeline (Developer) ─────────────────────────────── */
 .pipe-scroll {
   overflow-x: auto;
-  margin: 24px -28px 0;
-  padding: 0 28px 12px;
+  margin: 24px 0 0;
+  padding: 0 0 12px;
   scrollbar-width: thin;
   scrollbar-color: #27272a transparent;
 }
@@ -1841,8 +1846,8 @@ footer {
     font-size: 0.82em;
   }
   .pipe-scroll {
-    margin: 24px -16px 0;
-    padding: 0 16px 12px;
+    margin: 24px 0 0;
+    padding: 0 0 12px;
   }
   .faq-q {
     padding: 14px 16px;

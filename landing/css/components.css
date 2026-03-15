@@ -1,0 +1,77 @@
+/* ══════════════════════════════════════════════════════════════
+   Helmlab — Shared Site Components (nav + footer)
+   Included on ALL pages for consistent layout.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Site Nav ──────────────────────────────────────────────── */
+.site-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(9,9,11,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1a1a1e; height: 56px;
+}
+.site-nav-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+}
+.site-nav-logo { display: flex; align-items: center; text-decoration: none; }
+.site-nav-logo img { height: 24px; width: auto; }
+
+.site-nav-links {
+  display: flex; gap: 8px;
+}
+.site-nav-links a {
+  color: #71717a; text-decoration: none; font-size: 0.88em; font-weight: 500;
+  padding: 6px 12px; border-radius: 6px; transition: color 0.15s, background 0.15s;
+}
+.site-nav-links a:hover { color: #e4e4e7; background: rgba(255,255,255,0.04); }
+.site-nav-links a.active { color: #fafafa; }
+
+/* Hamburger (hidden on desktop) */
+.site-nav-burger {
+  display: none; flex-direction: column; justify-content: center; gap: 4px;
+  background: none; border: none; cursor: pointer; padding: 8px;
+}
+.site-nav-burger span {
+  display: block; width: 20px; height: 2px; background: #a1a1aa;
+  border-radius: 1px; transition: transform 0.2s, opacity 0.2s;
+}
+
+/* ── Site Footer ───────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid #1a1a1e; padding: 24px 0; margin-top: 48px;
+}
+.site-footer-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  font-size: 0.82em; color: #52525b;
+}
+.site-footer-left, .site-footer-right {
+  display: flex; align-items: center; gap: 8px;
+}
+.site-footer-sep { color: #3f3f46; }
+.site-footer a {
+  color: #52525b; text-decoration: none; transition: color 0.15s;
+}
+.site-footer a:hover { color: #a1a1aa; }
+
+/* ── Body padding for fixed nav ────────────────────────────── */
+body { padding-top: 56px; }
+
+/* ── Mobile responsive ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .site-nav-inner { padding: 0 16px; }
+  .site-nav-links {
+    display: none; position: absolute; top: 56px; left: 0; right: 0;
+    flex-direction: column; background: rgba(9,9,11,0.97);
+    backdrop-filter: blur(12px); border-bottom: 1px solid #27272a;
+    padding: 8px 0;
+  }
+  .site-nav-links.open { display: flex; }
+  .site-nav-links a {
+    padding: 12px 24px; border-radius: 0; font-size: 0.95em;
+  }
+  .site-nav-burger { display: flex; }
+  .site-footer-inner { flex-direction: column; text-align: center; }
+}

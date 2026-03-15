@@ -72,11 +72,43 @@ GitHub Actions (`.github/workflows/deploy.yml`) runs on every push to main:
 3. npm publishes automatically when `packages/helmlab-js/package.json` version changes
 4. PyPI publishes automatically when `pyproject.toml` version changes
 
+## Blog Post Workflow (HTML → Playwright → JPEG → Upload)
+
+```bash
+# 1. Generate HTML visual cards
+python scripts/blog_visuals.py          # outputs to scripts/blog_output/*.html
+
+# 2. Screenshot as JPEG at 100% quality
+python scripts/screenshot_blog.py       # outputs to scripts/blog_output/*.jpg
+
+# 3. Upload images to server
+scp scripts/blog_output/*.jpg root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/uploads/blog/
+
+# 4. Fix permissions
+ssh root@89.252.184.6 "chown ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/uploads/blog/*.jpg"
+```
+
+Images are served at `https://helmlab.space/uploads/blog/<filename>.jpg`.
+
+**Important:** If `cover_image` is set (shown as banner), do NOT put the same image at the start of `content` — it will appear twice.
+
+Blog posts can be created via the CI/CD endpoint:
+```bash
+curl -X POST "https://helmlab.space/api/ci/blog" \
+  -H "Content-Type: application/json" \
+  -H "X-Blog-Secret: REDACTED_BLOG_SECRET" \
+  -d '{"title":"...","excerpt":"...","content":"<html>...","cover_image":"...","tags":["release"],"author":"..."}'
+```
+
 ## Conventions
 
 - **Never add `Co-Authored-By: Claude`** to git commits
 - **Never commit `gorkemyildizcom.md`** (contains API keys)
 - GitHub username: **Grkmyldz148**
-- When updating GenSpace matrices: update BOTH Python and JS param JSON files, plus hardcoded copies in `colorjs-pr/src/spaces/helmgen.js`, `docs/demo.html`, `landing/js/main.js`
+- When updating GenSpace matrices: update BOTH Python and JS param JSON files, plus hardcoded copies in `colorjs-pr/src/spaces/helmgen.js`, `landing/demo.html`, `landing/js/main.js`
 - After changing gen_params.json: regenerate JS reference values with `python packages/helmlab-js/scripts/generate-reference.py`
 - Version numbers must stay in sync: `pyproject.toml`, `src/helmlab/__init__.py`, `packages/helmlab-js/package.json`
+- **All "Gorkem Yildiz" text in footers must link to `https://gorkemyildiz.com`**
+- **Every blog post must have author footer** with links to gorkemyildiz.com, GitHub repo, helmlab.space, and paper
+- **No github.io links** — all docs/demo/tools are under `helmlab.space/` (the `docs/` directory contains only redirects)
+- Landing pages: `landing/` → deploys to helmlab.space root. Includes: index.html, docs.html, demo.html, tools.html, palette.html, blog.html

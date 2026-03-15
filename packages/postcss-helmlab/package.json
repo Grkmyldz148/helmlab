@@ -32,7 +32,7 @@
     "postcss": "^8.0.0"
   },
   "dependencies": {
-    "helmlab": "^0.6.0"
+    "helmlab": "file:../helmlab-js"
   },
   "devDependencies": {
     "postcss": "^8.4.0"

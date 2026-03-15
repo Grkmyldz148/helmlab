@@ -51,31 +51,10 @@
   </script>
 
   <link rel="stylesheet" href="css/style.css?v=5">
+  <link rel="stylesheet" href="css/components.css">
 </head>
 <body class="mode-designer">
-  <!-- Navigation -->
-  <header>
-    <nav class="nav">
-      <div class="nav-inner">
-        <a href="/" class="nav-logo" aria-label="Helmlab Home">
-          <img src="assets/logo-horizontal.svg" alt="Helmlab" height="28" width="auto">
-        </a>
-        <div class="nav-links">
-          <a href="#gradient-demo">Demo</a>
-          <a href="palette.html">Palette</a>
-          <a href="#faq">FAQ</a>
-          <a href="https://grkmyldz148.github.io/helmlab/">Docs</a>
-          <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
-          <a href="https://arxiv.org/abs/2602.23010">Paper</a>
-          <a href="https://www.npmjs.com/package/helmlab">npm</a>
-          <a href="https://pypi.org/project/helmlab/">PyPI</a>
-        </div>
-        <button type="button" class="mobile-menu-btn" aria-label="Menu" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-    </nav>
-  </header>
+  <div id="site-nav"></div>
 
   <main>
     <!-- Hero -->
@@ -784,11 +763,11 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
         <div class="paper-card">
           <div class="paper-badge">arXiv:2602.23010</div>
           <h3>Helmlab: A Data-Driven Analytical Color Space for UI Design Systems</h3>
-          <p class="paper-author">Gorkem Yildiz &middot; 2026</p>
+          <p class="paper-author"><a href="https://gorkemyildiz.com" style="color:inherit;text-decoration:none">Gorkem Yildiz</a> &middot; 2026</p>
           <p class="paper-abstract">72-parameter analytical color space optimized end-to-end on COMBVD. STRESS 23.30 (20.2% lower than CIEDE2000). Neutral correction guarantees achromatic C &lt; 10<sup>&minus;6</sup>. Blue-band refit reduces gradient artifacts by 8.9&times;.</p>
           <div class="paper-links">
             <a href="https://arxiv.org/abs/2602.23010" class="paper-link">Read on arXiv</a>
-            <a href="https://grkmyldz148.github.io/helmlab/demo.html" class="paper-link secondary">Interactive Demo</a>
+            <a href="demo.html" class="paper-link secondary">Interactive Demo</a>
           </div>
           <div class="paper-cite">
             <code>@article{yildiz2026helmlab,
@@ -998,20 +977,7 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <div class="footer-left">
-        <span>MIT License</span>
-        <span class="footer-sep">&middot;</span>
-        <span>Gorkem Yildiz</span>
-      </div>
-      <div class="footer-right">
-        <a href="https://arxiv.org/abs/2602.23010">arXiv:2602.23010</a>
-        <span class="footer-sep">&middot;</span>
-        <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
-      </div>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 
   <!-- Helmlab JS (IIFE from CDN, exposes window.helmlab) -->
   <script src="https://cdn.jsdelivr.net/npm/helmlab@latest/dist/index.global.js"></script>
@@ -1036,5 +1002,6 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
     }).catch(() => {});
   })();
   </script>
+  <script src="js/components.js"></script>
 </body>
 </html>
