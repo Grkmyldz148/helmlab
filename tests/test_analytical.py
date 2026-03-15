@@ -328,6 +328,7 @@ class TestRegistry:
         assert space.name == "Metric"
 
 
+@pytest.mark.skipif(not _HAS_COLOUR, reason="colour-science not installed")
 class TestOklabEquivalence:
     """With Oklab params and hk_weight=0, should match Oklab closely."""
 
@@ -346,10 +347,6 @@ class TestOklabEquivalence:
         # Should be very close (not exact due to floating point)
         np.testing.assert_allclose(coords_a, coords_o, atol=1e-6)
 
-    @pytest.mark.skipif(
-        not _HAS_COLOUR,
-        reason="colour-science not installed",
-    )
     def test_stress_matches_oklab(self):
         """STRESS with Oklab params should be ~same as OKLCH."""
         from helmlab.data.combvd import load_combvd
