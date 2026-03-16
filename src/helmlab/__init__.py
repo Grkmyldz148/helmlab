@@ -1,6 +1,6 @@
 """Helmlab — a data-driven analytical color space for perceptual color difference."""
 
-__version__ = "0.8.0"
+__version__ = "0.9.0"
 
 from helmlab.helmlab import Helmlab
 from helmlab.spaces.metric import MetricSpace, MetricParams
