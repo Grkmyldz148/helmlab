@@ -1,4 +1,4 @@
-export const VERSION = '0.9.0';
+export const VERSION: string = typeof __HELMLAB_VERSION__ !== 'undefined' ? __HELMLAB_VERSION__ : '0.0.0-dev';
 export { Helmlab } from './helmlab.js';
 export type { HelmlabOptions } from './helmlab.js';
 export type { Lab, XYZ, RGB, Hex, SemanticScale, WCAGLevel } from './types.js';
