@@ -924,11 +924,12 @@ class MetricSpace(ColorSpace):
             S = self._surround
         dS = S - 0.5  # centered — all S params multiply by dS
 
-        # 1. XYZ -> LMS
-        LMS = XYZ @ self.params.M1.T
+        # 1. XYZ -> LMS (clamp: cone responses are physically non-negative;
+        #    negative values from M1 indicate out-of-human-gamut colors)
+        LMS = np.maximum(XYZ @ self.params.M1.T, 0.0)
 
-        # 2. Power compression (signed)
-        LMS_c = np.sign(LMS) * np.abs(LMS) ** self.params.gamma
+        # 2. Power compression
+        LMS_c = LMS ** self.params.gamma
 
         # 3. LMS_c -> Lab_raw
         Lab = LMS_c @ self.params.M2.T
@@ -1153,9 +1154,9 @@ class MetricSpace(ColorSpace):
         Lab = np.stack([L_raw, a_raw, b_raw], axis=-1)
         LMS_c = Lab @ self._M2_inv.T
 
-        # 2. Undo power compression
+        # 2. Undo power compression (LMS_c is non-negative after forward clamp)
         inv_gamma = 1.0 / self.params.gamma
-        LMS = np.sign(LMS_c) * np.abs(LMS_c) ** inv_gamma
+        LMS = np.maximum(LMS_c, 0.0) ** inv_gamma
 
         # 1. LMS -> XYZ
         return LMS @ self._M1_inv.T

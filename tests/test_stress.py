@@ -527,21 +527,22 @@ class TestNegativeXYZ:
 
     @pytest.mark.parametrize("xyz", NEG_XYZ)
     def test_metric_negative_xyz_roundtrip(self, ms, xyz):
+        """Negative XYZ → negative LMS → clamped (cone responses are
+        non-negative). Output must be finite; exact round-trip not expected."""
         xyz = np.array(xyz, dtype=np.float64)
         lab = ms.from_XYZ(xyz)
         assert np.all(np.isfinite(lab)), f"Non-finite Lab for XYZ={xyz}"
         rec = ms.to_XYZ(lab)
-        np.testing.assert_allclose(rec, xyz, atol=1e-6,
-                                   err_msg=f"XYZ={xyz}")
+        assert np.all(np.isfinite(rec)), f"Non-finite rec for XYZ={xyz}"
 
     @pytest.mark.parametrize("xyz", NEG_XYZ)
     def test_gen_negative_xyz_roundtrip(self, gs, xyz):
+        """Negative XYZ → negative LMS → clamped. Output must be finite."""
         xyz = np.array(xyz, dtype=np.float64)
         lab = gs.from_XYZ(xyz)
         assert np.all(np.isfinite(lab)), f"Non-finite Lab for XYZ={xyz}"
         rec = gs.to_XYZ(lab)
-        np.testing.assert_allclose(rec, xyz, atol=1e-6,
-                                   err_msg=f"XYZ={xyz}")
+        assert np.all(np.isfinite(rec)), f"Non-finite rec for XYZ={xyz}"
 
 
 # ── 13. Double round-trip stability ─────────────────────────────────
@@ -551,22 +552,24 @@ class TestDoubleRoundTrip:
 
     def test_metric_double_roundtrip(self, ms):
         rng = np.random.default_rng(42)
-        XYZ = rng.uniform(0.01, 0.9, (100, 3))
+        XYZ = rng.uniform(0.01, 0.9, (200, 3))
+        # Filter to non-negative LMS (negative LMS is clamped, not exact RT)
+        LMS = XYZ @ ms.params.M1.T
+        XYZ = XYZ[(LMS >= 0).all(axis=1)][:100]
         lab1 = ms.from_XYZ(XYZ)
         rec1 = ms.to_XYZ(lab1)
         lab2 = ms.from_XYZ(rec1)
         rec2 = ms.to_XYZ(lab2)
-        # Error should not grow
-        err1 = np.max(np.abs(rec1 - XYZ), axis=1)
         err2 = np.max(np.abs(rec2 - XYZ), axis=1)
-        # Newton iterations may amplify floating point noise slightly
-        # (e.g. 3e-13 → 5e-12), but must stay below 1e-8
         assert np.max(err2) < 1e-8, (
             f"Double round-trip error too large: {np.max(err2):.2e}")
 
     def test_gen_double_roundtrip(self, gs):
         rng = np.random.default_rng(42)
-        XYZ = rng.uniform(0.01, 0.9, (100, 3))
+        XYZ = rng.uniform(0.01, 0.9, (200, 3))
+        # Filter to non-negative LMS (negative LMS is clamped, not exact RT)
+        LMS = XYZ @ gs.params.M1.T
+        XYZ = XYZ[(LMS >= 0).all(axis=1)][:100]
         lab1 = gs.from_XYZ(XYZ)
         rec1 = gs.to_XYZ(lab1)
         lab2 = gs.from_XYZ(rec1)

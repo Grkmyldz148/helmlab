@@ -1,13 +1,17 @@
 """GenSpace — generation-optimized color space for palette, gradient, gamut map.
 
-Pipeline (subset of MetricSpace, ~35 params):
-    XYZ → M1 → γ^(1/3) shared → M2 → Lab_raw
+Pipeline:
+    XYZ → M1 → cbrt → M2 → Lab
+
+    Optional stages (currently all inactive — params are zero):
     → [hue correction δ(h)]
     → [cubic L correction]
     → [dark L compression]
     → [L-dependent chroma scaling]
-    → neutral correction (NC)
-    → Lab_final
+    → [neutral correction (NC)]
+
+    Current gen_params.json uses only M1 → cbrt → M2 (same structure
+    as OKLab, with CMA-ES optimized matrices).
 
 Key differences from MetricSpace:
     - Shared gamma (1/3) guarantees structural achromatic axis (grays → a=b≈0)
@@ -300,11 +304,11 @@ class GenSpace(ColorSpace):
         """XYZ → Gen Lab (generation-optimized pipeline)."""
         XYZ = np.asarray(XYZ, dtype=np.float64)
 
-        # 1. XYZ → LMS
-        LMS = XYZ @ self.params.M1.T
+        # 1. XYZ → LMS (clamp: cone responses are physically non-negative)
+        LMS = np.maximum(XYZ @ self.params.M1.T, 0.0)
 
         # 2. Shared power compression (γ = 1/3 for all channels)
-        LMS_c = np.sign(LMS) * np.abs(LMS) ** self.params.gamma
+        LMS_c = LMS ** self.params.gamma
 
         # 3. LMS_c → Lab_raw
         Lab = LMS_c @ self.params.M2.T
@@ -377,9 +381,9 @@ class GenSpace(ColorSpace):
         Lab = np.stack([L, a, b], axis=-1)
         LMS_c = Lab @ self._M2_inv.T
 
-        # 2. Undo power
+        # 2. Undo power (LMS_c is non-negative after forward clamp)
         inv_gamma = 1.0 / self.params.gamma
-        LMS = np.sign(LMS_c) * np.abs(LMS_c) ** inv_gamma
+        LMS = np.maximum(LMS_c, 0.0) ** inv_gamma
 
         # 1. LMS → XYZ
         return LMS @ self._M1_inv.T

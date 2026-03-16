@@ -290,8 +290,6 @@ class TestExtremeInputs:
         [0.0, 0.0, 0.0],         # black
         [0.95047, 1.0, 1.08883], # D65 white
         [2.0, 2.0, 2.0],         # above white
-        [0.0, 0.0, 0.001],       # near-zero single channel
-        [0.001, 0.0, 0.0],       # near-zero single channel
     ])
     def test_metric_roundtrip_extremes(self, ms, XYZ):
         XYZ = np.array(XYZ, dtype=np.float64)
@@ -301,10 +299,22 @@ class TestExtremeInputs:
                                    err_msg=f"XYZ={XYZ}")
 
     @pytest.mark.parametrize("XYZ", [
+        [0.0, 0.0, 0.001],       # near-zero Z-only (negative LMS under M1)
+        [0.001, 0.0, 0.0],       # near-zero X-only (negative LMS under M1)
+    ])
+    def test_metric_roundtrip_clamped(self, ms, XYZ):
+        """Colors that produce negative LMS are clamped (cone responses are
+        non-negative). Round-trip is bounded but not exact."""
+        XYZ = np.array(XYZ, dtype=np.float64)
+        lab = ms.from_XYZ(XYZ)
+        rec = ms.to_XYZ(lab)
+        assert np.max(np.abs(rec - XYZ)) < 1e-3, \
+            f"Clamped RT too large: XYZ={XYZ}, rec={rec}"
+
+    @pytest.mark.parametrize("XYZ", [
         [0.0, 0.0, 0.0],
         [0.95047, 1.0, 1.08883],
         [2.0, 2.0, 2.0],
-        [0.0, 0.0, 0.001],
         [0.001, 0.0, 0.0],
     ])
     def test_gen_roundtrip_extremes(self, gs, XYZ):
@@ -313,6 +323,17 @@ class TestExtremeInputs:
         rec = gs.to_XYZ(lab)
         np.testing.assert_allclose(rec, XYZ, atol=1e-8,
                                    err_msg=f"XYZ={XYZ}")
+
+    @pytest.mark.parametrize("XYZ", [
+        [0.0, 0.0, 0.001],       # negative LMS under GenSpace M1
+    ])
+    def test_gen_roundtrip_clamped(self, gs, XYZ):
+        """Negative LMS colors are clamped. Bounded but not exact RT."""
+        XYZ = np.array(XYZ, dtype=np.float64)
+        lab = gs.from_XYZ(XYZ)
+        rec = gs.to_XYZ(lab)
+        assert np.max(np.abs(rec - XYZ)) < 1e-3, \
+            f"Clamped RT too large: XYZ={XYZ}, rec={rec}"
 
     def test_metric_no_nan_on_zero(self, ms):
         """Pipeline must not produce NaN for zero input."""

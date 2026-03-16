@@ -91,6 +91,20 @@ class TestAnalyticalParams:
         assert p.hk_sin1 == 0.0
 
 
+def _make_valid_xyz(rng, n=500):
+    """Generate random XYZ with non-negative LMS under OKLab M1.
+
+    Negative LMS values represent out-of-human-gamut colors; these are
+    clamped in MetricSpace (cone responses are physically non-negative),
+    so round-trip is not exact for them. Tests use valid colors only.
+    """
+    M1 = oklab_params().M1
+    xyz = rng.uniform(0.05, 0.90, (n * 2, 3))
+    LMS = xyz @ M1.T
+    valid = (LMS >= 0).all(axis=1)
+    return xyz[valid][:n]
+
+
 class TestAnalyticalSpace:
     @pytest.fixture
     def space(self):
@@ -98,8 +112,7 @@ class TestAnalyticalSpace:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_from_XYZ_shape(self, space, xyz_batch):
         coords = space.from_XYZ(xyz_batch)
@@ -147,8 +160,7 @@ class TestEnrichmentRoundTrip:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_cubic_L_only(self, xyz_batch):
         params = oklab_params()
@@ -430,8 +442,7 @@ class TestEmbeddedHK:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_embedded_hk_round_trip(self, xyz_batch):
         """Round-trip with H-K at step 3.7 + all enrichment stages."""
@@ -516,8 +527,7 @@ class TestHueDependentDarkL:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_dark_L_hue_round_trip(self, xyz_batch):
         """Hue-dependent dark L compression round-trip."""
@@ -651,8 +661,7 @@ class TestDistLinear:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_backward_compat_zero(self):
         """dist_linear=0 should produce identical distances to v12 (pure compression)."""
@@ -777,8 +786,7 @@ class TestDistPostPower:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_backward_compat_one(self):
         """dist_post_power=1.0 should match v12 exactly."""
@@ -890,8 +898,7 @@ class TestDistSLSC:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_backward_compat_zero(self):
         """dist_sl=0 and dist_sc=0 should match v12 exactly."""
@@ -1035,8 +1042,7 @@ class TestDistSLSCHue:
 
     @pytest.fixture
     def xyz_batch(self):
-        rng = np.random.default_rng(42)
-        return rng.uniform(0.05, 0.90, (500, 3))
+        return _make_valid_xyz(np.random.default_rng(42))
 
     def test_backward_compat_zero_hue(self):
         """All hue params=0 should match v14c behavior exactly."""

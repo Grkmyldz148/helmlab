@@ -259,15 +259,13 @@ describe('NC LUT continuity', () => {
 // ── Extreme inputs ──────────────────────────────────────────────────
 
 describe('Extreme inputs', () => {
-  const extremes: { label: string; xyz: XYZ }[] = [
+  const exactExtremes: { label: string; xyz: XYZ }[] = [
     { label: 'black', xyz: [0, 0, 0] },
     { label: 'D65 white', xyz: [0.95047, 1.0, 1.08883] },
     { label: 'above white', xyz: [2, 2, 2] },
-    { label: 'near-zero Z only', xyz: [0, 0, 0.001] },
-    { label: 'near-zero X only', xyz: [0.001, 0, 0] },
   ];
 
-  for (const { label, xyz } of extremes) {
+  for (const { label, xyz } of exactExtremes) {
     it(`MetricSpace: ${label} round-trip`, () => {
       const lab = hl.fromXYZ(xyz);
       const rec = hl.toXYZ(lab);
@@ -278,6 +276,27 @@ describe('Extreme inputs', () => {
       const lab = gen.fromXYZ(xyz);
       const rec = gen.toXYZ(lab);
       expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-6);
+    });
+  }
+
+  // Colors that produce negative LMS are clamped (cone responses are
+  // non-negative). Round-trip is bounded but not exact.
+  const clampedExtremes: { label: string; xyz: XYZ }[] = [
+    { label: 'near-zero Z only', xyz: [0, 0, 0.001] },
+    { label: 'near-zero X only', xyz: [0.001, 0, 0] },
+  ];
+
+  for (const { label, xyz } of clampedExtremes) {
+    it(`MetricSpace: ${label} clamped RT`, () => {
+      const lab = hl.fromXYZ(xyz);
+      const rec = hl.toXYZ(lab);
+      expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-3);
+    });
+
+    it(`GenSpace: ${label} clamped RT`, () => {
+      const lab = gen.fromXYZ(xyz);
+      const rec = gen.toXYZ(lab);
+      expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-3);
     });
   }
 

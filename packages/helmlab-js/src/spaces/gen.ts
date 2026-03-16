@@ -11,7 +11,7 @@
  */
 
 import type { Lab, XYZ } from '../types.js';
-import { signedPow, clamp } from '../utils/math.js';
+import { clamp } from '../utils/math.js';
 import type { CompiledGenParams, GenParams } from '../core/params.js';
 
 const { cos, sin, sqrt, atan2, exp, abs, PI } = Math;
@@ -44,15 +44,15 @@ export class GenSpace {
     const M2 = this.p.M2;
     const g = this.p.gamma;
 
-    // 1. XYZ → LMS
-    const lms0 = M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2];
-    const lms1 = M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2];
-    const lms2 = M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2];
+    // 1. XYZ → LMS (clamp: cone responses are physically non-negative)
+    const lms0 = Math.max(M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2], 0);
+    const lms1 = Math.max(M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2], 0);
+    const lms2 = Math.max(M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2], 0);
 
     // 2. Shared power compression
-    const c0 = signedPow(lms0, g[0]);
-    const c1 = signedPow(lms1, g[1]);
-    const c2 = signedPow(lms2, g[2]);
+    const c0 = lms0 ** g[0];
+    const c1 = lms1 ** g[1];
+    const c2 = lms2 ** g[2];
 
     // 3. LMS_c → Lab_raw
     let L = M2[0] * c0 + M2[1] * c1 + M2[2] * c2;
@@ -153,11 +153,11 @@ export class GenSpace {
     const lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
     const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
 
-    // 2. Undo power
+    // 2. Undo power (LMS_c non-negative after forward clamp)
     const ig = this.p.inv_gamma;
-    const l0 = signedPow(lc0, ig[0]);
-    const l1 = signedPow(lc1, ig[1]);
-    const l2 = signedPow(lc2, ig[2]);
+    const l0 = Math.max(lc0, 0) ** ig[0];
+    const l1 = Math.max(lc1, 0) ** ig[1];
+    const l2 = Math.max(lc2, 0) ** ig[2];
 
     // 1. LMS → XYZ
     const M1i = this.p.M1_inv;
