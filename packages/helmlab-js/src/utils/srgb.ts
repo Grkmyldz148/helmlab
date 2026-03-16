@@ -91,8 +91,9 @@ export function displayP3ToXyz(rgb: RGB): XYZ {
 
 /** '#rrggbb' → [R, G, B] in [0, 1]. */
 export function hexToSrgb(hex: Hex): RGB {
-  const h = hex.startsWith('#') ? hex.slice(1) : hex;
-  if (h.length !== 6) throw new Error(`Expected 6-char hex, got '${hex}'`);
+  let h = hex.startsWith('#') ? hex.slice(1) : hex;
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if (h.length !== 6) throw new Error(`Expected 3 or 6-char hex, got '${hex}'`);
   return [
     parseInt(h.slice(0, 2), 16) / 255,
     parseInt(h.slice(2, 4), 16) / 255,

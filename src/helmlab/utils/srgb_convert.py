@@ -63,10 +63,12 @@ def sRGB_to_XYZ(srgb: np.ndarray) -> np.ndarray:
 # ── Hex ↔ sRGB ──────────────────────────────────────────────────────────
 
 def hex_to_srgb(hex_str: str) -> np.ndarray:
-    """'#rrggbb' → ndarray [R, G, B] in [0, 1]."""
+    """'#rrggbb' or '#rgb' → ndarray [R, G, B] in [0, 1]."""
     h = hex_str.lstrip("#")
+    if len(h) == 3:
+        h = h[0]*2 + h[1]*2 + h[2]*2
     if len(h) != 6:
-        raise ValueError(f"Expected 6-char hex, got '{hex_str}'")
+        raise ValueError(f"Expected 3 or 6-char hex, got '{hex_str}'")
     r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
     return np.array([r, g, b], dtype=np.float64) / 255.0
 

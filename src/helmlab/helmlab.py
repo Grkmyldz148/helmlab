@@ -364,7 +364,11 @@ class Helmlab:
         Evenly spaced L from near-white to near-black (GenSpace L range).
         Hue and chroma preserved, gamut clamped. Uses GenSpace.
         """
+        if steps < 1:
+            return []
         lab = self.gen_from_hex(base_hex)
+        if steps == 1:
+            return [self.gen_to_hex(lab)]
         L_hi = self._gen_white_L - 0.01
         L_lo = 0.05
         L_values = np.linspace(L_hi, L_lo, steps)

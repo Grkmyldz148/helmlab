@@ -264,7 +264,9 @@ export class Helmlab {
 
   /** Generate lightness palette from base color. Uses GenSpace. */
   palette(baseHex: Hex, steps = 10): Hex[] {
+    if (steps < 1) return [];
     const lab = this.genFromHex(baseHex);
+    if (steps === 1) return [this.genToHex(lab)];
     const Lhi = this.genWhiteL - 0.01;
     const Llo = 0.05;
     const result: Hex[] = [];
