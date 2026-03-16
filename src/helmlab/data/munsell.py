@@ -62,6 +62,8 @@ def load_munsell(subset: str = "real") -> dict:
 
     xyY_arr = np.array(xyY_list, dtype=np.float64)
     XYZ_arr = xyY_to_XYZ(xyY_arr)
+    # Munsell xyY has Y on percent scale (1.21–78.66); normalize to Y=1 scale
+    XYZ_arr = XYZ_arr / 100.0
 
     return {
         "hue_name": hue_names,
