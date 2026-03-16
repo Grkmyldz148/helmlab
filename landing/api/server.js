@@ -22,8 +22,6 @@ if (fs.existsSync(envPath)) {
 }
 
 const PORT = process.env.PORT || 3847;
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS_HASH = process.env.ADMIN_PASS_HASH || '';
 const TOKEN_SECRET = process.env.TOKEN_SECRET || crypto.randomBytes(32).toString('hex');
 const MONGO_URI = process.env.MONGO_URI;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || '/home/ismailyagci/web/helmlab.space/public_html/uploads/blog';
@@ -46,6 +44,7 @@ async function connectDB() {
   await db.collection('blogs').createIndex({ slug: 1 }, { unique: true });
   await db.collection('blogs').createIndex({ status: 1, created_at: -1 });
   await db.collection('comments').createIndex({ status: 1, created_at: -1 });
+  await db.collection('admins').createIndex({ username: 1 }, { unique: true });
 
   // Migrate comments.json if exists and collection is empty
   const count = await db.collection('comments').countDocuments();
@@ -60,6 +59,13 @@ async function connectDB() {
     } catch (e) {
       console.error('Migration failed:', e.message);
     }
+  }
+
+  // Check admin collection
+  const adminCount = await db.collection('admins').countDocuments();
+  if (adminCount === 0) {
+    console.log('WARNING: No admin users in database. Create one with:');
+    console.log('  db.admins.insertOne({ username: "admin", password_hash: sha256("your-password") })');
   }
 }
 
@@ -244,10 +250,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    // ── Auth ────────────────────────────────────────────
+    // ── Auth (credentials from MongoDB admins collection) ─
     if (p === '/auth' && method === 'POST') {
       const body = await parseBody(req);
-      if (body.username === ADMIN_USER && sha256(body.password || '') === ADMIN_PASS_HASH) {
+      const admin = await db.collection('admins').findOne({ username: body.username });
+      if (admin && admin.password_hash === sha256(body.password || '')) {
         return json(res, { token: makeToken() });
       }
       return json(res, { error: 'Invalid credentials' }, 401);
