@@ -16,5 +16,9 @@
   "hue_cos4": 0.0, "hue_sin4": 0.0,
   "L_corr_p1": 0.0, "L_corr_p2": 0.0, "L_corr_p3": 0.0,
   "lp_dark": 0.0, "lp_dark_hcos": 0.0, "lp_dark_hsin": 0.0,
-  "lc1": 0.0, "lc2": 0.0
+  "lc1": 0.0, "lc2": 0.0,
+  "hue_L_amp": 0.3664,
+  "hue_L_center": 1.5374,
+  "hue_L_width": 0.8816,
+  "hue_L_knee": 0.6821
 }

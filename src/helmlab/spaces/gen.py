@@ -1,9 +1,10 @@
 """GenSpace — generation-optimized color space for palette, gradient, gamut map.
 
 Pipeline:
-    XYZ → M1 → cbrt → M2 → Lab
+    XYZ → M1 → cbrt → M2 → [hue_L_correction] → Lab
 
-    Optional stages (currently all inactive — params are zero):
+    Optional stages:
+    → [hue_L_correction] — hue-dependent L compression (v31, yellow cusp fix)
     → [hue correction δ(h)]
     → [cubic L correction]
     → [dark L compression]
@@ -73,6 +74,12 @@ class GenParams:
     lc1: float = 0.0
     lc2: float = 0.0
 
+    # Hue-dependent L correction (4 params) — v31 yellow cusp fix
+    hue_L_amp: float = 0.0
+    hue_L_center: float = 0.0  # radians
+    hue_L_width: float = 1.0   # radians
+    hue_L_knee: float = 1.0    # L threshold
+
     def to_dict(self) -> dict:
         return {
             "M1": self.M1.tolist(),
@@ -90,6 +97,10 @@ class GenParams:
             "lp_dark_hsin": self.lp_dark_hsin,
             "lc1": self.lc1,
             "lc2": self.lc2,
+            "hue_L_amp": self.hue_L_amp,
+            "hue_L_center": self.hue_L_center,
+            "hue_L_width": self.hue_L_width,
+            "hue_L_knee": self.hue_L_knee,
         }
 
     @classmethod
@@ -110,6 +121,10 @@ class GenParams:
             lp_dark_hsin=d.get("lp_dark_hsin", 0.0),
             lc1=d.get("lc1", 0.0),
             lc2=d.get("lc2", 0.0),
+            hue_L_amp=d.get("hue_L_amp", 0.0),
+            hue_L_center=d.get("hue_L_center", 0.0),
+            hue_L_width=d.get("hue_L_width", 1.0),
+            hue_L_knee=d.get("hue_L_knee", 1.0),
         )
 
     def save(self, path: str | Path) -> None:
@@ -161,6 +176,7 @@ class GenSpace(ColorSpace):
         self._has_dark_L = (p.lp_dark != 0.0 or p.lp_dark_hcos != 0.0 or p.lp_dark_hsin != 0.0)
         self._has_dark_L_hue = (p.lp_dark_hcos != 0.0 or p.lp_dark_hsin != 0.0)
         self._has_L_chroma = (p.lc1 != 0.0 or p.lc2 != 0.0)
+        self._has_hue_L = (p.hue_L_amp != 0.0)
 
         # NC LUT (lazy)
         self._nc_lut_built = False
@@ -249,6 +265,32 @@ class GenSpace(ColorSpace):
             L = L - f / fp
         return L
 
+    # ── Hue-dependent L correction (v31 yellow cusp fix) ──────────
+
+    def _hue_L_weight(self, h, C):
+        """Gaussian hue weight × chroma gate (zero at achromatic)."""
+        p = self.params
+        dh = np.arctan2(np.sin(h - p.hue_L_center), np.cos(h - p.hue_L_center))
+        w = np.exp(-(dh / p.hue_L_width) ** 2) * C / (C + 0.01)
+        return w
+
+    def _apply_hue_L(self, L, a, b):
+        """Forward: compress high-L at target hue region."""
+        C = np.sqrt(a ** 2 + b ** 2)
+        h = np.arctan2(b, a)
+        w = self._hue_L_weight(h, C)
+        excess = np.maximum(0.0, L - self.params.hue_L_knee)
+        return L - self.params.hue_L_amp * w * excess
+
+    def _undo_hue_L(self, L, a, b):
+        """Inverse: analytical — L_in = (L_out - aw*knee) / (1 - aw)."""
+        C = np.sqrt(a ** 2 + b ** 2)
+        h = np.arctan2(b, a)
+        w = self._hue_L_weight(h, C)
+        aw = np.minimum(self.params.hue_L_amp * w, 0.99)
+        L_candidate = (L - aw * self.params.hue_L_knee) / (1.0 - aw)
+        return np.where(L_candidate > self.params.hue_L_knee, L_candidate, L)
+
     # ── L-dependent chroma scaling ─────────────────────────────────
 
     def _L_chroma_scale(self, L):
@@ -316,6 +358,10 @@ class GenSpace(ColorSpace):
         a = Lab[..., 1]
         b = Lab[..., 2]
 
+        # 3.25 Hue-dependent L correction (yellow cusp fix)
+        if self._has_hue_L:
+            L = self._apply_hue_L(L, a, b)
+
         # 3.5 Hue correction
         if self._has_hue_correction:
             a, b = self._apply_hue_correction(a, b)
@@ -376,6 +422,10 @@ class GenSpace(ColorSpace):
         # 3.5 Undo hue correction
         if self._has_hue_correction:
             a, b = self._undo_hue_correction(a, b)
+
+        # 3.25 Undo hue-dependent L correction
+        if self._has_hue_L:
+            L = self._undo_hue_L(L, a, b)
 
         # 3. Lab → LMS_c
         Lab = np.stack([L, a, b], axis=-1)

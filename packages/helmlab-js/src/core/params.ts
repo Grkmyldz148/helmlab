@@ -110,6 +110,7 @@ export interface GenParams {
   L_corr_p1: number; L_corr_p2: number; L_corr_p3: number;
   lp_dark: number; lp_dark_hcos: number; lp_dark_hsin: number;
   lc1: number; lc2: number;
+  hue_L_amp: number; hue_L_center: number; hue_L_width: number; hue_L_knee: number;
 }
 
 /** Compiled gen params ready for compute. */

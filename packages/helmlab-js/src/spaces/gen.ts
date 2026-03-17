@@ -59,6 +59,18 @@ export class GenSpace {
     let a = M2[3] * c0 + M2[4] * c1 + M2[5] * c2;
     let b = M2[6] * c0 + M2[7] * c1 + M2[8] * c2;
 
+    // 3.25 Hue-dependent L correction (yellow cusp fix)
+    if (r.hue_L_amp !== 0) {
+      const C = sqrt(a * a + b * b);
+      if (C > 1e-10) {
+        const h = atan2(b, a);
+        const dh = atan2(sin(h - r.hue_L_center), cos(h - r.hue_L_center));
+        const w = exp(-((dh / r.hue_L_width) ** 2)) * C / (C + 0.01);
+        const excess = Math.max(0, L - r.hue_L_knee);
+        L -= r.hue_L_amp * w * excess;
+      }
+    }
+
     // 3.5 Hue correction
     if (r.hue_cos1 !== 0 || r.hue_sin1 !== 0 || r.hue_cos2 !== 0 ||
         r.hue_sin2 !== 0 || r.hue_cos3 !== 0 || r.hue_sin3 !== 0 ||
@@ -145,6 +157,19 @@ export class GenSpace {
       }
       a = C * cos(hRaw);
       b = C * sin(hRaw);
+    }
+
+    // 3.25 Undo hue-dependent L correction
+    if (r.hue_L_amp !== 0) {
+      const C = sqrt(a * a + b * b);
+      if (C > 1e-10) {
+        const h = atan2(b, a);
+        const dh = atan2(sin(h - r.hue_L_center), cos(h - r.hue_L_center));
+        const w = exp(-((dh / r.hue_L_width) ** 2)) * C / (C + 0.01);
+        const aw = Math.min(r.hue_L_amp * w, 0.99);
+        const Lcand = (L - aw * r.hue_L_knee) / (1 - aw);
+        if (Lcand > r.hue_L_knee) L = Lcand;
+      }
     }
 
     // 3. Lab → LMS_c
