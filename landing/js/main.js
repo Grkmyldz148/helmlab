@@ -103,8 +103,8 @@
     return '#' + h(r) + h(g) + h(b);
   }
 
-  // ── GenSpace (inline, M1→cbrt→M2) ──────────────────────
-  // Hardcoded v14 CMA-ES optimized matrices (gen_params.json)
+  // ── GenSpace (inline, M1→cbrt→M2→hue_L_correction) ──────
+  // v14 CMA-ES matrices + v31 hue-dependent L correction
   var GEN_M1 = [
     [0.7583761294836658, 0.38380162590825084, -0.09608055040602373],
     [0.12671393631532843, 0.8421628149123207, 0.03434823621506485],
@@ -118,6 +118,9 @@
   // Inverse matrices (precomputed)
   var GEN_M1_INV = invertMatrix3(GEN_M1);
   var GEN_M2_INV = invertMatrix3(GEN_M2);
+
+  // v31 hue-dependent L correction (yellow cusp fix)
+  var HL_AMP = 0.3664, HL_CENTER = 1.5374, HL_WIDTH = 0.8816, HL_KNEE = 0.6821;
 
   function invertMatrix3(m) {
     var a=m[0][0],b=m[0][1],c=m[0][2],d=m[1][0],e=m[1][1],f=m[1][2],g=m[2][0],h=m[2][1],k=m[2][2];
@@ -147,10 +150,29 @@
     ];
     var lms = matMul3(GEN_M1, xyz);
     var lms_g = [Math.cbrt(lms[0]), Math.cbrt(lms[1]), Math.cbrt(lms[2])];
-    return matMul3(GEN_M2, lms_g);
+    var lab = matMul3(GEN_M2, lms_g);
+    // v31 hue-dependent L correction
+    var C = Math.sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+    if (C > 1e-10) {
+      var h = Math.atan2(lab[2], lab[1]);
+      var dh = Math.atan2(Math.sin(h-HL_CENTER), Math.cos(h-HL_CENTER));
+      var w = Math.exp(-((dh/HL_WIDTH)**2)) * C/(C+0.01);
+      lab[0] -= HL_AMP * w * Math.max(0, lab[0]-HL_KNEE);
+    }
+    return lab;
   }
 
   function genlabToSrgb(L, a, b) {
+    // v31 undo hue-dependent L correction
+    var C = Math.sqrt(a*a + b*b);
+    if (C > 1e-10) {
+      var h = Math.atan2(b, a);
+      var dh = Math.atan2(Math.sin(h-HL_CENTER), Math.cos(h-HL_CENTER));
+      var w = Math.exp(-((dh/HL_WIDTH)**2)) * C/(C+0.01);
+      var aw = Math.min(HL_AMP * w, 0.99);
+      var Lcand = (L - aw*HL_KNEE) / (1-aw);
+      if (Lcand > HL_KNEE) L = Lcand;
+    }
     var lms_g = matMul3(GEN_M2_INV, [L, a, b]);
     var lms = [lms_g[0]*lms_g[0]*lms_g[0], lms_g[1]*lms_g[1]*lms_g[1], lms_g[2]*lms_g[2]*lms_g[2]];
     var xyz = matMul3(GEN_M1_INV, lms);
