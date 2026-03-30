@@ -20,8 +20,9 @@ cd packages/helmlab-js && npm run build
 # Python build
 python -m build
 
-# Full benchmark suite (generates HTML report)
-python scripts/benchmark/run.py
+# ColorBench — compare spaces (46 metrics, 3038 pairs)
+cd colorbench && python run.py oklab cielab
+cd colorbench && python run.py oklab genenriched --json ../checkpoints/v7b_nodelta.json
 ```
 
 ## Architecture
@@ -58,11 +59,31 @@ JS reference values are generated from Python: `python packages/helmlab-js/scrip
 - `src/helmlab/utils/gamut.py` — binary-search chroma reduction for gamut mapping
 - `src/helmlab/metrics/delta_e.py` — CIEDE2000 and other formulas
 - `packages/helmlab-js/src/helmlab.ts` — JS API mirror
-- `scripts/benchmark/run.py` — 43-test benchmark comparing spaces
+- `colorbench/` — ColorBench test suite (46 metrics, standalone GitHub repo)
 
 ### Optimization
 
-GenSpace matrices are optimized with CMA-ES (not gradient-based). Optimization scripts are in `scripts/optimize_gen*.py`. Checkpoints saved to `checkpoints/`. Current best: v14 (28/43 benchmark wins vs OKLab 6/43).
+GenSpace matrices are optimized with CMA-ES (not gradient-based). Optimization scripts are in `scripts/optimize_*.py`. Checkpoints saved to `checkpoints/`.
+
+### ColorBench — Model Evaluation (CRITICAL)
+
+**Every new GenSpace model MUST be evaluated through ColorBench before any decisions are made.**
+
+```bash
+# Compare new model against OKLab and current best
+cd colorbench
+python run.py oklab genenriched --json ../checkpoints/NEW_MODEL.json
+```
+
+**Rules:**
+- **NO other test system.** ColorBench is the single source of truth. Do not write ad-hoc benchmark scripts, do not create temporary comparison code.
+- **Always compare against previous models.** Never evaluate a model in isolation. Include OKLab and the current deployed model in every comparison.
+- **Read the JSON `_methodology` section.** It documents fairness caveats (CIEDE2000 bias, Munsell bias, self-referential handling).
+- **Head-to-head wins decide.** Solo wins in N-way comparison can be misleading. Always check h2h vs OKLab.
+- **Do not trust other test results.** Only ColorBench results count. GPU suite metrics, optimizer internal metrics, and ad-hoc scripts have proven unreliable (20 experiments confirmed this).
+
+ColorBench: 46 metrics, 3038 gradient pairs, 3 gamuts (sRGB/P3/Rec.2020).
+GitHub: https://github.com/Grkmyldz148/colorbench
 
 ## CI/CD
 
@@ -111,5 +132,5 @@ Images are served at `https://helmlab.space/uploads/blog/<filename>.jpg`.
 - Version numbers must stay in sync: `pyproject.toml`, `src/helmlab/__init__.py`, `packages/helmlab-js/package.json`
 - **All "Gorkem Yildiz" text in footers must link to `https://gorkemyildiz.com`**
 - **Every blog post must have author footer** with links to gorkemyildiz.com, GitHub repo, helmlab.space, and paper
-- **No github.io links** — all docs/demo/tools are under `helmlab.space/` (the `docs/` directory contains only redirects)
+- **No github.io links** — all docs/demo/tools are under `helmlab.space/` (GitHub Pages disabled)
 - Landing pages: `landing/` → deploys to helmlab.space root. Includes: index.html, docs.html, demo.html, tools.html, palette.html, blog.html

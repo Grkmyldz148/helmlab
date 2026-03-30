@@ -103,24 +103,23 @@
     return '#' + h(r) + h(g) + h(b);
   }
 
-  // ── GenSpace (inline, M1→cbrt→M2→hue_L_correction) ──────
-  // v14 CMA-ES matrices + v31 hue-dependent L correction
+  // ── GenSpace v0.10.0 (softened cube root pipeline) ──────
   var GEN_M1 = [
-    [0.7583761294836658, 0.38380162590825084, -0.09608055040602373],
-    [0.12671393631532843, 0.8421628149123207, 0.03434823621506485],
-    [0.07639223722200054, 0.258943526275451, 0.6139139663787314]
+    [0.8241829891252608, 0.36440843554326735, -0.13571415300566114],
+    [0.03286046182049214, 0.9293630169582751, 0.036189395860879804],
+    [0.04813370946146968, 0.26424253789465524, 0.6337149190172036]
   ];
   var GEN_M2 = [
-    [0.1005807058959623, 1.0155897099394144, -0.11617041583537688],
-    [2.361576469961644, -2.4409973750629348, 0.0794209051012907],
-    [0.04565327074453784, 0.8187548844542447, -0.8644081551987827]
+    [0.2337515171705931, 0.8814711825753971, -0.004522821912689824],
+    [1.867570288000307, -2.014406466522118, 0.14683617852181108],
+    [-0.6521735079641363, 1.5661922948078826, -0.9140187868437465]
   ];
-  // Inverse matrices (precomputed)
   var GEN_M1_INV = invertMatrix3(GEN_M1);
   var GEN_M2_INV = invertMatrix3(GEN_M2);
 
-  // v31 hue-dependent L correction (yellow cusp fix)
-  var HL_AMP = 0.3664, HL_CENTER = 1.5374, HL_WIDTH = 0.8816, HL_KNEE = 0.6821;
+  var G_EPS = 0.001, G_EPS_CBRT = 0.1, G_HUE_SIN2 = 0.1;
+  var G_PW_IN = [0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.0];
+  var G_PW_OUT = [0,0.04473921057039986,0.08947842114079972,0.1342176317111996,0.1882933918103982,0.24233573630600849,0.29535951532005539,0.34824332614277598,0.40062896226708544,0.4530440126389132,0.50555538471837536,0.55818787608738174,0.61116576288373947,0.6643108808419349,0.71780269400386465,0.77144526690428339,0.82528486381044819,0.87913596594902788,0.93299577672652756,0.98412885262268923,1.0];
 
   function invertMatrix3(m) {
     var a=m[0][0],b=m[0][1],c=m[0][2],d=m[1][0],e=m[1][1],f=m[1][2],g=m[2][0],h=m[2][1],k=m[2][2];
@@ -141,6 +140,11 @@
     ];
   }
 
+  function gSoftcbrt(x) { var s = x < 0 ? -1 : 1; return s * ((Math.abs(x) + G_EPS) ** (1/3) - G_EPS_CBRT); }
+  function gSoftcbrtInv(y) { var s = y < 0 ? -1 : 1; return s * ((Math.abs(y) + G_EPS_CBRT) ** 3 - G_EPS); }
+  function gPwFwd(L) { if(L<=0||L>=1)return L; var lo=0,hi=20; while(hi-lo>1){var m=(lo+hi)>>1;if(G_PW_IN[m]<=L)lo=m;else hi=m;} var t=(L-G_PW_IN[lo])/(G_PW_IN[hi]-G_PW_IN[lo]); return G_PW_OUT[lo]+t*(G_PW_OUT[hi]-G_PW_OUT[lo]); }
+  function gPwInv(L) { if(L<=0||L>=1)return L; var lo=0,hi=20; while(hi-lo>1){var m=(lo+hi)>>1;if(G_PW_OUT[m]<=L)lo=m;else hi=m;} var t=(L-G_PW_OUT[lo])/(G_PW_OUT[hi]-G_PW_OUT[lo]); return G_PW_IN[lo]+t*(G_PW_IN[hi]-G_PW_IN[lo]); }
+
   function srgbToGenlab(r, g, b) {
     var lr = srgbToLinear(r), lg = srgbToLinear(g), lb = srgbToLinear(b);
     var xyz = [
@@ -149,32 +153,20 @@
       0.0193339*lr + 0.1191920*lg + 0.9503041*lb
     ];
     var lms = matMul3(GEN_M1, xyz);
-    var lms_g = [Math.cbrt(lms[0]), Math.cbrt(lms[1]), Math.cbrt(lms[2])];
+    var lms_g = [gSoftcbrt(lms[0]), gSoftcbrt(lms[1]), gSoftcbrt(lms[2])];
     var lab = matMul3(GEN_M2, lms_g);
-    // v31 hue-dependent L correction
-    var C = Math.sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
-    if (C > 1e-10) {
-      var h = Math.atan2(lab[2], lab[1]);
-      var dh = Math.atan2(Math.sin(h-HL_CENTER), Math.cos(h-HL_CENTER));
-      var w = Math.exp(-((dh/HL_WIDTH)**2)) * C/(C+0.01);
-      lab[0] -= HL_AMP * w * Math.max(0, lab[0]-HL_KNEE);
-    }
+    var C = Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
+    if (C > 1e-10) { var h=Math.atan2(lab[2],lab[1]),hN=h+G_HUE_SIN2*Math.sin(2*h); lab[1]=C*Math.cos(hN); lab[2]=C*Math.sin(hN); }
+    lab[0] = gPwFwd(lab[0]);
     return lab;
   }
 
   function genlabToSrgb(L, a, b) {
-    // v31 undo hue-dependent L correction
-    var C = Math.sqrt(a*a + b*b);
-    if (C > 1e-10) {
-      var h = Math.atan2(b, a);
-      var dh = Math.atan2(Math.sin(h-HL_CENTER), Math.cos(h-HL_CENTER));
-      var w = Math.exp(-((dh/HL_WIDTH)**2)) * C/(C+0.01);
-      var aw = Math.min(HL_AMP * w, 0.99);
-      var Lcand = (L - aw*HL_KNEE) / (1-aw);
-      if (Lcand > HL_KNEE) L = Lcand;
-    }
+    L = gPwInv(L);
+    var C = Math.sqrt(a*a+b*b);
+    if (C > 1e-10) { var hO=Math.atan2(b,a),hR=hO; for(var i=0;i<8;i++){var f=hR+G_HUE_SIN2*Math.sin(2*hR)-hO,fp=1+2*G_HUE_SIN2*Math.cos(2*hR);if(Math.abs(fp)<1e-10)fp=1;hR-=f/fp;} a=C*Math.cos(hR); b=C*Math.sin(hR); }
     var lms_g = matMul3(GEN_M2_INV, [L, a, b]);
-    var lms = [lms_g[0]*lms_g[0]*lms_g[0], lms_g[1]*lms_g[1]*lms_g[1], lms_g[2]*lms_g[2]*lms_g[2]];
+    var lms = [gSoftcbrtInv(lms_g[0]), gSoftcbrtInv(lms_g[1]), gSoftcbrtInv(lms_g[2])];
     var xyz = matMul3(GEN_M1_INV, lms);
     return xyzToSrgb(xyz[0], xyz[1], xyz[2]);
   }

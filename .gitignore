@@ -28,6 +28,12 @@ env/
 wandb/
 notebooks/
 
+# Experimental (moved to helmlab-experimental repo)
+checkpoints/
+results/
+spaceforge/
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db
