@@ -117,7 +117,7 @@
   var GEN_M1_INV = invertMatrix3(GEN_M1);
   var GEN_M2_INV = invertMatrix3(GEN_M2);
 
-  var G_EPS = 0.001, G_EPS_CBRT = 0.1, G_HUE_SIN2 = 0.1;
+  var G_EPS = 0.001, G_EPS_CBRT = 0.1;
   var G_PW_IN = [0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.0];
   var G_PW_OUT = [0,0.04473921057039986,0.08947842114079972,0.1342176317111996,0.1882933918103982,0.24233573630600849,0.29535951532005539,0.34824332614277598,0.40062896226708544,0.4530440126389132,0.50555538471837536,0.55818787608738174,0.61116576288373947,0.6643108808419349,0.71780269400386465,0.77144526690428339,0.82528486381044819,0.87913596594902788,0.93299577672652756,0.98412885262268923,1.0];
 
@@ -155,16 +155,12 @@
     var lms = matMul3(GEN_M1, xyz);
     var lms_g = [gSoftcbrt(lms[0]), gSoftcbrt(lms[1]), gSoftcbrt(lms[2])];
     var lab = matMul3(GEN_M2, lms_g);
-    var C = Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);
-    if (C > 1e-10) { var h=Math.atan2(lab[2],lab[1]),hN=h+G_HUE_SIN2*Math.sin(2*h); lab[1]=C*Math.cos(hN); lab[2]=C*Math.sin(hN); }
     lab[0] = gPwFwd(lab[0]);
     return lab;
   }
 
   function genlabToSrgb(L, a, b) {
     L = gPwInv(L);
-    var C = Math.sqrt(a*a+b*b);
-    if (C > 1e-10) { var hO=Math.atan2(b,a),hR=hO; for(var i=0;i<8;i++){var f=hR+G_HUE_SIN2*Math.sin(2*hR)-hO,fp=1+2*G_HUE_SIN2*Math.cos(2*hR);if(Math.abs(fp)<1e-10)fp=1;hR-=f/fp;} a=C*Math.cos(hR); b=C*Math.sin(hR); }
     var lms_g = matMul3(GEN_M2_INV, [L, a, b]);
     var lms = [gSoftcbrtInv(lms_g[0]), gSoftcbrtInv(lms_g[1]), gSoftcbrtInv(lms_g[2])];
     var xyz = matMul3(GEN_M1_INV, lms);

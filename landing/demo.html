@@ -691,16 +691,16 @@ const G = {
 };
 const G_M1_inv = mat3inv(G.M1);
 const G_M2_inv = mat3inv(G.M2);
-const G_EPS = 0.001, G_EPS_CBRT = 0.1, G_HUE_SIN2 = 0.1;
+const G_EPS = 0.001, G_EPS_CBRT = 0.1;
 const G_PW_IN = [0,0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75,0.80,0.85,0.90,0.95,1.0];
 const G_PW_OUT = [0,0.04473921057039986,0.08947842114079972,0.1342176317111996,0.1882933918103982,0.24233573630600849,0.29535951532005539,0.34824332614277598,0.40062896226708544,0.4530440126389132,0.50555538471837536,0.55818787608738174,0.61116576288373947,0.6643108808419349,0.71780269400386465,0.77144526690428339,0.82528486381044819,0.87913596594902788,0.93299577672652756,0.98412885262268923,1.0];
 function gPwFwd(L){if(L<=0||L>=1)return L;let lo=0,hi=20;while(hi-lo>1){let m=(lo+hi)>>1;if(G_PW_IN[m]<=L)lo=m;else hi=m;}let t=(L-G_PW_IN[lo])/(G_PW_IN[hi]-G_PW_IN[lo]);return G_PW_OUT[lo]+t*(G_PW_OUT[hi]-G_PW_OUT[lo]);}
 function gPwInv(L){if(L<=0||L>=1)return L;let lo=0,hi=20;while(hi-lo>1){let m=(lo+hi)>>1;if(G_PW_OUT[m]<=L)lo=m;else hi=m;}let t=(L-G_PW_OUT[lo])/(G_PW_OUT[hi]-G_PW_OUT[lo]);return G_PW_IN[lo]+t*(G_PW_IN[hi]-G_PW_IN[lo]);}
 function gSoftcbrt(x){const s=x<0?-1:1;return s*((Math.abs(x)+G_EPS)**(1/3)-G_EPS_CBRT);}
 function gSoftcbrtInv(y){const s=y<0?-1:1;return s*((Math.abs(y)+G_EPS_CBRT)**3-G_EPS);}
-function gFwd(X,Y,Z){let l=mat3(G.M1,[X,Y,Z]);l=[gSoftcbrt(l[0]),gSoftcbrt(l[1]),gSoftcbrt(l[2])];let lab=mat3(G.M2,l);const C=Math.sqrt(lab[1]*lab[1]+lab[2]*lab[2]);if(C>1e-10){const h=Math.atan2(lab[2],lab[1]),hN=h+G_HUE_SIN2*Math.sin(2*h);lab[1]=C*Math.cos(hN);lab[2]=C*Math.sin(hN);}lab[0]=gPwFwd(lab[0]);return lab;}
+function gFwd(X,Y,Z){let l=mat3(G.M1,[X,Y,Z]);l=[gSoftcbrt(l[0]),gSoftcbrt(l[1]),gSoftcbrt(l[2])];let lab=mat3(G.M2,l);lab[0]=gPwFwd(lab[0]);return lab;}
 function gFwdSrgb(r,g,b) { return gFwd(...srgbToXYZ(r,g,b)); }
-function gInv(L,a,b){L=gPwInv(L);const C=Math.sqrt(a*a+b*b);if(C>1e-10){let hO=Math.atan2(b,a),hR=hO;for(let i=0;i<8;i++){let f=hR+G_HUE_SIN2*Math.sin(2*hR)-hO,fp=1+2*G_HUE_SIN2*Math.cos(2*hR);if(Math.abs(fp)<1e-10)fp=1;hR-=f/fp;}a=C*Math.cos(hR);b=C*Math.sin(hR);}let l=mat3(G_M2_inv,[L,a,b]);l=[gSoftcbrtInv(l[0]),gSoftcbrtInv(l[1]),gSoftcbrtInv(l[2])];return mat3(G_M1_inv,l);}
+function gInv(L,a,b){L=gPwInv(L);let l=mat3(G_M2_inv,[L,a,b]);l=[gSoftcbrtInv(l[0]),gSoftcbrtInv(l[1]),gSoftcbrtInv(l[2])];return mat3(G_M1_inv,l);}
 function gInvSrgb(L,a,b) { const xyz=gInv(L,a,b); return xyzToSrgb(...xyz); }
 
 // ═══════════════════════════════════════════════════════════════
