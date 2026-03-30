@@ -131,7 +131,7 @@ XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
 + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
-MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses v14 CMA-ES optimized matrices — wins 28/43 perceptual benchmarks vs OKLab (6/43) and CIE Lab (9/43), with sky-blue Blue→White gradients (no purple shift).
+MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses a softened cube root pipeline (v0.10.0) — wins 21-10 vs OKLab on 50 ColorBench metrics (3,038 gradient pairs, 3 gamuts), with 360/360/360 cusps and sky-blue Blue→White gradients (no purple shift).
 
 ### Gradient Uniformity
 

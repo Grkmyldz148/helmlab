@@ -71,7 +71,7 @@
         </div>
 
         <p class="hero-subtitle designer-text">Two purpose-built color spaces: one for creating beautiful gradients and palettes, one for measuring how your eyes actually see color.</p>
-        <p class="hero-subtitle developer-text">Two spaces: MetricSpace (STRESS 23.30, 72 params) for measurement &middot; GenSpace + arc-length (CV &asymp; 0%, 28/43 wins) for generation.</p>
+        <p class="hero-subtitle developer-text">Two spaces: MetricSpace (STRESS 23.30, 72 params) for measurement &middot; GenSpace + arc-length (CV &asymp; 0%, 21-10 vs OKLab) for generation.</p>
 
         <div class="install-commands">
           <div class="install-cmd">
@@ -102,7 +102,7 @@
             <span class="space-badge gen">GenSpace</span>
             <h3>For Creating Colors</h3>
             <p class="designer-text">Optimized for smooth gradients, perceptually even palettes, and clean color generation. Arc-length reparameterization makes every gradient step perfectly equal.</p>
-            <p class="developer-text">v14 CMA-ES optimized M1/M2 (&gamma;=&frac13;) + CIEDE2000 arc-length. Wins 28/43 benchmarks vs OKLab (6/43), perfectly uniform steps.</p>
+            <p class="developer-text">v0.10.0 softened cube root + CMA-ES optimized M1/M2 + CIEDE2000 arc-length. Wins 21/50 metrics vs OKLab (10/50), 360/360/360 cusps.</p>
             <div class="card-stats">
               <span class="card-stat">CV <strong>&asymp; 0%</strong></span>
               <span class="card-stat">Hue <strong>5.2&deg;</strong></span>
@@ -387,7 +387,7 @@
           <div class="gen-compare-stats">
             <div class="gen-compare-stat">
               <span class="label">Color path</span>
-              <span class="values">GenSpace Lab (v14 optimized M1/M2, 28/43 wins)</span>
+              <span class="values">GenSpace Lab (v0.10.0 softcbrt, 21-10 vs OKLab)</span>
             </div>
             <div class="gen-compare-stat">
               <span class="label">Step distribution</span>

@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (27-7 vs OKLab on ColorBench's 48 metrics, 360/360 gamut cusps in all gamuts).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (21-10 vs OKLab on ColorBench's 50 metrics, 360/360 gamut cusps in all gamuts).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -13,7 +13,7 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 ## Key Features
 
 - **State-of-the-art color difference** — MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 on COMBVD (3,813 pairs)
-- **Superior gradient generation** — GenSpace: 27 wins vs OKLab across 48 benchmarks (ColorBench), 360/360 valid cusps in sRGB/P3/Rec.2020
+- **Superior gradient generation** — GenSpace: 21 wins vs OKLab's 10 across 50 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps
 - **Softened cube root transfer** — `f(x) = (|x|+ε)^(1/3) - ε^(1/3)`: eliminates cusp singularities while preserving gradient quality. Exact analytical inverse, no Newton iteration
 - **True blue gradients** — Blue→White midpoint is sky blue (G/R = 1.51), not lavender
 - **Perfect achromatic axis** — Grays map to C* < 10⁻¹⁵ (structural guarantee from uniform transfer function)

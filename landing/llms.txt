@@ -33,8 +33,8 @@ XYZ -> M1 -> power -> M2 -> hue correction -> H-K -> L scaling -> chroma scaling
 Best use: deltaE(), color difference measurement, accessibility checking, color harmony validation.
 
 ### GenSpace (18 parameters)
-Optimized for generation. v14 CMA-ES optimized, wins 25/45 benchmarks vs OKLab (8/45). Minimal linear-algebra pipeline:
-XYZ -> M1 -> cube root -> M2 -> Lab (L ∈ [0,1], white = 1)
+Optimized for generation. v0.10.0 softened cube root pipeline, wins 21-10 vs OKLab on 50 ColorBench metrics. 360/360/360 cusps (sRGB/P3/Rec.2020):
+XYZ -> M1 -> softcbrt -> M2 -> hue_corr -> PW_L_corr -> Lab (L ∈ [0,1], white = 1)
 Plus CIEDE2000 arc-length reparameterization for gradient().
 
 Best use: gradient(), palette(), semanticScale(), any color generation task.
