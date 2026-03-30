@@ -11,6 +11,7 @@
     { href: 'demo.html', text: 'Demo', page: 'demo' },
     { href: 'tools.html', text: 'Tools', page: 'tools' },
     { href: 'palette.html', text: 'Palette', page: 'palette' },
+    { href: 'gamut.html', text: 'Gamut', page: 'gamut' },
     { href: 'blog.html', text: 'Blog', page: 'blog' },
     { href: 'https://github.com/Grkmyldz148/helmlab', text: 'GitHub', page: null, external: true }
   ];
