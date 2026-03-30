@@ -1,24 +1,26 @@
 """GenSpace — generation-optimized color space for palette, gradient, gamut map.
 
 Pipeline:
-    XYZ → M1 → cbrt → M2 → [hue_L_correction] → Lab
+    XYZ → M1 → transfer → M2 → [enrichment] → Lab
 
-    Optional stages:
-    → [hue_L_correction] — hue-dependent L compression (v31, yellow cusp fix)
+    Transfer functions:
+    - "cbrt": standard cube root x^(1/3) (OKLab-compatible)
+    - "softcbrt": softened cube root (|x|+ε)^(1/3) - ε^(1/3)
+      → finite derivative at zero → 360/360 cusps
+      → exact analytical inverse: (|y|+ε^(1/3))^3 - ε
+
+    Optional enrichment stages:
+    → [hue_L_correction] — hue-dependent L compression
     → [hue correction δ(h)]
+    → [PW L correction] — piecewise-linear, analytically invertible
     → [cubic L correction]
     → [dark L compression]
     → [L-dependent chroma scaling]
     → [neutral correction (NC)]
 
-    Current gen_params.json uses only M1 → cbrt → M2 (same structure
-    as OKLab, with CMA-ES optimized matrices).
-
 Key differences from MetricSpace:
-    - Shared gamma (1/3) guarantees structural achromatic axis (grays → a=b≈0)
+    - Shared transfer guarantees structural achromatic axis (grays → a=b≈0)
     - No H-K, chroma power, HLC, hue-lightness — these cause brightness fold
-    - No hue-dep chroma scaling — causes distortion in gradients
-    - NC cleans up any residual achromatic error
 
 All stages are exactly invertible.
 """
@@ -74,11 +76,22 @@ class GenParams:
     lc1: float = 0.0
     lc2: float = 0.0
 
+    # Chroma power (1 param) — sublinear chroma compression
+    chroma_power: float = 1.0  # 1.0 = no effect, <1 = compression
+
     # Hue-dependent L correction (4 params) — v31 yellow cusp fix
     hue_L_amp: float = 0.0
     hue_L_center: float = 0.0  # radians
     hue_L_width: float = 1.0   # radians
     hue_L_knee: float = 1.0    # L threshold
+
+    # Transfer function type: "cbrt" (default) or "softcbrt"
+    transfer: str = "cbrt"
+    softcbrt_eps: float = 0.001
+
+    # Piecewise-linear L correction (analytically invertible, replaces cubic when non-empty)
+    L_corr_pw: list = field(default_factory=list)
+    L_corr_pw_step: float = 0.05
 
     def to_dict(self) -> dict:
         return {
@@ -97,20 +110,37 @@ class GenParams:
             "lp_dark_hsin": self.lp_dark_hsin,
             "lc1": self.lc1,
             "lc2": self.lc2,
+            "chroma_power": self.chroma_power,
             "hue_L_amp": self.hue_L_amp,
             "hue_L_center": self.hue_L_center,
             "hue_L_width": self.hue_L_width,
             "hue_L_knee": self.hue_L_knee,
+            "transfer": self.transfer,
+            "softcbrt_eps": self.softcbrt_eps,
+            "L_corr_pw": self.L_corr_pw,
+            "L_corr_pw_step": self.L_corr_pw_step,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> "GenParams":
+        # Support compact array format for hue_correction
+        hc = d.get("hue_correction", None)
+        if isinstance(hc, list):
+            hc1 = hc[0] if len(hc) > 0 else 0.0
+            hs1 = hc[1] if len(hc) > 1 else 0.0
+            hc2 = hc[2] if len(hc) > 2 else 0.0
+            hs2 = hc[3] if len(hc) > 3 else 0.0
+        else:
+            hc1 = d.get("hue_cos1", 0.0)
+            hs1 = d.get("hue_sin1", 0.0)
+            hc2 = d.get("hue_cos2", 0.0)
+            hs2 = d.get("hue_sin2", 0.0)
         return cls(
             M1=np.array(d["M1"]),
             gamma=np.array(d["gamma"]),
             M2=np.array(d["M2"]),
-            hue_cos1=d.get("hue_cos1", 0.0), hue_sin1=d.get("hue_sin1", 0.0),
-            hue_cos2=d.get("hue_cos2", 0.0), hue_sin2=d.get("hue_sin2", 0.0),
+            hue_cos1=hc1, hue_sin1=hs1,
+            hue_cos2=hc2, hue_sin2=hs2,
             hue_cos3=d.get("hue_cos3", 0.0), hue_sin3=d.get("hue_sin3", 0.0),
             hue_cos4=d.get("hue_cos4", 0.0), hue_sin4=d.get("hue_sin4", 0.0),
             L_corr_p1=d.get("L_corr_p1", 0.0),
@@ -121,10 +151,15 @@ class GenParams:
             lp_dark_hsin=d.get("lp_dark_hsin", 0.0),
             lc1=d.get("lc1", 0.0),
             lc2=d.get("lc2", 0.0),
+            chroma_power=d.get("chroma_power", 1.0),
             hue_L_amp=d.get("hue_L_amp", 0.0),
             hue_L_center=d.get("hue_L_center", 0.0),
             hue_L_width=d.get("hue_L_width", 1.0),
             hue_L_knee=d.get("hue_L_knee", 1.0),
+            transfer=d.get("transfer", "cbrt"),
+            softcbrt_eps=d.get("softcbrt_eps", 0.001),
+            L_corr_pw=d.get("L_corr_pw", []),
+            L_corr_pw_step=d.get("L_corr_pw_step", 0.05),
         )
 
     def save(self, path: str | Path) -> None:
@@ -176,7 +211,20 @@ class GenSpace(ColorSpace):
         self._has_dark_L = (p.lp_dark != 0.0 or p.lp_dark_hcos != 0.0 or p.lp_dark_hsin != 0.0)
         self._has_dark_L_hue = (p.lp_dark_hcos != 0.0 or p.lp_dark_hsin != 0.0)
         self._has_L_chroma = (p.lc1 != 0.0 or p.lc2 != 0.0)
+        self._has_chroma_power = (p.chroma_power != 1.0)
         self._has_hue_L = (p.hue_L_amp != 0.0)
+        self._is_softcbrt = (p.transfer == "softcbrt")
+
+        # Piecewise-linear L correction setup
+        self._has_pw_L = len(p.L_corr_pw) > 0
+        if self._has_pw_L:
+            n = len(p.L_corr_pw)
+            step = p.L_corr_pw_step
+            shifts = [0.0] + list(p.L_corr_pw) + [0.0]
+            breakpoints = [i * step for i in range(n + 2)]
+            breakpoints[-1] = 1.0
+            self._pw_L_in = np.array(breakpoints)
+            self._pw_L_out = np.array([bp + s for bp, s in zip(breakpoints, shifts)])
 
         # NC LUT (lazy)
         self._nc_lut_built = False
@@ -239,6 +287,52 @@ class GenSpace(ColorSpace):
             dfdL = np.where(np.abs(dfdL) < 1e-10, 1.0, dfdL)
             L = L - f / dfdL
         return L
+
+    # ── Softened cbrt transfer ───────────────────────────────────────
+
+    def _softcbrt(self, x):
+        eps = self.params.softcbrt_eps
+        ax = np.abs(x)
+        return np.sign(x) * ((ax + eps) ** (1.0 / 3.0) - eps ** (1.0 / 3.0))
+
+    def _softcbrt_inv(self, y):
+        eps = self.params.softcbrt_eps
+        eps_cbrt = eps ** (1.0 / 3.0)
+        ay = np.abs(y)
+        return np.sign(y) * ((ay + eps_cbrt) ** 3.0 - eps)
+
+    # ── Piecewise-linear L correction ─────────────────────────────
+
+    def _pw_L_forward(self, L):
+        L_arr = np.asarray(L)
+        result = np.empty_like(L_arr)
+        inside = (L_arr >= 0.0) & (L_arr <= 1.0)
+        # Inside [0,1]: piecewise-linear interpolation
+        L_c = np.clip(L_arr, 0.0, 1.0)
+        idx = np.searchsorted(self._pw_L_in, L_c, side='right') - 1
+        idx = np.clip(idx, 0, len(self._pw_L_in) - 2)
+        L_lo = self._pw_L_in[idx]
+        L_hi = self._pw_L_in[idx + 1]
+        t = np.clip((L_c - L_lo) / np.maximum(L_hi - L_lo, 1e-30), 0.0, 1.0)
+        pw_result = self._pw_L_out[idx] + t * (self._pw_L_out[idx + 1] - self._pw_L_out[idx])
+        # Outside [0,1]: linear extrapolation (identity + endpoint slope)
+        result = np.where(inside, pw_result, L_arr)
+        return result
+
+    def _pw_L_inverse(self, L_target):
+        L_arr = np.asarray(L_target)
+        result = np.empty_like(L_arr)
+        inside = (L_arr >= self._pw_L_out[0]) & (L_arr <= self._pw_L_out[-1])
+        L_c = np.clip(L_arr, self._pw_L_out[0], self._pw_L_out[-1])
+        idx = np.searchsorted(self._pw_L_out, L_c, side='right') - 1
+        idx = np.clip(idx, 0, len(self._pw_L_out) - 2)
+        Lo_lo = self._pw_L_out[idx]
+        Lo_hi = self._pw_L_out[idx + 1]
+        t = np.clip((L_c - Lo_lo) / np.maximum(Lo_hi - Lo_lo, 1e-30), 0.0, 1.0)
+        pw_result = self._pw_L_in[idx] + t * (self._pw_L_in[idx + 1] - self._pw_L_in[idx])
+        # Outside range: linear extrapolation (identity)
+        result = np.where(inside, pw_result, L_arr)
+        return result
 
     # ── Dark L compression ─────────────────────────────────────────
 
@@ -349,8 +443,11 @@ class GenSpace(ColorSpace):
         # 1. XYZ → LMS (clamp: cone responses are physically non-negative)
         LMS = np.maximum(XYZ @ self.params.M1.T, 0.0)
 
-        # 2. Shared power compression (γ = 1/3 for all channels)
-        LMS_c = LMS ** self.params.gamma
+        # 2. Transfer function
+        if self._is_softcbrt:
+            LMS_c = self._softcbrt(LMS)
+        else:
+            LMS_c = LMS ** self.params.gamma
 
         # 3. LMS_c → Lab_raw
         Lab = LMS_c @ self.params.M2.T
@@ -366,8 +463,10 @@ class GenSpace(ColorSpace):
         if self._has_hue_correction:
             a, b = self._apply_hue_correction(a, b)
 
-        # 4. Cubic L correction
-        if self._has_L_corr:
+        # 4. L correction (PW takes priority over cubic)
+        if self._has_pw_L:
+            L = self._pw_L_forward(L)
+        elif self._has_L_corr:
             L = self._L_correct(L)
 
         # 4.5 Dark L compression
@@ -380,6 +479,13 @@ class GenSpace(ColorSpace):
             T = self._L_chroma_scale(L)
             a = a * T
             b = b * T
+
+        # 7. Chroma power (sublinear compression)
+        if self._has_chroma_power:
+            C = np.sqrt(a ** 2 + b ** 2 + 1e-30)
+            scale = C ** (self.params.chroma_power - 1.0)
+            a = a * scale
+            b = b * scale
 
         # 10. Neutral correction
         if self._neutral_correction:
@@ -404,6 +510,15 @@ class GenSpace(ColorSpace):
             a = a + a_err
             b = b + b_err
 
+        # 7. Undo chroma power
+        if self._has_chroma_power:
+            C = np.sqrt(a ** 2 + b ** 2 + 1e-30)
+            inv_cp = 1.0 / self.params.chroma_power
+            C_raw = C ** inv_cp
+            scale = C_raw / C
+            a = a * scale
+            b = b * scale
+
         # 6. Undo L-dep chroma scaling
         if self._has_L_chroma:
             T = self._L_chroma_scale(L)
@@ -415,8 +530,10 @@ class GenSpace(ColorSpace):
             h = np.arctan2(b, a) if self._has_dark_L_hue else None
             L = self._dark_L_compress_inv(L, h)
 
-        # 4. Undo cubic L
-        if self._has_L_corr:
+        # 4. Undo L correction (PW takes priority over cubic)
+        if self._has_pw_L:
+            L = self._pw_L_inverse(L)
+        elif self._has_L_corr:
             L = self._L_correct_inv(L)
 
         # 3.5 Undo hue correction
@@ -431,9 +548,12 @@ class GenSpace(ColorSpace):
         Lab = np.stack([L, a, b], axis=-1)
         LMS_c = Lab @ self._M2_inv.T
 
-        # 2. Undo power (LMS_c is non-negative after forward clamp)
-        inv_gamma = 1.0 / self.params.gamma
-        LMS = np.maximum(LMS_c, 0.0) ** inv_gamma
+        # 2. Undo transfer function
+        if self._is_softcbrt:
+            LMS = self._softcbrt_inv(LMS_c)
+        else:
+            inv_gamma = 1.0 / self.params.gamma
+            LMS = np.maximum(LMS_c, 0.0) ** inv_gamma
 
         # 1. LMS → XYZ
         return LMS @ self._M1_inv.T

@@ -49,10 +49,19 @@ export class GenSpace {
     const lms1 = Math.max(M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2], 0);
     const lms2 = Math.max(M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2], 0);
 
-    // 2. Shared power compression
-    const c0 = lms0 ** g[0];
-    const c1 = lms1 ** g[1];
-    const c2 = lms2 ** g[2];
+    // 2. Transfer function
+    let c0: number, c1: number, c2: number;
+    if (r.transfer === 'softcbrt') {
+      const eps = r.softcbrt_eps ?? 0.001;
+      const epsCbrt = eps ** (1 / 3);
+      c0 = (lms0 + eps) ** (1 / 3) - epsCbrt;
+      c1 = (lms1 + eps) ** (1 / 3) - epsCbrt;
+      c2 = (lms2 + eps) ** (1 / 3) - epsCbrt;
+    } else {
+      c0 = lms0 ** g[0];
+      c1 = lms1 ** g[1];
+      c2 = lms2 ** g[2];
+    }
 
     // 3. LMS_c → Lab_raw
     let L = M2[0] * c0 + M2[1] * c1 + M2[2] * c2;
@@ -83,8 +92,10 @@ export class GenSpace {
       b = C * sin(hNew);
     }
 
-    // 4. Cubic L correction
-    if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
+    // 4. L correction (PW takes priority over cubic)
+    if (r.L_corr_pw && r.L_corr_pw.length > 0) {
+      L = pwLForward(r, L);
+    } else if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
       L = lCorrect(r, L);
     }
 
@@ -137,8 +148,10 @@ export class GenSpace {
       L = darkLCompressInv(r, L, h);
     }
 
-    // 4. Undo cubic L
-    if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
+    // 4. Undo L correction (PW takes priority)
+    if (r.L_corr_pw && r.L_corr_pw.length > 0) {
+      L = pwLInverse(r, L);
+    } else if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
       L = lCorrectInv(r, L);
     }
 
@@ -178,11 +191,24 @@ export class GenSpace {
     const lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
     const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
 
-    // 2. Undo power (LMS_c non-negative after forward clamp)
-    const ig = this.p.inv_gamma;
-    const l0 = Math.max(lc0, 0) ** ig[0];
-    const l1 = Math.max(lc1, 0) ** ig[1];
-    const l2 = Math.max(lc2, 0) ** ig[2];
+    // 2. Undo transfer function
+    let l0: number, l1: number, l2: number;
+    if (r.transfer === 'softcbrt') {
+      const eps = r.softcbrt_eps ?? 0.001;
+      const epsCbrt = eps ** (1 / 3);
+      l0 = (Math.abs(lc0) + epsCbrt) ** 3 - eps;
+      l1 = (Math.abs(lc1) + epsCbrt) ** 3 - eps;
+      l2 = (Math.abs(lc2) + epsCbrt) ** 3 - eps;
+      // Restore sign for negative LMS_c (out-of-gamut)
+      if (lc0 < 0) l0 = -l0;
+      if (lc1 < 0) l1 = -l1;
+      if (lc2 < 0) l2 = -l2;
+    } else {
+      const ig = this.p.inv_gamma;
+      l0 = Math.max(lc0, 0) ** ig[0];
+      l1 = Math.max(lc1, 0) ** ig[1];
+      l2 = Math.max(lc2, 0) ** ig[2];
+    }
 
     // 1. LMS → XYZ
     const M1i = this.p.M1_inv;
@@ -255,6 +281,10 @@ interface R {
   L_corr_p1: number; L_corr_p2: number; L_corr_p3: number;
   lp_dark: number; lp_dark_hcos: number; lp_dark_hsin: number;
   lc1: number; lc2: number;
+  transfer?: string;
+  softcbrt_eps?: number;
+  L_corr_pw?: number[];
+  L_corr_pw_step?: number;
 }
 
 function hueDelta(r: R, h: number): number {
@@ -324,4 +354,54 @@ function darkLCompressInv(r: R, Ln: number, h: number): number {
     L -= f / fp;
   }
   return L;
+}
+
+// ── Piecewise-linear L correction ─────────────────────────────
+
+function pwLForward(r: R, L: number): number {
+  const pw = r.L_corr_pw!;
+  const step = r.L_corr_pw_step ?? 0.05;
+  const n = pw.length;
+  // Outside [0,1]: pass through
+  if (L < 0 || L > 1) return L;
+  // Build breakpoints on-the-fly (small n=19, fast)
+  // shifts = [0, pw[0], pw[1], ..., pw[n-1], 0]
+  // breakpoints = [0, step, 2*step, ..., 1.0]
+  let idx = Math.floor(L / step);
+  if (idx >= n + 1) idx = n;
+  if (idx < 0) idx = 0;
+  const bpLo = idx * step;
+  const bpHi = idx < n + 1 ? Math.min((idx + 1) * step, 1.0) : 1.0;
+  const sLo = idx === 0 ? 0 : (idx <= n ? pw[idx - 1] : 0);
+  const sHi = idx + 1 === 0 ? 0 : (idx + 1 <= n ? pw[idx] : 0);
+  const outLo = bpLo + sLo;
+  const outHi = bpHi + sHi;
+  const span = bpHi - bpLo;
+  const t = span > 1e-30 ? clamp((L - bpLo) / span, 0, 1) : 0;
+  return outLo + t * (outHi - outLo);
+}
+
+function pwLInverse(r: R, Ltarget: number): number {
+  const pw = r.L_corr_pw!;
+  const step = r.L_corr_pw_step ?? 0.05;
+  const n = pw.length;
+  // Build output breakpoints
+  const outBps: number[] = [0];
+  for (let i = 0; i < n; i++) outBps.push((i + 1) * step + pw[i]);
+  outBps.push(1.0);
+  // Outside output range: pass through
+  if (Ltarget < outBps[0] || Ltarget > outBps[outBps.length - 1]) return Ltarget;
+  // Binary search for segment
+  let lo = 0, hi = outBps.length - 2;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (outBps[mid] <= Ltarget) lo = mid; else hi = mid - 1;
+  }
+  const oLo = outBps[lo];
+  const oHi = outBps[lo + 1];
+  const iLo = lo * step;
+  const iHi = lo < n + 1 ? Math.min((lo + 1) * step, 1.0) : 1.0;
+  const span = oHi - oLo;
+  const t = span > 1e-30 ? clamp((Ltarget - oLo) / span, 0, 1) : 0;
+  return iLo + t * (iHi - iLo);
 }
