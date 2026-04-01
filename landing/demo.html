@@ -686,7 +686,7 @@ function pInvSrgb(L, a, b) {
 // ═══════════════════════════════════════════════════════════════
 // Helmlab GenSpace v0.11.0 — loaded from CDN (helmlab global)
 // ═══════════════════════════════════════════════════════════════
-const _gs = new helmlab.GenSpace();
+const _gs = new helmlab.GenSpace(helmlab.compileGenParams(helmlab.getDefaultGenParams()));
 function gFwd(X,Y,Z) { return _gs.fromXYZ([X,Y,Z]); }
 function gFwdSrgb(r,g,b) { return gFwd(...srgbToXYZ(r,g,b)); }
 function gInv(L,a,b) { return _gs.toXYZ([L,a,b]); }

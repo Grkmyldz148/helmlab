@@ -511,7 +511,7 @@ function mat3inv(M) {
 const Q_M1_inv = mat3inv(Q.M1), Q_M2_inv = mat3inv(Q.M2), Q_inv_gamma = Q.gamma.map(g => 1/g);
 
 // GenSpace v0.11.0 — loaded from CDN (helmlab global)
-const _gs = new helmlab.GenSpace();
+const _gs = new helmlab.GenSpace(helmlab.compileGenParams(helmlab.getDefaultGenParams()));
 function baseLabFwd(X, Y, Z) { return _gs.fromXYZ([X, Y, Z]); }
 function baseLabInv(L, a, b) { return _gs.toXYZ([L, a, b]); }
 // Legacy aliases for MetricSpace inverse

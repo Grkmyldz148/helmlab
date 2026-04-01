@@ -104,7 +104,7 @@
   }
 
   // ── GenSpace v0.11.0 — loaded from CDN (helmlab global) ──────
-  var _gs = new helmlab.GenSpace();
+  var _gs = new helmlab.GenSpace(helmlab.compileGenParams(helmlab.getDefaultGenParams()));
   function srgbToGenlab(r, g, b) {
     var lr = srgbToLinear(r), lg = srgbToLinear(g), lb = srgbToLinear(b);
     var xyz = [
