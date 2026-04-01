@@ -148,7 +148,8 @@ class TestAnalyticalSpace:
 
     def test_2d_batch(self, space):
         """Test with 2D batch input."""
-        XYZ = np.random.rand(10, 3) * 0.8 + 0.05
+        rng = np.random.default_rng(42)
+        XYZ = rng.random((10, 3)) * 0.8 + 0.05
         coords = space.from_XYZ(XYZ)
         assert coords.shape == (10, 3)
         rt = space.to_XYZ(coords)
