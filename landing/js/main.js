@@ -103,100 +103,8 @@
     return '#' + h(r) + h(g) + h(b);
   }
 
-  // ── GenSpace v0.11.0 (depressed cubic + enrichment pipeline) ──────
-  var GEN_M1 = [
-    [0.81543747356487, 0.360322149126427, -0.124327034179467],
-    [0.0329839120754665, 0.92929407882555, 0.0361449466529038],
-    [0.0481841136683565, 0.26427748135788, 0.633638827111447]
-  ];
-  var GEN_M2 = [
-    [0.211866680137607, 0.79894400408501, -0.00409937558948928],
-    [2.46720188280335, -2.98773480248308, 0.520532919679731],
-    [-0.113907878680686, 1.39329828081175, -1.27939040213106]
-  ];
-  var GEN_M1_INV = invertMatrix3(GEN_M1);
-  var GEN_M2_INV = invertMatrix3(GEN_M2);
-
-  var G_ALPHA = 0.02;
-  var G_ENR_AMP = 0.055, G_ENR_CENTER = 4.616395871525, G_ENR_SIGMA = 0.7, G_ENR_LLO = 0.37, G_ENR_LHI = 1.0;
-  var G_PW_IN = [0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1];
-  var G_PW_OUT = [0,0.00949401352218963,0.0256456983803099,0.0552596616586891,0.105749015312274,0.16055853320726,0.214059648929938,0.267862305088112,0.32204352461045,0.373905209852024,0.430209977809188,0.483546516212887,0.539982467041135,0.595671008133034,0.654216166645048,0.711538021651999,0.770276241271167,0.829331346771284,0.889406386197059,0.946282957347473,1];
-
-  function invertMatrix3(m) {
-    var a=m[0][0],b=m[0][1],c=m[0][2],d=m[1][0],e=m[1][1],f=m[1][2],g=m[2][0],h=m[2][1],k=m[2][2];
-    var det = a*(e*k-f*h) - b*(d*k-f*g) + c*(d*h-e*g);
-    var inv = 1/det;
-    return [
-      [(e*k-f*h)*inv, (c*h-b*k)*inv, (b*f-c*e)*inv],
-      [(f*g-d*k)*inv, (a*k-c*g)*inv, (c*d-a*f)*inv],
-      [(d*h-e*g)*inv, (b*g-a*h)*inv, (a*e-b*d)*inv]
-    ];
-  }
-
-  function matMul3(m, v) {
-    return [
-      m[0][0]*v[0] + m[0][1]*v[1] + m[0][2]*v[2],
-      m[1][0]*v[0] + m[1][1]*v[1] + m[1][2]*v[2],
-      m[2][0]*v[0] + m[2][1]*v[1] + m[2][2]*v[2]
-    ];
-  }
-
-  // Depressed cubic: y³ + αy = x (sinh/arcsinh + Halley)
-  function gDepcubicFwd(x) {
-    var s = Math.sqrt(G_ALPHA / 3), t = x / (2 * s*s*s);
-    var y = 2 * s * Math.sinh(Math.asinh(t) / 3);
-    var f = y*y*y + G_ALPHA*y - x, fp = 3*y*y + G_ALPHA, fpp = 6*y;
-    var d = 2*fp*fp - f*fpp;
-    if (Math.abs(d) > 1e-30) y -= 2*f*fp/d;
-    return y;
-  }
-  function gDepcubicInv(y) { return y*y*y + G_ALPHA*y; }
-
-  // Smooth neutral blend
-  function gSmoothBlend(c0, c1, c2) {
-    var mn = (c0+c1+c2)/3;
-    var mx = Math.max(c0,c1,c2), mi = Math.min(c0,c1,c2);
-    var spread = (mx-mi) / Math.max(Math.abs(mn), 1e-30);
-    var w = Math.exp(-(spread/1e-5)*(spread/1e-5));
-    return [c0+w*(mn-c0), c1+w*(mn-c1), c2+w*(mn-c2)];
-  }
-
-  // PW L correction
-  function gPwFwd(L) { if(L<=0||L>=1)return L; var lo=0,hi=20; while(hi-lo>1){var m=(lo+hi)>>1;if(G_PW_IN[m]<=L)lo=m;else hi=m;} var t=(L-G_PW_IN[lo])/(G_PW_IN[hi]-G_PW_IN[lo]); return G_PW_OUT[lo]+t*(G_PW_OUT[hi]-G_PW_OUT[lo]); }
-  function gPwInv(L) { if(L<=0||L>=1)return L; var lo=0,hi=20; while(hi-lo>1){var m=(lo+hi)>>1;if(G_PW_OUT[m]<=L)lo=m;else hi=m;} var t=(L-G_PW_OUT[lo])/(G_PW_OUT[hi]-G_PW_OUT[lo]); return G_PW_IN[lo]+t*(G_PW_IN[hi]-G_PW_IN[lo]); }
-
-  // Enrichment forward
-  function gEnrFwd(L, a, b) {
-    var C = Math.sqrt(a*a+b*b);
-    if (C < 1e-12) return [L,a,b];
-    var tg = Math.max(0,Math.min(1,(L-G_ENR_LLO)/(G_ENR_LHI-G_ENR_LLO)));
-    var gate = Math.pow(Math.sin(Math.PI*tg),2);
-    if (gate < 1e-12) return [L,a,b];
-    var h = Math.atan2(b,a), dh = h-G_ENR_CENTER;
-    dh = dh - Math.round(dh/(2*Math.PI))*2*Math.PI;
-    var g = Math.exp(-0.5*dh*dh/(G_ENR_SIGMA*G_ENR_SIGMA));
-    var hn = h + G_ENR_AMP*gate*g;
-    return [L, C*Math.cos(hn), C*Math.sin(hn)];
-  }
-
-  // Enrichment inverse (Halley)
-  function gEnrInv(L, a, b) {
-    var C = Math.sqrt(a*a+b*b);
-    if (C < 1e-12) return [L,a,b];
-    var tg = Math.max(0,Math.min(1,(L-G_ENR_LLO)/(G_ENR_LHI-G_ENR_LLO)));
-    var gate = Math.pow(Math.sin(Math.PI*tg),2);
-    if (gate < 1e-12) return [L,a,b];
-    var ht = Math.atan2(b,a), s2 = G_ENR_SIGMA*G_ENR_SIGMA, h = ht, ag = G_ENR_AMP*gate;
-    for (var i=0;i<8;i++) {
-      var dh = h-G_ENR_CENTER; dh = dh-Math.round(dh/(2*Math.PI))*2*Math.PI;
-      var g = Math.exp(-0.5*dh*dh/s2);
-      var F = h+ag*g-ht, Fp = 1+ag*g*(-dh/s2), Fpp = ag*g*(-1/s2+dh*dh/(s2*s2));
-      var d = 2*Fp*Fp-F*Fpp;
-      if (Math.abs(d)>1e-30) h -= 2*F*Fp/d;
-    }
-    return [L, C*Math.cos(h), C*Math.sin(h)];
-  }
-
+  // ── GenSpace v0.11.0 — loaded from CDN (helmlab global) ──────
+  var _gs = new helmlab.GenSpace();
   function srgbToGenlab(r, g, b) {
     var lr = srgbToLinear(r), lg = srgbToLinear(g), lb = srgbToLinear(b);
     var xyz = [
@@ -204,29 +112,10 @@
       0.2126729*lr + 0.7151522*lg + 0.0721750*lb,
       0.0193339*lr + 0.1191920*lg + 0.9503041*lb
     ];
-    var lms = matMul3(GEN_M1, xyz);
-    lms = [Math.max(lms[0],1e-30), Math.max(lms[1],1e-30), Math.max(lms[2],1e-30)];
-    var lms_c = [gDepcubicFwd(lms[0]), gDepcubicFwd(lms[1]), gDepcubicFwd(lms[2])];
-    // Smooth neutral blend
-    var bl = gSmoothBlend(lms_c[0], lms_c[1], lms_c[2]);
-    var lab = matMul3(GEN_M2, bl);
-    // PW L correction
-    lab[0] = gPwFwd(lab[0]);
-    // Enrichment
-    var enr = gEnrFwd(lab[0], lab[1], lab[2]);
-    return enr;
+    return _gs.fromXYZ(xyz);
   }
-
   function genlabToSrgb(L, a, b) {
-    // Inverse enrichment
-    var enr = gEnrInv(L, a, b); L = enr[0]; a = enr[1]; b = enr[2];
-    // Inverse PW
-    L = gPwInv(L);
-    var lms_c = matMul3(GEN_M2_INV, [L, a, b]);
-    // Smooth neutral blend (inverse)
-    var bl = gSmoothBlend(lms_c[0], lms_c[1], lms_c[2]);
-    var lms = [gDepcubicInv(bl[0]), gDepcubicInv(bl[1]), gDepcubicInv(bl[2])];
-    var xyz = matMul3(GEN_M1_INV, lms);
+    var xyz = _gs.toXYZ([L, a, b]);
     return xyzToSrgb(xyz[0], xyz[1], xyz[2]);
   }
 
