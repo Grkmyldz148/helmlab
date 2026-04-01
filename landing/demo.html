@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Helmlab — Technical Demo</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="css/components.css">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -384,7 +385,7 @@
 <script src="https://cdn.jsdelivr.net/npm/helmlab@0.11.0/dist/index.global.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// MetricSpace v20b — loaded from CDN (helmlab global)
+// MetricSpace v0.11.0 — loaded from CDN (helmlab global)
 // ═══════════════════════════════════════════════════════════════
 const _ms = new helmlab.MetricSpace(helmlab.compileParams(helmlab.getDefaultParams()), { neutralCorrection: true, abRotateDeg: -28.2 });
 function pFwd(X,Y,Z) { return _ms.fromXYZ([X,Y,Z]); }
@@ -574,7 +575,7 @@ const T = {
   rt_note: 'Each color: sRGB \u2192 Helmlab Lab \u2192 sRGB round-trip. Error is below 10<sup>-6</sup> for all colors \u2014 the transform is fully invertible.',
   picker_rt_error: 'Round-trip error:',
   hk_note_static: 'Left: saturated color. Right: gray at the same luminance (Y). In Helmlab, the L difference reflects the H-K effect; in Oklab, L is nearly equal.',
-  pipe_note: 'v20b: NC (Neutral Correction) is applied at the end of the pipeline \u2014 structurally corrects the achromatic axis without disrupting hue interactions in the enrichment layers. Uses a_err(L) and b_err(L) LUT computed via PCHIP interpolation over 256 gray Y values.',
+  pipe_note: 'v0.11.0: NC (Neutral Correction) is applied at the end of the pipeline \u2014 structurally corrects the achromatic axis without disrupting hue interactions in the enrichment layers. Uses a_err(L) and b_err(L) LUT computed via PCHIP interpolation over 256 gray Y values.',
   pipe_s1: 'XYZ \u2192 LMS',
   pipe_s2: 'Power compress',
   pipe_s3: 'LMS \u2192 Lab',

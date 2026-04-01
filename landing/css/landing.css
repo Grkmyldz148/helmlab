@@ -310,8 +310,7 @@ noscript .hero-install { visibility: visible !important; }
 .grad-bar {
   flex: 1;
   height: 44px;
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 6px;
 }
 
 .grad-note {

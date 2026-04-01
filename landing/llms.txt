@@ -84,7 +84,7 @@ hl.semantic_scale('#3B82F6')                    # Tailwind-style 50-950 scale
 
 ### Perceptual Distance (MetricSpace)
 STRESS on COMBVD (3,813 color pairs), lower is better:
-- Helmlab v20b: 23.30 (best)
+- Helmlab v0.11.0: 23.30 (best)
 - CIEDE2000: 29.18
 - CIE94: 33.59
 - CAM16-UCS: 33.90

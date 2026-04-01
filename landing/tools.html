@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Helmlab — Design Tools</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="stylesheet" href="css/components.css">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -515,7 +516,7 @@ function wcagCR(rgb1, rgb2) {
   return (Math.max(l1,l2)+0.05) / (Math.min(l1,l2)+0.05);
 }
 
-// MetricSpace v20b — from CDN
+// MetricSpace v0.11.0 — from CDN
 function pFwd(X,Y,Z) { return _ms.fromXYZ([X,Y,Z]); }
 function pFwdSrgb(r,g,b) { return pFwd(...srgbToXYZ(r,g,b)); }
 function pInv(L,a,b) { return _ms.toXYZ([L,a,b]); }
@@ -1048,7 +1049,7 @@ function updateInspector() {
   const inSrgb = r>=0&&r<=1&&g>=0&&g<=1&&b>=0&&b<=1;
 
   let html = '';
-  html += `<div class="sp-block"><div class="sp-title blue">Helmlab v20b (Lab)</div><div class="sp-vals">
+  html += `<div class="sp-block"><div class="sp-title blue">Helmlab v0.11.0 (Lab)</div><div class="sp-vals">
     <div class="sp-val"><div class="k">L</div><div class="v blue mono">${pg[0].toFixed(4)}</div></div>
     <div class="sp-val"><div class="k">a</div><div class="v blue mono">${pg[1].toFixed(4)}</div></div>
     <div class="sp-val"><div class="k">b</div><div class="v blue mono">${pg[2].toFixed(4)}</div></div>
