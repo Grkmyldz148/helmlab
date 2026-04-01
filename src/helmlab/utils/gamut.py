@@ -260,6 +260,12 @@ def gamut_map(lab: np.ndarray, space, gamut: str = "srgb", method: str = "chroma
     lab = np.asarray(lab, dtype=np.float64)
     if lab.ndim == 1:
         return _gamut_map_single(lab, space, gamut, method=method, alpha=alpha)
+    # Support arbitrary leading dims: (H, W, 3), (B, H, W, 3), etc.
+    if lab.ndim > 2:
+        orig_shape = lab.shape
+        flat = lab.reshape(-1, 3)
+        mapped = gamut_map_batch(flat, space, gamut, method=method, alpha=alpha)
+        return mapped.reshape(orig_shape)
     return gamut_map_batch(lab, space, gamut, method=method, alpha=alpha)
 
 
