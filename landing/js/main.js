@@ -186,6 +186,7 @@
   // ── Gradient Demo ─────────────────────────────────────────
   var STEPS = 32;
   var hl = null; // Helmlab instance, set after CDN loads
+  console.log('[helmlab] main.js v0.11.0-2 | CDN version:', typeof helmlab !== 'undefined' ? helmlab.VERSION : 'NOT LOADED');
 
   function initHelmlab() {
     if (typeof helmlab !== 'undefined' && helmlab.Helmlab) {
