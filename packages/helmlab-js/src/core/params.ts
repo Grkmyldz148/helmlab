@@ -101,6 +101,35 @@ export function getDefaultParams(): HelmlabParams {
 /** Parameters for the generation color space (subset of HelmlabParams). */
 export interface GenParams {
   M1: number[][];
+  gamma?: number[];
+  M2: number[][];
+  hue_cos1?: number; hue_sin1?: number;
+  hue_cos2?: number; hue_sin2?: number;
+  hue_cos3?: number; hue_sin3?: number;
+  hue_cos4?: number; hue_sin4?: number;
+  L_corr_p1?: number; L_corr_p2?: number; L_corr_p3?: number;
+  lp_dark?: number; lp_dark_hcos?: number; lp_dark_hsin?: number;
+  lc1?: number; lc2?: number;
+  hue_L_amp?: number; hue_L_center?: number; hue_L_width?: number; hue_L_knee?: number;
+  transfer?: string;
+  softcbrt_eps?: number;
+  depcubic_alpha?: number;
+  L_corr_pw?: number[];
+  L_corr_pw_step?: number;
+  chroma_power?: number;
+  enrichment?: {
+    type: string;
+    amp: number;
+    center_deg: number;
+    sigma: number;
+    L_lo: number;
+    L_hi: number;
+  };
+}
+
+/** Normalized gen params with all defaults applied. */
+export interface NormalizedGenParams {
+  M1: number[][];
   gamma: number[];
   M2: number[][];
   hue_cos1: number; hue_sin1: number;
@@ -111,11 +140,20 @@ export interface GenParams {
   lp_dark: number; lp_dark_hcos: number; lp_dark_hsin: number;
   lc1: number; lc2: number;
   hue_L_amp: number; hue_L_center: number; hue_L_width: number; hue_L_knee: number;
-  transfer?: string;
-  softcbrt_eps?: number;
-  L_corr_pw?: number[];
-  L_corr_pw_step?: number;
-  chroma_power?: number;
+  transfer: string;
+  softcbrt_eps: number;
+  depcubic_alpha: number;
+  L_corr_pw: number[];
+  L_corr_pw_step: number;
+  chroma_power: number;
+  enrichment?: {
+    type: string;
+    amp: number;
+    center_deg: number;
+    sigma: number;
+    L_lo: number;
+    L_hi: number;
+  };
 }
 
 /** Compiled gen params ready for compute. */
@@ -126,18 +164,43 @@ export interface CompiledGenParams {
   M2_inv: Mat3;
   gamma: Float64Array;
   inv_gamma: Float64Array;
-  raw: GenParams;
+  raw: NormalizedGenParams;
+}
+
+function normalizeGenParams(p: GenParams): NormalizedGenParams {
+  return {
+    M1: p.M1,
+    gamma: p.gamma ?? [1/3, 1/3, 1/3],
+    M2: p.M2,
+    hue_cos1: p.hue_cos1 ?? 0, hue_sin1: p.hue_sin1 ?? 0,
+    hue_cos2: p.hue_cos2 ?? 0, hue_sin2: p.hue_sin2 ?? 0,
+    hue_cos3: p.hue_cos3 ?? 0, hue_sin3: p.hue_sin3 ?? 0,
+    hue_cos4: p.hue_cos4 ?? 0, hue_sin4: p.hue_sin4 ?? 0,
+    L_corr_p1: p.L_corr_p1 ?? 0, L_corr_p2: p.L_corr_p2 ?? 0, L_corr_p3: p.L_corr_p3 ?? 0,
+    lp_dark: p.lp_dark ?? 0, lp_dark_hcos: p.lp_dark_hcos ?? 0, lp_dark_hsin: p.lp_dark_hsin ?? 0,
+    lc1: p.lc1 ?? 0, lc2: p.lc2 ?? 0,
+    hue_L_amp: p.hue_L_amp ?? 0, hue_L_center: p.hue_L_center ?? 0,
+    hue_L_width: p.hue_L_width ?? 1, hue_L_knee: p.hue_L_knee ?? 1,
+    transfer: p.transfer ?? 'cbrt',
+    softcbrt_eps: p.softcbrt_eps ?? 0.001,
+    depcubic_alpha: p.depcubic_alpha ?? 0.02,
+    L_corr_pw: p.L_corr_pw ?? [],
+    L_corr_pw_step: p.L_corr_pw_step ?? 0.05,
+    chroma_power: p.chroma_power ?? 1.0,
+    enrichment: p.enrichment,
+  };
 }
 
 export function compileGenParams(p: GenParams): CompiledGenParams {
-  const M1 = mat3(p.M1);
-  const M2 = mat3(p.M2);
+  const n = normalizeGenParams(p);
+  const M1 = mat3(n.M1);
+  const M2 = mat3(n.M2);
   return {
     M1, M1_inv: mat3Inv(M1),
     M2, M2_inv: mat3Inv(M2),
-    gamma: new Float64Array(p.gamma),
-    inv_gamma: new Float64Array(p.gamma.map(g => 1 / g)),
-    raw: p,
+    gamma: new Float64Array(n.gamma),
+    inv_gamma: new Float64Array(n.gamma.map(g => 1 / g)),
+    raw: n,
   };
 }
 

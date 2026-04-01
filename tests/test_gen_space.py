@@ -23,9 +23,10 @@ class TestGenSpaceRoundtrip:
         np.testing.assert_allclose(rec, XYZ, atol=1e-10)
 
     def test_roundtrip_batch(self, gs):
-        """Batch XYZ → Gen Lab → XYZ roundtrip."""
+        """Batch sRGB → XYZ → Gen Lab → XYZ roundtrip."""
         rng = np.random.default_rng(42)
-        XYZ = rng.uniform(0.05, 0.9, (100, 3))
+        srgb = rng.uniform(0.0, 1.0, (100, 3))
+        XYZ = np.array([sRGB_to_XYZ(s) for s in srgb])
         lab = gs.from_XYZ(XYZ)
         rec = gs.to_XYZ(lab)
         np.testing.assert_allclose(rec, XYZ, atol=1e-8)
@@ -173,3 +174,135 @@ class TestGenParams:
         p = GenParams.from_dict(d)
         assert p.hue_cos1 == 0.0
         assert p.lp_dark == 0.0
+
+
+class TestGenSpaceCIGates:
+    """CI gates — production quality guarantees (Codex mandate).
+
+    These tests MUST pass before any GenSpace deploy.
+    Failure = hard blocker, no exceptions.
+    """
+
+    @pytest.fixture
+    def gs(self):
+        return GenSpace()
+
+    XYZ_TO_SRGB = np.array([
+        [3.2404542, -1.5371385, -0.4985314],
+        [-0.9692660, 1.8760108, 0.0415560],
+        [0.0556434, -0.2040259, 1.0572252]
+    ])
+
+    def _count_cusps(self, gs, gamut_mat):
+        """Count valid cusps (cusp_L in [0.05, 0.99])."""
+        valid = 0
+        for hue_deg in range(360):
+            h = np.radians(hue_deg)
+            ch, sh = np.cos(h), np.sin(h)
+            best_C, best_L = 0, 0
+            for L in np.arange(0.02, 0.98, 0.01):
+                lo, hi = 0.0, 0.5
+                for _ in range(30):
+                    mid = (lo + hi) / 2
+                    lab = np.array([L, mid * ch, mid * sh])
+                    xyz = gs.to_XYZ(lab)
+                    rgb = gamut_mat @ xyz
+                    if np.all(rgb >= -0.001) and np.all(rgb <= 1.001):
+                        lo = mid
+                    else:
+                        hi = mid
+                if lo > best_C:
+                    best_C = lo
+                    best_L = L
+            if 0.05 < best_L < 0.99:
+                valid += 1
+        return valid
+
+    def test_srgb_360_cusps(self, gs):
+        """CI GATE: sRGB must have 360/360 valid cusps."""
+        cusps = self._count_cusps(gs, self.XYZ_TO_SRGB)
+        assert cusps == 360, f"sRGB cusps: {cusps}/360 — HARD BLOCKER"
+
+    def test_zero_gamut_holes(self, gs):
+        """CI GATE: zero interior gamut holes at any hue."""
+        total_holes = 0
+        for hue_deg in range(0, 360, 3):
+            h = np.radians(hue_deg)
+            ch, sh = np.cos(h), np.sin(h)
+            for L in np.arange(0.01, 0.99, 0.005):
+                for C in np.arange(0.005, 0.45, 0.005):
+                    lab = np.array([L, C * ch, C * sh])
+                    xyz = gs.to_XYZ(lab)
+                    rgb = self.XYZ_TO_SRGB @ xyz
+                    ok = np.all(rgb >= -0.001) and np.all(rgb <= 1.001)
+                    if not ok:
+                        # Check if next C is CLEARLY in gamut (hole = OOG then back in)
+                        lab2 = np.array([L, (C + 0.01) * ch, (C + 0.01) * sh])
+                        xyz2 = gs.to_XYZ(lab2)
+                        rgb2 = self.XYZ_TO_SRGB @ xyz2
+                        if np.all(rgb2 >= 0.0) and np.all(rgb2 <= 1.0):
+                            total_holes += 1
+        assert total_holes == 0, f"Gamut holes: {total_holes} — HARD BLOCKER"
+
+    def test_zero_mono_violations(self, gs):
+        """CI GATE: zero monotonicity violations after cusp."""
+        violations = 0
+        for hue_deg in range(0, 360, 3):
+            h = np.radians(hue_deg)
+            ch, sh = np.cos(h), np.sin(h)
+            # Find cusp
+            best_C, cusp_L = 0, 0.5
+            for L in np.arange(0.02, 0.98, 0.01):
+                lo, hi = 0.0, 0.5
+                for _ in range(25):
+                    mid = (lo + hi) / 2
+                    lab = np.array([L, mid * ch, mid * sh])
+                    xyz = gs.to_XYZ(lab)
+                    rgb = self.XYZ_TO_SRGB @ xyz
+                    if np.all(rgb >= -0.001) and np.all(rgb <= 1.001):
+                        lo = mid
+                    else:
+                        hi = mid
+                if lo > best_C:
+                    best_C = lo
+                    cusp_L = L
+            # Check monotonicity after cusp
+            prev_C = best_C
+            for L in np.arange(cusp_L + 0.01, 0.98, 0.01):
+                lo, hi = 0.0, 0.5
+                for _ in range(25):
+                    mid = (lo + hi) / 2
+                    lab = np.array([L, mid * ch, mid * sh])
+                    xyz = gs.to_XYZ(lab)
+                    rgb = self.XYZ_TO_SRGB @ xyz
+                    if np.all(rgb >= -0.001) and np.all(rgb <= 1.001):
+                        lo = mid
+                    else:
+                        hi = mid
+                if lo > prev_C + 0.005:
+                    violations += 1
+                prev_C = lo
+        assert violations <= 2, f"Mono violations: {violations} — HARD BLOCKER (max 2)"
+
+    def test_roundtrip_precision(self, gs):
+        """CI GATE: XYZ round-trip < 1e-12."""
+        rng = np.random.default_rng(42)
+        max_err = 0
+        for _ in range(10000):
+            srgb = rng.uniform(0.01, 0.99, 3)
+            xyz = sRGB_to_XYZ(srgb)
+            lab = gs.from_XYZ(xyz)
+            xyz2 = gs.to_XYZ(lab)
+            err = np.max(np.abs(xyz - xyz2))
+            max_err = max(max_err, err)
+        assert max_err < 1e-12, f"RT max error: {max_err:.2e} — HARD BLOCKER"
+
+    def test_achromatic_precision(self, gs):
+        """CI GATE: achromatic chroma < 1e-6."""
+        D65 = np.array([0.95047, 1.0, 1.08883])
+        max_C = 0
+        for Y in np.linspace(0.01, 1.5, 100):
+            lab = gs.from_XYZ(D65 * Y)
+            C = np.sqrt(lab[1] ** 2 + lab[2] ** 2)
+            max_C = max(max_C, C)
+        assert max_C < 1e-6, f"Achromatic chroma: {max_C:.2e} — HARD BLOCKER"

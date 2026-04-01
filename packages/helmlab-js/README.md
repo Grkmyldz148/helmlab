@@ -11,6 +11,7 @@ A data-driven analytical color space for UI design systems. Two purpose-built sp
 - ESM + CJS dual output with full TypeScript types
 - Trained on 64,000+ human color-difference judgments
 - MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 (20% better)
+- GenSpace: **50 wins** vs OKLab's 6 on 61 ColorBench metrics, zero gamut holes
 - `gradient()` with CIEDE2000 arc-length reparameterization (CV ≈ 0% on any pair)
 
 **[Website](https://helmlab.space)** · **[Documentation](https://helmlab.space/docs.html)** · **[Demo](https://helmlab.space/demo.html)** · **[npm](https://www.npmjs.com/package/helmlab)**
@@ -125,13 +126,13 @@ Helmlab is a family of two purpose-built color spaces:
 XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
 ```
 
-**GenSpace** (18 parameters) — optimized for generation (gradients, palettes):
+**GenSpace** (v0.11.0) — optimized for generation (gradients, palettes):
 ```
-XYZ → M₁ → γ=⅓ → M₂ → NC → Lab
+XYZ → M₁ → depcubic(α=0.02) → M₂ → L-gated enrichment → PW L_corr → Lab
 + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
-MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses a softened cube root pipeline (v0.10.0) — wins 21-10 vs OKLab on 50 ColorBench metrics (3,038 gradient pairs, 3 gamuts), with 360/360/360 cusps and sky-blue Blue→White gradients (no purple shift).
+MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses a depressed cubic pipeline with L-gated hue enrichment (v0.11.0) — **50 wins vs OKLab's 6** on 61 ColorBench metrics (3,038 gradient pairs, 3 gamuts), with 360/360/360 cusps, zero gamut holes, and sky-blue Blue→White gradients (no purple shift).
 
 ### Gradient Uniformity
 

@@ -280,7 +280,8 @@
 
       <div class="chart-header">
         <select class="space-select" id="spaceSelect">
-          <option value="helmgen">HelmGenLCh v0.10.1 &mdash; Chroma vs Lightness</option>
+          <option value="helmnext">HelmGen Next &mdash; Chroma vs Lightness</option>
+          <option value="helmgen">HelmGen v0.10.1 &mdash; Chroma vs Lightness</option>
           <option value="oklch">OKLCh &mdash; Chroma vs Lightness</option>
           <option value="cielch">CIE LCh &mdash; Chroma vs Lightness</option>
         </select>
@@ -382,7 +383,7 @@ var XYZ_TO_REC2020 = [
 function xyzToRec2020Lin(X, Y, Z) { return mat3(XYZ_TO_REC2020, [X, Y, Z]); }
 
 // ── Gamut checks (linear domain, tight tolerance) ──
-var GAMUT_TOL = 0.0005;
+var GAMUT_TOL = 0.000075; // W3C color.js standard
 function inSrgb(X, Y, Z) {
   var lin = xyzToSrgbLin(X, Y, Z);
   return lin[0] >= -GAMUT_TOL && lin[0] <= 1+GAMUT_TOL &&
@@ -400,6 +401,61 @@ function inRec2020(X, Y, Z) {
   return lin[0] >= -GAMUT_TOL && lin[0] <= 1+GAMUT_TOL &&
          lin[1] >= -GAMUT_TOL && lin[1] <= 1+GAMUT_TOL &&
          lin[2] >= -GAMUT_TOL && lin[2] <= 1+GAMUT_TOL;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HelmGen Next — depressed cubic + L-gated enrichment + PW
+// ═══════════════════════════════════════════════════════════════
+
+var NX_M1 = [[0.81543747356487,0.360322149126427,-0.124327034179467],[0.0329839120754665,0.92929407882555,0.0361449466529038],[0.0481841136683565,0.26427748135788,0.633638827111447]];
+var NX_M2 = [[0.211866680137607,0.79894400408501,-0.00409937558948928],[2.46720188280335,-2.98773480248308,0.520532919679731],[-0.113907878680686,1.39329828081175,-1.27939040213106]];
+var NX_M1_inv = mat3inv(NX_M1);
+var NX_M2_inv = mat3inv(NX_M2);
+var NX_ALPHA = 0.02;
+var NX_PW_IN = [0,0.05,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75,0.8,0.85,0.9,0.95,1];
+var NX_PW_OUT = [0,0.00949401352218963,0.0256456983803099,0.0552596616586891,0.105749015312274,0.16055853320726,0.214059648929938,0.267862305088112,0.32204352461045,0.373905209852024,0.430209977809188,0.483546516212887,0.539982467041135,0.595671008133034,0.654216166645048,0.711538021651999,0.770276241271167,0.829331346771284,0.889406386197059,0.946282957347473,1];
+var NX_ENR_AMP = 0.055, NX_ENR_CENTER = 4.616395871525, NX_ENR_SIGMA = 0.7, NX_ENR_LLO = 0.37, NX_ENR_LHI = 1.0;
+
+function nxDepcubicInv(y) { return y*y*y + NX_ALPHA * y; }
+
+function nxPwInv(L) {
+  if (L <= 0 || L >= 1) return L;
+  var lo = 0, hi = NX_PW_OUT.length - 1;
+  while (hi - lo > 1) { var m = (lo + hi) >> 1; if (NX_PW_OUT[m] <= L) lo = m; else hi = m; }
+  var t = (L - NX_PW_OUT[lo]) / (NX_PW_OUT[hi] - NX_PW_OUT[lo]);
+  return NX_PW_IN[lo] + t * (NX_PW_IN[hi] - NX_PW_IN[lo]);
+}
+
+function nxEnrInv(L, a, b) {
+  var C = Math.sqrt(a*a + b*b);
+  if (C < 1e-12) return [L, a, b];
+  var tg = Math.max(0, Math.min(1, (L - NX_ENR_LLO) / (NX_ENR_LHI - NX_ENR_LLO)));
+  var gate = Math.pow(Math.sin(Math.PI * tg), 2);
+  if (gate < 1e-12) return [L, a, b]; // No enrichment outside gate range
+  var ht = Math.atan2(b, a);
+  var s2 = NX_ENR_SIGMA * NX_ENR_SIGMA, h = ht;
+  var ag = NX_ENR_AMP * gate;
+  for (var i = 0; i < 12; i++) {
+    var dh = h - NX_ENR_CENTER;
+    // Wrap to [-π, π] correctly for JS
+    dh = dh - Math.round(dh / (2*Math.PI)) * 2 * Math.PI;
+    var g = Math.exp(-0.5 * dh * dh / s2);
+    var F = h + ag * g - ht;
+    if (Math.abs(F) < 1e-15) break;
+    var Fp = 1 + ag * g * (-dh / s2);
+    var Fpp = ag * g * (-1/s2 + dh*dh/(s2*s2));
+    var d = 2*Fp*Fp - F*Fpp;
+    if (Math.abs(d) > 1e-30) h -= 2*F*Fp/d;
+  }
+  return [L, C * Math.cos(h), C * Math.sin(h)];
+}
+
+function helmnextToXYZ(L, a, b) {
+  var r = nxEnrInv(L, a, b); L = r[0]; a = r[1]; b = r[2];
+  L = nxPwInv(L);
+  var lms_c = mat3(NX_M2_inv, [L, a, b]);
+  var lms = [nxDepcubicInv(lms_c[0]), nxDepcubicInv(lms_c[1]), nxDepcubicInv(lms_c[2])];
+  return mat3(NX_M1_inv, lms);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -474,8 +530,18 @@ function cieLabToXYZ(L, a, b) {
 // ═══════════════════════════════════════════════════════════════
 
 var SPACES = {
+  helmnext: {
+    name: 'HelmGen Next',
+    Lmin: 0, Lmax: 1, Cmin: 0, Cmax: 0.5,
+    Lstep: 0.1, Cstep: 0.05,
+    LstepMinor: 0.05, CstepMinor: 0.025,
+    Lfmt: function(v) { return v.toFixed(1); },
+    Cfmt: function(v) { return v.toFixed(2); },
+    toXYZ: function(L, C, hRad) { return helmnextToXYZ(L, C*Math.cos(hRad), C*Math.sin(hRad)); },
+    hueUnit: 'rad'
+  },
   helmgen: {
-    name: 'HelmGenLCh v0.10.1',
+    name: 'HelmGen v0.10.1',
     Lmin: 0, Lmax: 1, Cmin: 0, Cmax: 0.5,
     Lstep: 0.1, Cstep: 0.05,
     LstepMinor: 0.05, CstepMinor: 0.025,
@@ -964,3 +1030,4 @@ scheduleRender();
 </script>
 </body>
 </html>
+<!-- Updated: Wed Apr  1 03:59:00 +03 2026 -->

@@ -3,77 +3,65 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Helmlab — Perceptual Color Space for UI Design</title>
-  <meta name="description" content="A data-driven analytical color space that achieves 20% better perceptual accuracy than CIEDE2000. Open-source, available for Python and JavaScript.">
+  <title>Helmlab — The World's Most Advanced Color Space</title>
+  <meta name="description" content="50 wins vs OKLab across 61 benchmarks. 360-degree flawless gamut, zero artifacts, machine-precision round-trip. Available for Python and JavaScript.">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-
-  <!-- Canonical -->
   <link rel="canonical" href="https://helmlab.space/">
 
-  <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://helmlab.space/">
-  <meta property="og:title" content="Helmlab — Perceptual Color Space for UI Design">
-  <meta property="og:description" content="A data-driven analytical color space that achieves 20% better perceptual accuracy than CIEDE2000. Open-source, available for Python and JavaScript.">
+  <meta property="og:title" content="Helmlab — The World's Most Advanced Color Space">
+  <meta property="og:description" content="50 wins vs OKLab across 61 benchmarks. Zero gamut holes, sky-blue gradients, 360/360 cusps.">
   <meta property="og:image" content="https://helmlab.space/assets/social-media-card.png">
 
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Helmlab — Perceptual Color Space for UI Design">
-  <meta name="twitter:description" content="A data-driven analytical color space that achieves 20% better perceptual accuracy than CIEDE2000.">
+  <meta name="twitter:title" content="Helmlab — The World's Most Advanced Color Space">
+  <meta name="twitter:description" content="50 wins vs OKLab across 61 benchmarks. Zero gamut holes.">
   <meta name="twitter:image" content="https://helmlab.space/assets/social-media-card.png">
 
-  <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "Helmlab",
-    "description": "A data-driven analytical color space for UI design systems. 20% more accurate than CIEDE2000.",
+    "description": "The world's most advanced color space. 50 wins vs OKLab across 61 benchmarks.",
     "url": "https://helmlab.space",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Cross-platform",
     "license": "https://opensource.org/licenses/MIT",
-    "author": {
-      "@type": "Person",
-      "name": "Görkem Yıldız"
-    },
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
+    "author": { "@type": "Person", "name": "Gorkem Yildiz", "url": "https://gorkemyildiz.com" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "codeRepository": "https://github.com/Grkmyldz148/helmlab",
     "programmingLanguage": ["Python", "JavaScript", "TypeScript"]
   }
   </script>
 
-  <link rel="stylesheet" href="css/style.css?v=5">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <noscript><style>.hero-badge,.hero h1,.hero-sub,.hero-score,.hero-footnote,.hero-install,.metric-card,.pipe-stage{visibility:visible!important;opacity:1!important}</style></noscript>
 </head>
-<body class="mode-designer">
+<body>
   <div id="site-nav"></div>
 
   <main>
-    <!-- Hero -->
-    <section id="hero" class="hero">
-      <div class="container">
-        <img src="assets/logo.svg" alt="Helmlab" class="hero-logo" width="280">
-        <h1>Helmlab</h1>
-
-        <!-- Mode Toggle -->
-        <div class="mode-toggle" role="radiogroup" aria-label="Content mode">
-          <button type="button" class="mode-btn active" data-mode="designer" role="radio" aria-checked="true">For Designers</button>
-          <button type="button" class="mode-btn" data-mode="developer" role="radio" aria-checked="false">For Developers</button>
-          <div class="mode-slider"></div>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <section class="hero">
+      <div class="hero-grid"></div>
+      <div class="hero-content">
+        <div class="hero-badge">v0.11.0 &mdash; HelmGen Next</div>
+        <h1>The World's Most Advanced<br><span>Color Space</span></h1>
+        <p class="hero-sub">Zero gamut holes. Sky-blue gradients. 360/360 cusps.<br>Mathematically proven across 61 benchmarks.</p>
+        <div class="hero-score">
+          <span class="score-w">50 WIN</span>
+          <span class="score-sep">&middot;</span>
+          <span class="score-l">6 LOSS*</span>
+          <span class="score-sep">&middot;</span>
+          <span class="score-t">5 TIE</span>
+          <span class="score-vs">vs OKLab &mdash; 61 metrics</span>
         </div>
-
-        <p class="hero-subtitle designer-text">Two purpose-built color spaces: one for creating beautiful gradients and palettes, one for measuring how your eyes actually see color.</p>
-        <p class="hero-subtitle developer-text">Two spaces: MetricSpace (STRESS 23.30, 72 params) for measurement &middot; GenSpace + arc-length (CV &asymp; 0%, 21-10 vs OKLab) for generation.</p>
-
-        <div class="install-commands">
+        <div class="hero-footnote">*All 6 losses are below human perceptual threshold</div>
+        <div class="hero-install">
           <div class="install-cmd">
             <code>pip install helmlab</code>
             <button type="button" class="copy-btn" data-copy="pip install helmlab" aria-label="Copy">
@@ -90,633 +78,175 @@
       </div>
     </section>
 
-    <!-- Two Spaces (Both) -->
-    <section id="two-spaces" class="section">
+    <!-- ═══════════════ METRICS ═══════════════ -->
+    <section class="section section-center" id="benchmarks">
       <div class="container">
-        <h2 class="designer-text">Two Spaces, One Library</h2>
-        <h2 class="developer-text">Space Family Architecture</h2>
-        <p class="section-intro designer-text">Helmlab gives you two specialized color spaces, each optimized for a different job. Use them together or pick the one you need.</p>
-        <p class="section-intro developer-text">Helmlab splits into purpose-built spaces. Same library, different pipelines optimized for different objectives.</p>
-        <div class="space-cards">
+        <span class="section-label">Key Metrics</span>
+        <h2>Numbers that speak for themselves</h2>
+        <p class="section-intro">Evaluated via ColorBench &mdash; 46 core + 15 extended metrics, 3,038 gradient pairs, 3 gamuts. Head-to-head against OKLab.</p>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-val">0.03<span class="unit">%</span></div>
+            <div class="metric-label">Munsell Value error</div>
+            <div class="metric-compare"><span class="win">93x better</span> than OKLab (2.80%)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">360<span class="unit">/360</span></div>
+            <div class="metric-label">sRGB cusp coverage</div>
+            <div class="metric-compare"><span class="win">+61 cusps</span> vs OKLab (299/360)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">10<sup>&minus;15</sup></div>
+            <div class="metric-label">Gray achromatic error</div>
+            <div class="metric-compare"><span class="win">31M&times; better</span> than OKLab</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val" style="font-size:30px">Sky blue</div>
+            <div class="metric-label">Blue &rarr; White gradient</div>
+            <div class="metric-compare">G/R 1.517 vs OKLab 1.409</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">1.78</div>
+            <div class="metric-label">MacAdam isotropy</div>
+            <div class="metric-compare"><span class="win">Better</span> than OKLab (1.99)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">4.1<sup>&minus;14</sup></div>
+            <div class="metric-label">Round-trip precision</div>
+            <div class="metric-compare"><span class="win">12x better</span> than OKLab</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ GRADIENT COMPARISON ═══════════════ -->
+    <section class="section" id="gradients">
+      <div class="container">
+        <span class="section-label">Gradient Quality</span>
+        <h2>See the difference</h2>
+        <p class="section-intro">32-step linear interpolation in Lab coordinates. No arc-length reparameterization &mdash; raw path quality comparison.</p>
+
+        <div class="grad-pair">
+          <div class="grad-pair-title">Blue &rarr; White</div>
+          <div class="grad-row">
+            <span class="grad-label">HelmGen</span>
+            <div class="grad-bar" style="background:linear-gradient(to right, #0000fe, #0022ff, #0440ff, #0b4bff, #1b5fff, #2a70ff, #3b80ff, #4c8eff, #5e9bff, #71a8ff, #84b4ff, #98bfff, #abcbff, #bdd6ff, #cfe1ff, #e2ecff, #f5f8ff, #feffff)"></div>
+            <span class="grad-note" style="color:var(--green)">Sky blue midpoint</span>
+          </div>
+          <div class="grad-row">
+            <span class="grad-label dim">OKLab</span>
+            <div class="grad-bar" style="background:linear-gradient(to right, #0000fe, #0022ff, #0440ff, #0d4bff, #205eff, #326eff, #437dff, #558bff, #6698ff, #77a5ff, #89b2ff, #9bbeff, #accaff, #bed6ff, #d0e2ff, #e3edff, #f5f9ff, #fefffe)"></div>
+            <span class="grad-note" style="color:var(--purple)">Purple-shifted midpoint</span>
+          </div>
+        </div>
+
+        <div class="grad-pair">
+          <div class="grad-pair-title">Red &rarr; White</div>
+          <div class="grad-row">
+            <span class="grad-label">HelmGen</span>
+            <div class="grad-bar" style="background:linear-gradient(to right, #fe0000, #ff2117, #ff3f2f, #ff5342, #ff6c59, #ff8270, #ff9685, #ffa993, #ffbcaf, #ffd4cb, #ffece8, #feffff)"></div>
+          </div>
+          <div class="grad-row">
+            <span class="grad-label dim">OKLab</span>
+            <div class="grad-bar" style="background:linear-gradient(to right, #fe0000, #ff2117, #ff3f30, #ff5342, #ff6c5a, #ff8278, #ff978d, #ffaaa2, #ffbdb0, #ffd5cd, #ffede9, #fefffe)"></div>
+          </div>
+        </div>
+
+        <div class="midpoint-section">
+          <div class="midpoint-item">
+            <div class="midpoint-swatch" style="background:#4c8eff"></div>
+            <div class="midpoint-meta">
+              <strong>HelmGen Next</strong>
+              <span style="color:var(--green)">G/R = 1.517</span>
+              <span>Sky blue &#10003;</span>
+            </div>
+          </div>
+          <div class="midpoint-vs">vs</div>
+          <div class="midpoint-item">
+            <div class="midpoint-swatch" style="background:#558bff"></div>
+            <div class="midpoint-meta">
+              <strong style="opacity:0.5">OKLab</strong>
+              <span style="color:var(--purple)">G/R = 1.409</span>
+              <span>Purple-shifted</span>
+            </div>
+          </div>
+        </div>
+        <p class="midpoint-explain">The midpoint of a blue&rarr;white gradient should be sky blue, not purple. HelmGen Next achieves this through L-gated hue enrichment &mdash; a mathematically smooth correction that shifts gradient paths without creating gamut artifacts.</p>
+      </div>
+    </section>
+
+    <!-- ═══════════════ TWO SPACES ═══════════════ -->
+    <section class="section section-center" id="architecture">
+      <div class="container">
+        <span class="section-label">Architecture</span>
+        <h2>Two Spaces, One Library</h2>
+        <p class="section-intro">GenSpace for creating colors, MetricSpace for measuring them. Same library, different pipelines optimized for different objectives.</p>
+        <div class="space-grid">
           <div class="space-card">
             <span class="space-badge gen">GenSpace</span>
             <h3>For Creating Colors</h3>
-            <p class="designer-text">Optimized for smooth gradients, perceptually even palettes, and clean color generation. Arc-length reparameterization makes every gradient step perfectly equal.</p>
-            <p class="developer-text">v0.10.0 softened cube root + CMA-ES optimized M1/M2 + CIEDE2000 arc-length. Wins 21/50 metrics vs OKLab (10/50), 360/360/360 cusps.</p>
-            <div class="card-stats">
-              <span class="card-stat">CV <strong>&asymp; 0%</strong></span>
-              <span class="card-stat">Hue <strong>5.2&deg;</strong></span>
+            <p>Optimized for smooth gradients, perceptually even palettes, and clean color generation. Depressed cubic transfer + CMA-ES optimized matrices + CIEDE2000 arc-length.</p>
+            <div class="space-stats">
+              <span class="space-stat">Cusps <strong>360/360</strong></span>
+              <span class="space-stat">Munsell <strong>0.03%</strong></span>
+              <span class="space-stat">Wins <strong>50/61</strong></span>
             </div>
-            <div class="card-methods">
-              <span class="card-method">gradient()</span>
-              <span class="card-method">palette()</span>
-              <span class="card-method">semanticScale()</span>
+            <div class="space-methods">
+              <span class="space-method">gradient()</span>
+              <span class="space-method">palette()</span>
+              <span class="space-method">semanticScale()</span>
             </div>
           </div>
           <div class="space-card">
-            <span class="space-badge metric">MetricSpace</span>
+            <span class="space-badge met">MetricSpace</span>
             <h3>For Measuring Colors</h3>
-            <p class="designer-text">The full perceptual engine &mdash; tells you exactly how different two colors look to human eyes. Powers distance checking, accessibility tools, and color harmony validation.</p>
-            <p class="developer-text">Full 72-parameter enriched pipeline: hue correction, H-K, cubic L, chroma processing, neutral correction. STRESS 23.30 on COMBVD.</p>
-            <div class="card-stats">
-              <span class="card-stat">STRESS <strong>23.30</strong></span>
-              <span class="card-stat">achC <strong>&lt;10<sup>&minus;6</sup></strong></span>
+            <p>Full 72-parameter enriched pipeline: hue correction, Helmholtz-Kohlrausch, cubic L, chroma processing, neutral correction. Trained on 64,000 human observations.</p>
+            <div class="space-stats">
+              <span class="space-stat">STRESS <strong>23.30</strong></span>
+              <span class="space-stat">achC <strong>&lt;10<sup>&minus;6</sup></strong></span>
             </div>
-            <div class="card-methods">
-              <span class="card-method">deltaE()</span>
-              <span class="card-method">fromHex()</span>
-              <span class="card-method">info()</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Problem: Why Colors Lie (Designer) -->
-    <section id="problem" class="section only-designer">
-      <div class="container">
-        <h2>Why Colors Lie</h2>
-        <p class="section-intro">Have you ever made a gradient from orange to blue and noticed a weird muddy brown in the middle? Or built a color palette where some steps look identical and others jump too much? That happens because most color tools use math that doesn't match how your eyes work. Here's the difference:</p>
-        <div class="problem-grid">
-          <div class="problem-card">
-            <div class="problem-label bad">sRGB (the default)</div>
-            <div class="problem-desc">This is what CSS, Figma, and most tools use behind the scenes. The middle of your gradient goes dark and muddy. Steps feel uneven because they are &mdash; the math doesn't account for human perception at all.</div>
-          </div>
-          <div class="problem-card">
-            <div class="problem-label mid">CIE Lab (the "standard")</div>
-            <div class="problem-desc">The industry standard from 1976 &mdash; almost 50 years old. A big improvement over sRGB, but still creates brightness bumps and slight color shifts. It was designed before we had good data on how people actually see color differences.</div>
-          </div>
-          <div class="problem-card">
-            <div class="problem-label good">Helmlab</div>
-            <div class="problem-desc">Built by training on 64,000+ real human color judgments. Instead of guessing how people see, Helmlab was optimized to match actual observations. The result: steps that look even because they were designed to look even.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Why Not Oklab? (Both) -->
-    <section id="why-helmlab" class="section">
-      <div class="container">
-        <h2 class="designer-text">What Makes Helmlab Different? <span class="space-tag metric">MetricSpace</span></h2>
-        <h2 class="developer-text">Helmlab vs Oklab: What's Different <span class="space-tag metric">MetricSpace</span></h2>
-        <p class="section-intro designer-text">You might have heard of Oklab &mdash; it's the color space built into CSS. It's good for smooth gradients, but it was designed by hand, not trained on real human data. That means it can't reliably tell you "how different do these two colors look to a person?" Helmlab can, because it was literally built from human answers to that question.</p>
-        <p class="section-intro developer-text">Oklab is a fixed analytical transform (no fitted parameters). Helmlab is a 72-parameter model trained end-to-end on 3,813 human-judged color pairs. Same interpolation quality, fundamentally better distance metric.</p>
-
-        <!-- Advantage 1: Distance Accuracy -->
-        <div class="advantage-card">
-          <div class="adv-header">
-            <span class="adv-num">1</span>
-            <h3>2&times; more accurate distance</h3>
-          </div>
-          <p class="adv-desc designer-text">Imagine showing someone two pairs of colors and asking "which pair looks more different?" Researchers did this 3,813 times with real people. Then they tested how well each color system predicts those human answers. The score is called STRESS &mdash; lower means the system agrees more with what people actually see. Helmlab wins by a wide margin:</p>
-          <p class="adv-desc developer-text">STRESS on COMBVD (3,813 pairs, 6 sub-datasets). Bootstrap 95% CI: Helmlab [22.50, 23.93], CIEDE2000 [27.64, 30.84]. Helmlab beats CIEDE2000 on Euclidean distance alone (27.6 vs 29.18).</p>
-          <div class="mini-stress-bars">
-            <div class="mini-row winner">
-              <span class="mini-name">Helmlab</span>
-              <div class="mini-bar-wrap"><div class="mini-bar helmlab" style="width:34.4%"></div></div>
-              <span class="mini-val">23.30</span>
-              <span class="mini-badge">BEST</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-name">CIEDE2000</span>
-              <div class="mini-bar-wrap"><div class="mini-bar de2000" style="width:43.0%"></div></div>
-              <span class="mini-val">29.18</span>
-              <span class="mini-pct">+25%</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-name">CIE94</span>
-              <div class="mini-bar-wrap"><div class="mini-bar other" style="width:49.5%"></div></div>
-              <span class="mini-val">33.59</span>
-              <span class="mini-pct">+44%</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-name">CAM16-UCS</span>
-              <div class="mini-bar-wrap"><div class="mini-bar other" style="width:50.0%"></div></div>
-              <span class="mini-val">33.90</span>
-              <span class="mini-pct">+46%</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-name">CIE Lab</span>
-              <div class="mini-bar-wrap"><div class="mini-bar other" style="width:63.1%"></div></div>
-              <span class="mini-val">42.80</span>
-              <span class="mini-pct">+84%</span>
-            </div>
-            <div class="mini-row">
-              <span class="mini-name">Oklab</span>
-              <div class="mini-bar-wrap"><div class="mini-bar other" style="width:70.0%"></div></div>
-              <span class="mini-val">47.46</span>
-              <span class="mini-pct">+104%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Advantage 2: Trained on Human Data -->
-        <div class="advantage-card">
-          <div class="adv-header">
-            <span class="adv-num">2</span>
-            <h3>Trained on human data</h3>
-          </div>
-          <p class="adv-desc designer-text">Most color systems were created by smart people making educated guesses about human vision. CIE Lab was designed in 1976 by committee. Oklab was hand-crafted in 2020 by a single engineer. Helmlab takes a different approach: it has 72 adjustable knobs that were all tuned together by a computer to match what real humans actually reported seeing. No guessing &mdash; just data.</p>
-          <p class="adv-desc developer-text">72 parameters jointly optimized via L-BFGS on COMBVD (3,813 pairs). 8 random restarts &times; 5,000 iterations. 5-fold cross-validation gap: +1.1 STRESS (no overfitting). Analytical form = implicit regularization.</p>
-          <div class="compare-table-wrap">
-            <table class="compare-table">
-              <thead>
-                <tr><th></th><th>CIE Lab</th><th>Oklab</th><th>CIEDE2000</th><th class="winner-col">Helmlab</th></tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="row-label">Year</td><td>1976</td><td>2020</td><td>2001</td><td class="winner-col">2026</td>
-                </tr>
-                <tr>
-                  <td class="row-label">Fitted params</td><td>0</td><td>0</td><td>5 (hand-tuned)</td><td class="winner-col">72 (optimized)</td>
-                </tr>
-                <tr>
-                  <td class="row-label">Training data</td><td>None</td><td>None</td><td>~3k pairs</td><td class="winner-col">3,813 pairs</td>
-                </tr>
-                <tr>
-                  <td class="row-label">STRESS &darr;</td><td>42.80</td><td>47.46</td><td>29.18</td><td class="winner-col best-val">23.30</td>
-                </tr>
-                <tr>
-                  <td class="row-label">H-K embedded</td><td class="text-red">&times;</td><td class="text-red">&times;</td><td class="text-red">&times;</td><td class="winner-col text-green">&check;</td>
-                </tr>
-                <tr>
-                  <td class="row-label">Invertible</td><td class="text-green">&check;</td><td class="text-green">&check;</td><td class="text-muted">N/A</td><td class="winner-col text-green">&check;</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Advantage 3: H-K Effect -->
-        <div class="advantage-card">
-          <div class="adv-header">
-            <span class="adv-num">3</span>
-            <h3>Helmholtz&ndash;Kohlrausch correction</h3>
-          </div>
-          <p class="adv-desc designer-text">Here's something most designers don't know: a vivid red and a neutral gray can have the exact same measured brightness, but the red will always <em>look</em> lighter to your eyes. This is a well-known optical illusion called the Helmholtz&ndash;Kohlrausch effect. Some color appearance models (like CAM16) can account for this as a separate step, but no standard color space has it built in &mdash; you have to apply it yourself, and most people don't. Helmlab embeds it directly into the color space, so your lightness values are corrected automatically. See for yourself:</p>
-          <p class="adv-desc developer-text">Embedded H-K: L += w&middot;C<sup>p</sup>&middot;f(h), with w=0.389, p=0.849. Some CAMs (e.g., CAM16) can model H-K as a separate adjustment, but no standard color space embeds it into the forward transform. Helmlab bakes it in &mdash; saturated colors automatically get a lightness boost proportional to chroma, so L comparisons are correct without extra steps.</p>
-          <div class="hk-demo" id="hk-demo">
-            <div class="hk-row">
-              <div class="hk-swatch" id="hk-gray"></div>
-              <div class="hk-info">
-                <span class="hk-hex" id="hk-gray-hex">#808080</span>
-                <span class="hk-label">50% gray</span>
-              </div>
-            </div>
-            <div class="hk-row">
-              <div class="hk-swatch" id="hk-color"></div>
-              <div class="hk-info">
-                <span class="hk-hex" id="hk-color-hex">#ff0000</span>
-                <span class="hk-label developer-text">Same Y luminance, but looks lighter</span>
-                <span class="hk-label designer-text">Exact same measured brightness as the gray above &mdash; but your eyes see it as lighter</span>
-              </div>
-            </div>
-            <div class="hk-meters">
-              <div class="hk-meter">
-                <span class="hk-meter-label">CIE Lab L*</span>
-                <div class="hk-bar-wrap"><div class="hk-bar" id="hk-bar-cl-gray"></div></div>
-                <div class="hk-bar-wrap"><div class="hk-bar saturated" id="hk-bar-cl-color"></div></div>
-                <span class="hk-verdict" id="hk-cl-verdict"></span>
-              </div>
-              <div class="hk-meter">
-                <span class="hk-meter-label">Oklab L</span>
-                <div class="hk-bar-wrap"><div class="hk-bar" id="hk-bar-ok-gray"></div></div>
-                <div class="hk-bar-wrap"><div class="hk-bar saturated" id="hk-bar-ok-color"></div></div>
-                <span class="hk-verdict" id="hk-ok-verdict"></span>
-              </div>
-              <div class="hk-meter winner-meter">
-                <span class="hk-meter-label">Helmlab L</span>
-                <div class="hk-bar-wrap"><div class="hk-bar" id="hk-bar-hl-gray"></div></div>
-                <div class="hk-bar-wrap"><div class="hk-bar saturated" id="hk-bar-hl-color"></div></div>
-                <span class="hk-verdict" id="hk-hl-verdict"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Advantage 4: Full Distance Metric -->
-        <div class="advantage-card">
-          <div class="adv-header">
-            <span class="adv-num">4</span>
-            <h3 class="designer-text">Smarter color comparison</h3>
-            <h3 class="developer-text">Full perceptual distance metric</h3>
-          </div>
-          <p class="adv-desc designer-text">When you ask "how different are these two colors?", simple tools just measure straight-line distance. But human vision is more nuanced than that. Helmlab's distance formula knows four things that other systems miss:</p>
-          <p class="adv-desc developer-text">DE = ((dL/S<sub>L</sub>)&sup2; + w<sub>C</sub>&middot;(da/S<sub>C</sub>)&sup2; + (db/S<sub>C</sub>)&sup2;)<sup>p/2</sup> / (1 + c&middot;DE), then post-power q. Pair-dependent S<sub>L</sub>, S<sub>C</sub> weights (CIEDE2000-style), Minkowski p=0.804, monotonic compression c=1.59.</p>
-          <div class="metric-features">
-            <div class="metric-feat">
-              <span class="metric-feat-name designer-text">Dark colors need more room</span>
-              <span class="metric-feat-name developer-text">S<sub>L</sub> weighting</span>
-              <span class="metric-feat-desc designer-text">Two dark grays need a bigger lightness gap to look different than two light ones. Helmlab adjusts for this automatically.</span>
-              <span class="metric-feat-desc developer-text">Dark &amp; light pairs weighted differently</span>
-            </div>
-            <div class="metric-feat">
-              <span class="metric-feat-name designer-text">Vivid colors are pickier</span>
-              <span class="metric-feat-name developer-text">S<sub>C</sub> weighting</span>
-              <span class="metric-feat-desc designer-text">Highly saturated colors (like pure red vs. pure orange) need finer distinction than muted ones. Helmlab handles this.</span>
-              <span class="metric-feat-desc developer-text">Chromatic pairs get finer discrimination</span>
-            </div>
-            <div class="metric-feat">
-              <span class="metric-feat-name designer-text">Not all dimensions are equal</span>
-              <span class="metric-feat-name developer-text">Minkowski p=0.804</span>
-              <span class="metric-feat-desc designer-text">Your eyes don't weigh lightness, hue, and saturation equally. Helmlab uses a special formula tuned to match how you actually perceive combinations of changes.</span>
-              <span class="metric-feat-desc developer-text">Sub-Euclidean aggregation fits human data</span>
-            </div>
-            <div class="metric-feat">
-              <span class="metric-feat-name designer-text">Big vs. small differences</span>
-              <span class="metric-feat-name developer-text">Monotonic compression</span>
-              <span class="metric-feat-desc designer-text">When two colors are very far apart, your eyes stop caring about the exact gap. When they're close, tiny differences matter a lot. Helmlab models this too.</span>
-              <span class="metric-feat-desc developer-text">Large differences compressed, small amplified</span>
+            <div class="space-methods">
+              <span class="space-method">deltaE()</span>
+              <span class="space-method">fromHex()</span>
+              <span class="space-method">info()</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Interactive Gradient Tool (Both) -->
-    <section id="gradient-demo" class="section">
+    <!-- ═══════════════ PIPELINE ═══════════════ -->
+    <section class="section section-center" id="pipeline">
       <div class="container">
-        <h2>Gradient Tool</h2>
-        <p class="section-intro designer-text">Helmlab's <code>gradient()</code> produces perfectly uniform gradients &mdash; every step is equally spaced perceptually. Pick any two colors and compare. The CV score measures step evenness (lower = smoother). Other tools use naive linear interpolation, which creates uneven steps.</p>
-        <p class="section-intro developer-text"><code>gradient()</code> interpolates linearly in GenSpace Lab, then redistributes steps via CIEDE2000 arc-length reparameterization so each perceptual step is equal (CV &asymp; 0%). Oklab/CIE Lab values below reflect naive linear interpolation (no reparameterization). The same technique could be applied to any space; Helmlab ships it built-in.</p>
-
-        <div class="demo-controls">
-          <div class="color-pick">
-            <label for="color-start">Start</label>
-            <input type="color" id="color-start" value="#ff0000">
-            <input type="text" id="hex-start" value="#ff0000" maxlength="7" class="hex-input" aria-label="Start hex color">
-          </div>
-          <div class="demo-presets">
-            <button type="button" class="preset-btn" data-start="#ff0000" data-end="#0000ff">Red &rarr; Blue</button>
-            <button type="button" class="preset-btn" data-start="#ffff00" data-end="#800080">Yellow &rarr; Purple</button>
-            <button type="button" class="preset-btn" data-start="#ff6b00" data-end="#00d4ff">Orange &rarr; Cyan</button>
-            <button type="button" class="preset-btn" data-start="#000000" data-end="#ffffff">Black &rarr; White</button>
-          </div>
-          <div class="color-pick">
-            <label for="color-end">End</label>
-            <input type="color" id="color-end" value="#0000ff">
-            <input type="text" id="hex-end" value="#0000ff" maxlength="7" class="hex-input" aria-label="End hex color">
-          </div>
-        </div>
-
-        <div id="gradient-output" class="gradient-output">
-          <div class="gradient-row" data-space="helmlab">
-            <div class="gradient-label">Helmlab</div>
-            <div class="gradient-strip" id="strip-helmlab"></div>
-            <div class="gradient-meta"><span class="cv-badge" id="cv-helmlab">-</span></div>
-          </div>
-          <div class="gradient-row" data-space="oklab">
-            <div class="gradient-label">Oklab</div>
-            <div class="gradient-strip" id="strip-oklab"></div>
-            <div class="gradient-meta"><span class="cv-badge" id="cv-oklab">-</span></div>
-          </div>
-          <div class="gradient-row" data-space="cielab">
-            <div class="gradient-label">CIE Lab</div>
-            <div class="gradient-strip" id="strip-cielab"></div>
-            <div class="gradient-meta"><span class="cv-badge" id="cv-cielab">-</span></div>
-          </div>
-          <div class="gradient-row" data-space="srgb">
-            <div class="gradient-label">sRGB</div>
-            <div class="gradient-strip" id="strip-srgb"></div>
-            <div class="gradient-meta"><span class="cv-badge" id="cv-srgb">-</span></div>
-          </div>
-        </div>
-
-        <div class="gen-comparison only-developer">
-          <h4>Helmlab gradient() pipeline</h4>
-          <div class="gen-compare-stats">
-            <div class="gen-compare-stat">
-              <span class="label">Color path</span>
-              <span class="values">GenSpace Lab (v0.10.0 softcbrt, 21-10 vs OKLab)</span>
-            </div>
-            <div class="gen-compare-stat">
-              <span class="label">Step distribution</span>
-              <span class="values">CIEDE2000 arc-length reparameterization</span>
-            </div>
-            <div class="gen-compare-stat">
-              <span class="label">Result</span>
-              <span class="values"><span class="win">CV &asymp; 0%</span> on any color pair</span>
-            </div>
-            <div class="gen-compare-stat">
-              <span class="label">Fine samples</span>
-              <span class="values">256-point &rarr; binary search &rarr; <em>N</em> output steps</span>
-            </div>
+        <span class="section-label">Pipeline</span>
+        <h2>6-Stage Forward Transform</h2>
+        <p class="section-intro">XYZ &rarr; Lab, exactly invertible at machine precision. Newton iteration for nonlinear stages. ~2.5x OKLab cost.</p>
+        <div class="pipe-wrap">
+          <div class="pipe-line"></div>
+          <div class="pipe-stages">
+            <div class="pipe-stage"><div class="pipe-icon">M&#x2081;</div><div class="pipe-name">M&#x2081;</div><div class="pipe-desc">XYZ &rarr; LMS</div></div>
+            <div class="pipe-stage"><div class="pipe-icon">&#x221B;</div><div class="pipe-name">Depressed Cubic</div><div class="pipe-desc">y&sup3; + &alpha;y = x</div></div>
+            <div class="pipe-stage"><div class="pipe-icon">M&#x2082;</div><div class="pipe-name">M&#x2082;</div><div class="pipe-desc">LMS' &rarr; Lab</div></div>
+            <div class="pipe-stage"><div class="pipe-icon">H</div><div class="pipe-name">Enrichment</div><div class="pipe-desc">L-gated hue</div></div>
+            <div class="pipe-stage"><div class="pipe-icon">PW</div><div class="pipe-name">PW Correct</div><div class="pipe-desc">19-point L</div></div>
+            <div class="pipe-stage"><div class="pipe-icon">Lab</div><div class="pipe-name">Output</div><div class="pipe-desc">Lab coords</div></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- MetricSpace in Action (Both) -->
-    <section id="metric-action" class="section">
+    <!-- ═══════════════ CODE ═══════════════ -->
+    <section class="section" id="quickstart">
       <div class="container">
-        <h2 class="designer-text">When Accuracy Matters <span class="space-tag metric">MetricSpace</span></h2>
-        <h2 class="developer-text">MetricSpace in Action <span class="space-tag metric">MetricSpace</span></h2>
-        <p class="section-intro designer-text">GenSpace creates beautiful colors. But sometimes you need to <em>measure</em> them &mdash; check if two colors look different enough, validate accessibility, or ensure palette harmony. That's MetricSpace.</p>
-        <p class="section-intro developer-text">Full 72-parameter pipeline with enrichment stages. STRESS 23.30 on COMBVD &mdash; 20.2% lower than CIEDE2000. achC &lt; 10<sup>&minus;6</sup>.</p>
-        <div class="metric-usecase-grid">
-          <div class="metric-usecase-card">
-            <div class="mu-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-            </div>
-            <h3 class="designer-text">Accessibility checking</h3>
-            <h3 class="developer-text">deltaE-based distinguishability</h3>
-            <p class="designer-text">Are these two colors different enough for everyone to tell apart? MetricSpace's distance metric gives you a reliable number &mdash; not a guess.</p>
-            <p class="developer-text"><code>deltaE(a, b)</code> returns perceptual distance calibrated on 3,813 human judgments. Threshold-based pair checking for WCAG and beyond.</p>
-          </div>
-          <div class="metric-usecase-card">
-            <div class="mu-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            </div>
-            <h3 class="designer-text">Color harmony validation</h3>
-            <h3 class="developer-text">Palette uniformity measurement</h3>
-            <p class="designer-text">Built a palette and want to check if the steps look even? MetricSpace can measure the perceptual spacing between every pair and flag uneven jumps.</p>
-            <p class="developer-text">Compute pairwise <code>deltaE</code> across palette steps. CV of step distances measures uniformity. Automated harmony scoring.</p>
-          </div>
-          <div class="metric-usecase-card">
-            <div class="mu-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </div>
-            <h3 class="designer-text">"Does this look right?"</h3>
-            <h3 class="developer-text">H-K perceptual lightness</h3>
-            <p class="designer-text">Saturated colors look lighter than they "should." MetricSpace has this baked in, so when it says two colors have the same lightness, your eyes agree.</p>
-            <p class="developer-text">Embedded Helmholtz&ndash;Kohlrausch: <code>L += w&middot;C<sup>p</sup>&middot;f(h)</code>. No separate adjustment step needed &mdash; L values are perceptually correct.</p>
-          </div>
-          <div class="metric-usecase-card">
-            <div class="mu-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/></svg>
-            </div>
-            <h3 class="designer-text">Data visualization</h3>
-            <h3 class="developer-text">Chart color discrimination</h3>
-            <p class="designer-text">Picking colors for charts? MetricSpace tells you exactly how distinguishable two colors are &mdash; including for colorblind users.</p>
-            <p class="developer-text">Reliable perceptual distance for categorical color selection. Minimum <code>deltaE</code> threshold ensures chart legibility across vision types.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features (Designer) -->
-    <section id="features" class="section only-designer">
-      <div class="container">
-        <h2>What Helmlab Gives You</h2>
-        <div class="feature-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            </div>
-            <h3>Grays that stay gray</h3>
-            <p>Some color systems accidentally add a tiny tint to neutral grays when you convert back and forth. Helmlab guarantees your grays stay perfectly neutral &mdash; no surprise pink or green tints in your shadows.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            </div>
-            <h3>Distance you can trust</h3>
-            <p>When Helmlab says two color pairs look "equally different," your eyes will agree. This is what makes palette generation, contrast checking, and color harmony actually work correctly.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            </div>
-            <h3>Smooth gradients</h3>
-            <p>No dark holes in the middle, no surprise bright bands, no hue shifts. Your gradients blend cleanly from start to finish, just like you'd draw them by hand.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            </div>
-            <h3>Design system ready</h3>
-            <p>Need WCAG contrast checking? Auto-adjusting foreground colors? Gamut mapping for Display P3? Dark mode palette generation? It's all built in &mdash; one import, zero config.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg>
-            </div>
-            <h3>One-click palettes</h3>
-            <p>Give Helmlab any brand color and it generates a full Tailwind-style scale (50&ndash;950) where each step is perceptually even and meets WCAG accessibility standards.</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
-            </div>
-            <h3>Export everywhere</h3>
-            <p>Your palettes can be exported as CSS Custom Properties, Tailwind config, Android XML, iOS Swift, or plain JSON. One function call, every platform covered.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Use Cases (Designer) -->
-    <section id="use-cases" class="section only-designer">
-      <div class="container">
-        <h2>Who Is This For?</h2>
-        <p class="section-intro">If you work with color in any of these scenarios, Helmlab will save you time and guesswork.</p>
-        <div class="usecase-grid">
-          <div class="usecase-card">
-            <div class="usecase-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <h3>Design Systems</h3>
-            <p>Building a color system for your team? Generate perceptually even scales from any brand color. Every step has predictable contrast, so your tokens work across light and dark themes without manual tweaking.</p>
-          </div>
-          <div class="usecase-card">
-            <div class="usecase-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-            </div>
-            <h3>Data Visualization</h3>
-            <p>Choosing colors for charts and maps? Helmlab's distance metric tells you exactly how distinguishable two colors are. No more guessing if your red and orange are different enough for colorblind users.</p>
-          </div>
-          <div class="usecase-card">
-            <div class="usecase-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <h3>Accessibility</h3>
-            <p>Need to meet WCAG contrast ratios? Helmlab can auto-adjust any foreground color to meet 4.5:1 or 7:1 against your background &mdash; while staying as close to your original color as possible.</p>
-          </div>
-          <div class="usecase-card">
-            <div class="usecase-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            </div>
-            <h3>UI Development</h3>
-            <p>Building components with hover states, focus rings, or loading skeletons? Use Helmlab's lightness scale to pick shades that feel natural. The palette generator creates production-ready CSS and Tailwind tokens.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Pipeline (Developer) -->
-    <section id="pipeline" class="section only-developer">
-      <div class="container">
-        <h2>The Pipeline</h2>
-        <p class="section-intro">Two pipelines for two objectives. MetricSpace: 11-stage enriched transform (72 params). GenSpace: 3-stage pure transform (18 params) + arc-length reparameterization for gradient().</p>
-        <div class="pipe-scroll">
-          <div class="pipe-track">
-            <div class="pipe-stage">
-              <div class="pipe-num">1</div>
-              <div class="pipe-name">M<sub>1</sub></div>
-              <div class="pipe-desc">XYZ &rarr; cone</div>
-              <div class="pipe-params">9 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">2</div>
-              <div class="pipe-name">&gamma;</div>
-              <div class="pipe-desc">Power compress</div>
-              <div class="pipe-params">3 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">3</div>
-              <div class="pipe-name">M<sub>2</sub></div>
-              <div class="pipe-desc">Cone &rarr; Lab</div>
-              <div class="pipe-params">9 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">4</div>
-              <div class="pipe-name">Hue</div>
-              <div class="pipe-desc">4-harm Fourier</div>
-              <div class="pipe-params">8 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">5</div>
-              <div class="pipe-name">H-K</div>
-              <div class="pipe-desc">Helmholtz&ndash;K.</div>
-              <div class="pipe-params">6 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">6</div>
-              <div class="pipe-name">L</div>
-              <div class="pipe-desc">Cubic + dark</div>
-              <div class="pipe-params">8 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">7&ndash;8</div>
-              <div class="pipe-name">C</div>
-              <div class="pipe-desc">Chroma process</div>
-              <div class="pipe-params">18 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">9</div>
-              <div class="pipe-name">HL</div>
-              <div class="pipe-desc">Hue &rarr; L</div>
-              <div class="pipe-params">4 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">10</div>
-              <div class="pipe-name">NC</div>
-              <div class="pipe-desc">Neutral corr.</div>
-              <div class="pipe-params">structural</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">11</div>
-              <div class="pipe-name">&phi;</div>
-              <div class="pipe-desc">Rotation</div>
-              <div class="pipe-params">&minus;28.2&deg;</div>
-            </div>
-          </div>
-        </div>
-
-        <h3 style="color:#71717a;font-size:0.88em;font-weight:700;margin-top:32px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">MetricSpace <span class="space-tag metric" style="font-size:0.85em;">72 params</span></h3>
-        <p style="font-size:0.82em;color:#52525b;margin-bottom:16px;">Full enriched pipeline &mdash; XYZ &rarr; M<sub>1</sub> &rarr; &gamma; &rarr; M<sub>2</sub> &rarr; Hue &rarr; H-K &rarr; L &rarr; C &rarr; HL &rarr; NC &rarr; &phi;</p>
-
-        <h3 style="color:#71717a;font-size:0.88em;font-weight:700;margin-top:24px;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">GenSpace <span class="space-tag gen" style="font-size:0.85em;">18 params</span></h3>
-        <div class="pipe-scroll">
-          <div class="pipe-track">
-            <div class="pipe-stage">
-              <div class="pipe-num">1</div>
-              <div class="pipe-name">M<sub>1</sub></div>
-              <div class="pipe-desc">XYZ &rarr; cone</div>
-              <div class="pipe-params">9 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">2</div>
-              <div class="pipe-name">&gamma;=&frac13;</div>
-              <div class="pipe-desc">Cube root</div>
-              <div class="pipe-params">shared</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">3</div>
-              <div class="pipe-name">M<sub>2</sub></div>
-              <div class="pipe-desc">Cone &rarr; Lab</div>
-              <div class="pipe-params">9 params</div>
-            </div>
-            <div class="pipe-arrow">&rarr;</div>
-            <div class="pipe-stage">
-              <div class="pipe-num">4</div>
-              <div class="pipe-name">NC</div>
-              <div class="pipe-desc">Neutral corr.</div>
-              <div class="pipe-params">structural</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Sub-dataset table (Developer only) -->
-    <section id="benchmarks" class="section only-developer">
-      <div class="container">
-        <h2>Sub-Dataset Breakdown</h2>
-        <p class="section-intro">Per-dataset STRESS on COMBVD. Helmlab wins 4 of 6 sub-datasets. BFD-P(C) and Leeds are the hardest &mdash; small sample sizes with high observer variance.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Sub-dataset</th><th>N</th><th>Helmlab</th><th>CIEDE2000</th><th>Winner</th></tr>
-            </thead>
-            <tbody>
-              <tr class="highlight-row"><td>BFD-P(D65)</td><td>2,028</td><td><strong>23.11</strong></td><td>24.14</td><td class="text-green">Helmlab</td></tr>
-              <tr class="highlight-row"><td>BFD-P(M)</td><td>548</td><td><strong>22.22</strong></td><td>35.09</td><td class="text-green">Helmlab</td></tr>
-              <tr><td>BFD-P(C)</td><td>200</td><td>30.15</td><td><strong>30.05</strong></td><td class="text-muted">CIEDE2000</td></tr>
-              <tr class="highlight-row"><td>Witt</td><td>418</td><td><strong>28.88</strong></td><td>30.37</td><td class="text-green">Helmlab</td></tr>
-              <tr><td>Leeds</td><td>307</td><td>20.92</td><td><strong>19.46</strong></td><td class="text-muted">CIEDE2000</td></tr>
-              <tr class="highlight-row"><td>RIT-DuPont</td><td>312</td><td><strong>20.41</strong></td><td>19.51</td><td class="text-green">Helmlab</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- Blue-Band Story (Developer) -->
-    <section id="blue-band" class="section only-developer">
-      <div class="container">
-        <h2>The Blue-Band Fix</h2>
-        <p class="section-intro">An earlier version had severe gradient artifacts in the blue&ndash;cyan region. The 4-harmonic hue correction overshoots at h &asymp; 240&ndash;340&deg;. We couldn't disable it (STRESS +15.5), so we added sub-dataset penalties and re-optimized.</p>
-        <div class="blue-band-stats">
-          <div class="bb-stat">
-            <div class="bb-val">51.4&times;</div>
-            <div class="bb-label">Before (v19)</div>
-            <div class="bb-desc">Red&rarr;Blue gradient max/min step ratio</div>
-          </div>
-          <div class="bb-arrow">&rarr;</div>
-          <div class="bb-stat good">
-            <div class="bb-val">5.8&times;</div>
-            <div class="bb-label">After (v20b)</div>
-            <div class="bb-desc">8.9&times; improvement, STRESS cost +0.08</div>
-          </div>
-        </div>
-        <div class="bb-detail">
-          <p>Loss function: <code>L = STRESS<sub>COMBVD</sub> + 0.05&middot;STRESS<sub>He</sub> + 0.1&middot;(STRESS<sub>RIT</sub> + STRESS<sub>LEEDS</sub> + 0.5&middot;STRESS<sub>FullBlue</sub>)</code> with RT, achromatic, and CV constraints.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Quick Start -->
-    <section id="quickstart" class="section">
-      <div class="container">
-        <h2>Quick Start</h2>
-        <div class="code-tabs">
-          <div class="code-tab-header">
+        <span class="section-label">Quick Start</span>
+        <h2>Works where you work</h2>
+        <p class="section-intro">Python and JavaScript with identical APIs. TypeScript types included. Zero dependencies in JS.</p>
+        <div class="code-block">
+          <div class="code-tabs">
             <button type="button" class="code-tab active" data-tab="python">Python</button>
             <button type="button" class="code-tab" data-tab="js">JavaScript / TypeScript</button>
           </div>
-          <div class="code-tab-content active" data-tab-content="python">
+          <div class="code-panel active" data-panel="python">
             <pre><code><span class="kw">from</span> <span class="fn">helmlab</span> <span class="kw">import</span> Helmlab
 
 hl = Helmlab()
@@ -727,14 +257,13 @@ lab = hl.<span class="fn">from_srgb</span>([<span class="num">0.2</span>, <span 
 <span class="cm"># Perceptual distance</span>
 dist = hl.<span class="fn">delta_e</span>(<span class="str">"#ff0000"</span>, <span class="str">"#00ff00"</span>)
 
-<span class="cm"># WCAG contrast &mdash; auto-adjust to meet ratio</span>
-safe = hl.<span class="fn">ensure_contrast</span>(<span class="str">"#3b82f6"</span>, <span class="str">"#1a1a2e"</span>, <span class="num">4.5</span>)
+<span class="cm"># 32-step gradient</span>
+grad = hl.<span class="fn">gradient</span>(<span class="str">"#0000ff"</span>, <span class="str">"#ffffff"</span>, <span class="num">32</span>)
 
 <span class="cm"># Tailwind-style semantic scale</span>
-scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</span>)
-<span class="cm"># {50: '#eff6ff', 100: '#dbeafe', ..., 950: '#0a1628'}</span></code></pre>
+scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</span>)</code></pre>
           </div>
-          <div class="code-tab-content" data-tab-content="js">
+          <div class="code-panel" data-panel="js">
             <pre><code><span class="kw">import</span> { Helmlab } <span class="kw">from</span> <span class="str">'helmlab'</span>;
 
 <span class="kw">const</span> hl = <span class="kw">new</span> <span class="fn">Helmlab</span>();
@@ -745,233 +274,196 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
 <span class="cm">// Perceptual distance</span>
 <span class="kw">const</span> dist = hl.<span class="fn">deltaE</span>(<span class="str">'#ff0000'</span>, <span class="str">'#00ff00'</span>);
 
-<span class="cm">// WCAG contrast &mdash; auto-adjust to meet ratio</span>
-<span class="kw">const</span> safe = hl.<span class="fn">ensureContrast</span>(<span class="str">'#3b82f6'</span>, <span class="str">'#1a1a2e'</span>, <span class="num">4.5</span>);
+<span class="cm">// 32-step gradient</span>
+<span class="kw">const</span> grad = hl.<span class="fn">gradient</span>(<span class="str">'#0000ff'</span>, <span class="str">'#ffffff'</span>, <span class="num">32</span>);
 
 <span class="cm">// Tailwind-style semantic scale</span>
-<span class="kw">const</span> scale = hl.<span class="fn">semanticScale</span>(<span class="str">'#3b82f6'</span>);
-<span class="cm">// {50: '#eff6ff', 100: '#dbeafe', ..., 950: '#0a1628'}</span></code></pre>
+<span class="kw">const</span> scale = hl.<span class="fn">semanticScale</span>(<span class="str">'#3b82f6'</span>);</code></pre>
+          </div>
+        </div>
+        <div class="dev-stats">
+          <div class="dev-stat"><div class="dev-stat-val">~2.5x</div><div class="dev-stat-label">OKLab cost</div></div>
+          <div class="dev-stat"><div class="dev-stat-val">&micro;s/px</div><div class="dev-stat-label">per pixel</div></div>
+          <div class="dev-stat"><div class="dev-stat-val">Exact</div><div class="dev-stat-label">invertibility</div></div>
+          <div class="dev-stat"><div class="dev-stat-val">0 deps</div><div class="dev-stat-label">JS bundle</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ GRADIENT TOOL ═══════════════ -->
+    <section class="section section-center" id="try-it">
+      <div class="container">
+        <span class="section-label">Try It</span>
+        <h2>Gradient Tool</h2>
+        <p class="section-intro">Pick any two colors and compare. CV (coefficient of variation) measures perceptual uniformity &mdash; lower is better.</p>
+
+        <div class="tool-controls">
+          <div class="color-pick">
+            <label for="color-start">Start</label>
+            <input type="color" id="color-start" value="#ff0000">
+            <input type="text" id="hex-start" value="#ff0000" maxlength="7" class="hex-input" aria-label="Start hex">
+          </div>
+          <div class="presets">
+            <button type="button" class="preset-btn" data-start="#ff0000" data-end="#0000ff">Red &rarr; Blue</button>
+            <button type="button" class="preset-btn" data-start="#0000ff" data-end="#ffffff">Blue &rarr; White</button>
+            <button type="button" class="preset-btn" data-start="#ff6b00" data-end="#00d4ff">Orange &rarr; Cyan</button>
+            <button type="button" class="preset-btn" data-start="#000000" data-end="#ffffff">Black &rarr; White</button>
+          </div>
+          <div class="color-pick">
+            <label for="color-end">End</label>
+            <input type="color" id="color-end" value="#0000ff">
+            <input type="text" id="hex-end" value="#0000ff" maxlength="7" class="hex-input" aria-label="End hex">
+          </div>
+        </div>
+
+        <div class="tool-output" id="gradient-output">
+          <div class="tool-row">
+            <span class="tool-row-label">Helmlab</span>
+            <div class="tool-strip" id="strip-helmlab"></div>
+            <span class="cv-badge" id="cv-helmlab">-</span>
+          </div>
+          <div class="tool-row">
+            <span class="tool-row-label dim">OKLab</span>
+            <div class="tool-strip" id="strip-oklab"></div>
+            <span class="cv-badge" id="cv-oklab">-</span>
+          </div>
+          <div class="tool-row">
+            <span class="tool-row-label dim">CIE Lab</span>
+            <div class="tool-strip" id="strip-cielab"></div>
+            <span class="cv-badge" id="cv-cielab">-</span>
+          </div>
+          <div class="tool-row">
+            <span class="tool-row-label dim">sRGB</span>
+            <div class="tool-strip" id="strip-srgb"></div>
+            <span class="cv-badge" id="cv-srgb">-</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Paper (Developer) -->
-    <section id="paper" class="section only-developer">
+    <!-- ═══════════════ ECOSYSTEM ═══════════════ -->
+    <section class="section" id="ecosystem">
       <div class="container">
-        <h2>Paper</h2>
-        <div class="paper-card">
-          <div class="paper-badge">arXiv:2602.23010</div>
-          <h3>Helmlab: A Data-Driven Analytical Color Space for UI Design Systems</h3>
-          <p class="paper-author"><a href="https://gorkemyildiz.com" style="color:inherit;text-decoration:none">Gorkem Yildiz</a> &middot; 2026</p>
-          <p class="paper-abstract">72-parameter analytical color space optimized end-to-end on COMBVD. STRESS 23.30 (20.2% lower than CIEDE2000). Neutral correction guarantees achromatic C &lt; 10<sup>&minus;6</sup>. Blue-band refit reduces gradient artifacts by 8.9&times;.</p>
-          <div class="paper-links">
-            <a href="https://arxiv.org/abs/2602.23010" class="paper-link">Read on arXiv</a>
-            <a href="demo.html" class="paper-link secondary">Interactive Demo</a>
-          </div>
-          <div class="paper-cite">
-            <code>@article{yildiz2026helmlab,
-  title={Helmlab: A Data-Driven Analytical Color Space for UI Design Systems},
-  author={Y{\i}ld{\i}z, G\"orkem},
-  journal={arXiv preprint arXiv:2602.23010},
-  year={2026}
-}</code>
-          </div>
+        <span class="section-label">Ecosystem</span>
+        <h2>Integrated In</h2>
+        <p class="section-intro">Libraries and tools that ship Helmlab as a built-in color space.</p>
+        <div class="eco-grid">
+          <a href="https://github.com/facelessuser/coloraide" class="eco-card">
+            <div class="eco-header">
+              <span class="eco-name">ColorAide</span>
+              <img src="https://img.shields.io/github/stars/facelessuser/coloraide?style=flat-square&color=f59e0b&label=stars" alt="stars" loading="lazy">
+            </div>
+            <div class="eco-desc">A Python color library for color manipulation, conversion, and delta E. Helmlab, HelmGen, and HelmGenLCh available as built-in spaces.</div>
+            <span class="eco-author">by Isaac Muse</span>
+          </a>
+          <a href="https://github.com/color-js/color.js/pull/722" class="eco-card">
+            <div class="eco-header">
+              <span class="eco-name">Color.js</span>
+              <span class="eco-badge">PR pending</span>
+            </div>
+            <div class="eco-desc">The CSS Color Level 4/5 reference library by the W3C CSS Color spec editors. Helmlab and HelmGen spaces with deltaE method.</div>
+            <span class="eco-author">by Lea Verou &amp; Chris Lilley</span>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- FAQ -->
-    <section id="faq" class="section">
+    <!-- ═══════════════ PROOF ═══════════════ -->
+    <section class="section section-center" id="proof">
       <div class="container">
+        <span class="section-label">Proven</span>
+        <h2>Built on research, validated by data</h2>
+        <div class="proof-row">
+          <div class="proof-item"><div class="proof-num">22</div><div class="proof-label">AI Council decisions</div></div>
+          <div class="proof-item"><div class="proof-num">30+</div><div class="proof-label">model iterations</div></div>
+          <div class="proof-item"><div class="proof-num">411</div><div class="proof-label">Python tests</div></div>
+          <div class="proof-item"><div class="proof-num">196</div><div class="proof-label">JS tests</div></div>
+        </div>
+        <div class="proof-facts">
+          <div class="proof-fact">Zero gamut holes across sRGB, Display P3, and Rec.2020</div>
+          <div class="proof-fact">Machine-precision round-trip: sRGB &rarr; Lab &rarr; sRGB = 4.1&times;10<sup>&minus;14</sup></div>
+          <div class="proof-fact">Structural achromatic guarantee: grays map to a=b=0 by construction</div>
+        </div>
+        <a href="https://arxiv.org/abs/2602.23010" style="color:var(--blue);font-weight:600;font-size:15px">Read the paper on arXiv &rarr;</a>
+      </div>
+    </section>
+
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <section class="section" id="faq">
+      <div class="container">
+        <span class="section-label">FAQ</span>
         <h2>Frequently Asked Questions</h2>
-
         <div class="faq-list">
           <details class="faq-item" open>
-            <summary class="faq-q">What is a color space, and why does it matter?</summary>
-            <div class="faq-a">
-              <p>A color space is a system for organizing colors as numbers. Your screen uses sRGB, which is great for displaying pixels but terrible for answering questions like "how different do these two colors look?" or "what's the midpoint between orange and blue?" Different color spaces give different answers to these questions &mdash; and most of them get it wrong. Helmlab was designed to get it right.</p>
-            </div>
+            <summary>What is Helmlab?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer"><p>Helmlab is a family of two purpose-built color spaces: GenSpace for creating beautiful gradients and palettes, and MetricSpace for measuring perceptual color differences. Both are exactly invertible, open-source, and available for Python and JavaScript.</p></div></div></div>
           </details>
-
           <details class="faq-item">
-            <summary class="faq-q">Why does Helmlab have two spaces?</summary>
-            <div class="faq-a">
-              <p>Because measurement and generation are fundamentally different tasks. Measuring "how different do these colors look?" requires a complex pipeline with hue correction, H-K compensation, and chroma processing (MetricSpace, 72 parameters). But generating smooth gradients and palettes works best with a simple, fast transform (GenSpace, 21 parameters). Trying to do both with one space means compromising on both.</p>
-              <p>Think of it like photography: you use one lens for portraits and another for landscapes. Same camera, different tools for different jobs. GenSpace gives you the best gradients; MetricSpace gives you the best distance measurements.</p>
-            </div>
+            <summary>How is Helmlab different from OKLab?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer"><p>OKLab is a hand-designed color space built into CSS. Helmlab's GenSpace wins 50 out of 61 benchmarks against OKLab, including 360/360 gamut cusps (OKLab: 299), 93x better Munsell Value accuracy, and 31-million-times better gray achromatic precision. Helmlab's MetricSpace also provides a trained perceptual distance metric (STRESS 23.30 on COMBVD), which OKLab cannot offer.</p></div></div></div>
           </details>
-
           <details class="faq-item">
-            <summary class="faq-q">How is Helmlab different from Oklab?</summary>
-            <div class="faq-a">
-              <p>Oklab is a hand-designed color space that's built into CSS Color Level 4. It's good for smooth gradients, but it was never trained on human perception data. Its distance measurements are unreliable &mdash; it scores worse than even 50-year-old CIE Lab (STRESS 47.46 vs 42.80).</p>
-              <p>Helmlab's <code>gradient()</code> uses CIEDE2000 arc-length reparameterization for perfectly uniform steps (CV &asymp; 0% on any color pair). Oklab's 25&ndash;40% CV comes from naive linear interpolation without reparameterization &mdash; the same technique could be applied to Oklab, but Helmlab ships it built-in. GenSpace's real advantage is 6&times; better hue accuracy (5.2&deg; vs 30.1&deg; RMS), meaning the gradient path passes through more natural intermediate colors. And Helmlab's MetricSpace does what Oklab can't: accurate perceptual distance (STRESS 23.30, trained on 3,813 human judgments) with embedded Helmholtz&ndash;Kohlrausch correction.</p>
-            </div>
+            <summary>Is Helmlab free?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer"><p>Yes. Helmlab is fully open-source under the MIT license. Use it in personal projects, commercial products &mdash; no attribution required (though appreciated).</p></div></div></div>
           </details>
-
           <details class="faq-item">
-            <summary class="faq-q">Is Helmlab free?</summary>
-            <div class="faq-a">
-              <p>Yes. Helmlab is fully open-source under the MIT license. You can use it in personal projects, commercial products, and anything in between &mdash; no attribution required (though it's appreciated). The source code, research paper, and all training data references are publicly available.</p>
-            </div>
+            <summary>Can I use it in production?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer"><p>Yes. The JavaScript package is ~10KB gzipped with zero dependencies and ships with TypeScript types. The Python package uses NumPy for batch operations. Both have full test suites (607 tests combined) and are published on npm and PyPI.</p></div></div></div>
           </details>
-
           <details class="faq-item">
-            <summary class="faq-q">Can I use it in production?</summary>
-            <div class="faq-a">
-              <p>Yes. The JavaScript package is ~10KB gzipped with zero dependencies and ships with TypeScript types. The Python package uses NumPy for batch operations. Both have full test suites (337 tests combined) and are published on npm and PyPI.</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary class="faq-q">Does it work with Tailwind / Figma / CSS?</summary>
-            <div class="faq-a">
+            <summary>Does it work with Tailwind / Figma / CSS?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer">
               <p><strong>Tailwind:</strong> Use <code>semanticScale()</code> to generate 50&ndash;950 scales, then export directly to Tailwind config format.</p>
-              <p><strong>CSS:</strong> Export palette as CSS Custom Properties with one function call. Also available as a <code>&lt;script&gt;</code> tag from CDN for browser use.</p>
-              <p><strong>Figma:</strong> No plugin yet, but you can generate palettes in code and paste hex values. A Figma plugin is on the roadmap.</p>
-            </div>
+              <p><strong>CSS:</strong> Export palette as CSS Custom Properties with one function call. Also available as a <code>&lt;script&gt;</code> tag from CDN.</p>
+              <p><strong>Figma:</strong> No plugin yet, but you can generate palettes in code and paste hex values.</p>
+            </div></div></div>
           </details>
-
           <details class="faq-item">
-            <summary class="faq-q">What does "STRESS" mean in the benchmarks?</summary>
-            <div class="faq-a">
-              <p class="designer-text">STRESS measures how well a color system predicts human perception. Researchers showed people pairs of colors and asked "how different do these look?" Then they tested each system's predictions against the human answers. Lower STRESS = the system agrees more with what people actually see. Helmlab's 23.30 means it's the closest to human perception of any system ever tested.</p>
-              <p class="developer-text">STRESS (Standardized Residual Sum of Squares) is the standard metric in color science for evaluating color difference formulas. It measures the correlation between predicted and observed color differences on a reference dataset (COMBVD = 3,813 pairs from 6 sub-datasets). Lower values indicate better agreement with visual data. Helmlab achieves 23.30, compared to CIEDE2000's 29.18 and CIE Lab's 42.80.</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary class="faq-q">How was STRESS 23.30 actually measured?</summary>
-            <div class="faq-a">
-              <p><strong>The data:</strong> COMBVD is a combined visual-difference dataset of 3,813 color pairs compiled from 6 independent psychophysical experiments (Luo &amp; Rigg 1986, RIT-DuPont, Witt, Leeds, BFD, and He et al. 2022). In each experiment, human observers viewed pairs of physical color samples under controlled D65 lighting and rated the perceived difference between them. The aggregate dataset contains over 64,000 individual human judgments.</p>
-              <p><strong>The metric:</strong> STRESS is a standardized goodness-of-fit measure defined by the CIE (Commission Internationale de l'&Eacute;clairage). For each pair <em>i</em>, let &Delta;V<sub>i</sub> be the human-reported visual difference and &Delta;E<sub>i</sub> be the formula's predicted distance. STRESS finds the optimal scaling factor <em>F</em> that minimizes the residual, then computes:</p>
-              <p style="text-align:center; font-family:'SF Mono','Fira Code',monospace; font-size:0.92em; color:#e4e4e7; margin:12px 0;">STRESS = 100 &times; &radic;( &Sigma;(&Delta;E<sub>i</sub> &minus; F&middot;&Delta;V<sub>i</sub>)&sup2; / &Sigma;(&Delta;E<sub>i</sub>)&sup2; )</p>
-              <p>The scale is 0&ndash;100: 0 = perfect prediction, 100 = no correlation. This is the same formula used by the CIE to evaluate CIEDE2000, CIE94, and every other color difference formula in the literature.</p>
-              <p><strong>The evaluation:</strong> Helmlab's 72 parameters were optimized using L-BFGS-B with 8 random restarts on an 80/20 train-test split (seed=42). The reported STRESS of 23.30 is the <em>full-dataset</em> value. 5-fold cross-validation confirms generalization (mean CV STRESS &asymp; 23.5). Bootstrap analysis (10,000 iterations) gives a 95% CI of [22.50, 23.93] for Helmlab vs [27.64, 30.84] for CIEDE2000 &mdash; zero overlap, p&nbsp;&lt;&nbsp;10<sup>&minus;4</sup>.</p>
-              <p>Full details, ablation study, and reproducible code: <a href="https://arxiv.org/abs/2602.23010">arXiv:2602.23010</a></p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary class="faq-q">Why not just use CIEDE2000?</summary>
-            <div class="faq-a">
-              <p>CIEDE2000 is a distance formula, not a color space. It takes two CIE Lab colors and computes a "perceptual distance" using hand-tuned corrections (SL, SC, SH, RT). It's good &mdash; but it was designed in 2001 with only 5 tunable parameters.</p>
-              <p>Helmlab is both a color space and a distance formula with 72 jointly optimized parameters. Its distance metric includes similar corrections (SL, SC, Minkowski exponent, compression) but fitted to data rather than hand-tuned. Even Helmlab's Euclidean distance alone (no special formula) beats CIEDE2000 at 26.28 vs 29.18.</p>
-            </div>
-          </details>
-
-          <details class="faq-item">
-            <summary class="faq-q">Is there a peer-reviewed paper?</summary>
-            <div class="faq-a">
-              <p>The full methodology, evaluation, and ablation study are published as an arXiv preprint: <a href="https://arxiv.org/abs/2602.23010">arXiv:2602.23010</a>. The paper describes the 11-stage pipeline, optimization procedure, cross-validation results, and comparison with 8 baseline methods.</p>
-            </div>
+            <summary>Is there a peer-reviewed paper?</summary>
+            <div class="faq-body"><div class="faq-body-inner"><div class="faq-answer"><p>The full methodology, evaluation, and ablation study are published as an arXiv preprint: <a href="https://arxiv.org/abs/2602.23010">arXiv:2602.23010</a>. The paper describes the pipeline, optimization procedure, cross-validation results, and comparison with 8 baseline methods.</p></div></div></div>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- Packages -->
-    <section id="packages" class="section">
+    <!-- ═══════════════ BLOG ═══════════════ -->
+    <section class="section" id="blog">
       <div class="container">
-        <h2>Packages</h2>
-        <div class="package-grid">
-          <a href="https://www.npmjs.com/package/helmlab" class="package-card">
-            <div class="package-header">
-              <span class="package-name">helmlab</span>
-              <img src="https://img.shields.io/npm/v/helmlab?style=flat-square&color=60a5fa" alt="npm version" loading="lazy">
-            </div>
-            <div class="package-install">
-              <code>npm install helmlab</code>
-            </div>
-            <p>104 tests passing. ~10KB gzipped, zero dependencies, ESM + CJS with TypeScript types.</p>
-          </a>
-          <a href="https://pypi.org/project/helmlab/" class="package-card">
-            <div class="package-header">
-              <span class="package-name">helmlab</span>
-              <img src="https://img.shields.io/pypi/v/helmlab?style=flat-square&color=a78bfa" alt="PyPI version" loading="lazy">
-            </div>
-            <div class="package-install">
-              <code>pip install helmlab</code>
-            </div>
-            <p>233 tests passing. NumPy-based, supports batch operations.</p>
-          </a>
+        <span class="section-label">Updates</span>
+        <h2>Blog &amp; News</h2>
+        <div class="blog-grid" id="blog-preview">
+          <div class="blog-empty">Loading latest posts...</div>
         </div>
+        <div class="blog-more"><a href="/blog.html">View all posts &rarr;</a></div>
       </div>
     </section>
 
-    <!-- Integrated In -->
-    <section id="integrated-in" class="section">
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <section class="s-cta">
       <div class="container">
-        <h2>Integrated In</h2>
-        <p class="section-desc">Libraries and tools that ship Helmlab as a built-in color space.</p>
-        <div class="integration-grid">
-          <a href="https://github.com/facelessuser/coloraide" class="integration-card">
-            <div class="integration-header">
-              <span class="integration-name">ColorAide</span>
-              <img src="https://img.shields.io/github/stars/facelessuser/coloraide?style=flat-square&color=f59e0b&label=stars" alt="GitHub stars" loading="lazy">
-            </div>
-            <p class="integration-desc">A Python color library for color manipulation, conversion, and delta E. Helmlab, HelmGen, and HelmGenLCh available as built-in spaces.</p>
-            <span class="integration-author">by Isaac Muse</span>
-          </a>
-          <a href="https://github.com/color-js/color.js/pull/722" class="integration-card integration-pending">
-            <div class="integration-header">
-              <span class="integration-name">Color.js</span>
-              <span class="integration-badge">PR pending</span>
-            </div>
-            <p class="integration-desc">The CSS Color Level 4/5 reference library by the W3C CSS Color spec editors. Helmlab and HelmGen spaces with deltaE method.</p>
-            <span class="integration-author">by Lea Verou &amp; Chris Lilley</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Blog & News -->
-    <section id="blog" class="section">
-      <div class="container">
-        <h2>Blog & News</h2>
-        <p class="section-desc">Release notes, color science insights, and development updates.</p>
-        <div id="blogPreview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:24px">
-          <div style="color:#52525b;text-align:center;padding:40px;grid-column:1/-1">Loading latest posts...</div>
-        </div>
-        <div style="text-align:center;margin-top:24px">
-          <a href="/blog.html" style="color:#60a5fa;font-size:0.92em;font-weight:600">View all posts &rarr;</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Community -->
-    <section id="community" class="section">
-      <div class="container">
-        <h2>Community</h2>
-        <p class="section-desc">Share your experience with Helmlab &mdash; what worked, what surprised you, how you're using it.</p>
-
-        <!-- Testimonial carousel -->
-        <div class="testimonial-track-wrapper">
-          <div class="testimonial-track" id="testimonialTrack">
-            <!-- Populated by JS from approved comments -->
+        <div class="cta-headline">helmlab<span>.space</span></div>
+        <div class="cta-sub">Open source &middot; Python &middot; JavaScript &middot; TypeScript</div>
+        <div class="hero-install" style="visibility:visible">
+          <div class="install-cmd">
+            <code>pip install helmlab</code>
+            <button type="button" class="copy-btn" data-copy="pip install helmlab" aria-label="Copy">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
+          </div>
+          <div class="install-cmd">
+            <code>npm install helmlab</code>
+            <button type="button" class="copy-btn" data-copy="npm install helmlab" aria-label="Copy">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
           </div>
         </div>
-        <div class="testimonial-empty" id="testimonialEmpty" style="display:none;">
-          <p>No comments yet. Be the first to share your experience.</p>
-        </div>
-
-        <!-- Submit form -->
-        <div class="community-form-wrap">
-          <form id="communityForm" class="community-form">
-            <div class="form-row">
-              <input type="text" name="name" placeholder="Name or handle" required class="form-input">
-              <input type="email" name="email" placeholder="Email (optional)" class="form-input">
-            </div>
-            <textarea name="message" placeholder="How are you using Helmlab? What do you think about the color space?" required class="form-textarea" rows="4"></textarea>
-            <div class="form-footer">
-              <span class="form-note">Comments appear after review.</span>
-              <button type="submit" class="form-submit" id="communitySubmit">Submit</button>
-            </div>
-          </form>
-          <div class="form-success" id="formSuccess" style="display:none;">
-            Thank you! Your comment will appear after review.
-          </div>
+        <div class="cta-links">
+          <a href="docs.html" class="cta-link">Documentation</a>
+          <a href="demo.html" class="cta-link">Interactive Demo</a>
+          <a href="https://github.com/Grkmyldz148/helmlab" class="cta-link">GitHub</a>
+          <a href="https://www.npmjs.com/package/helmlab" class="cta-link">npm</a>
+          <a href="https://pypi.org/project/helmlab/" class="cta-link">PyPI</a>
+          <a href="https://arxiv.org/abs/2602.23010" class="cta-link">arXiv Paper</a>
         </div>
       </div>
     </section>
@@ -979,37 +471,124 @@ scale = hl.<span class="fn">semantic_scale</span>(<span class="str">"#3b82f6"</s
 
   <div id="site-footer"></div>
 
-  <!-- Helmlab JS (IIFE from CDN, exposes window.helmlab) -->
-  <script src="https://cdn.jsdelivr.net/npm/helmlab@0.10.1/dist/index.global.js"></script>
+  <!-- GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+  <!-- Helmlab JS -->
+  <script src="js/helmlab.js"></script>
+
+  <!-- Shared nav/footer -->
+  <script src="js/components.js"></script>
+
   <script>
-  if (window.helmlab && window.helmlab.VERSION) {
-    console.log('helmlab v' + window.helmlab.VERSION + ' loaded from CDN');
-    var h = new window.helmlab.Helmlab();
-    var w = h.fromHex('#ffffff');
-    console.log('  GenSpace white L = ' + w[0].toFixed(6) + ' (expected: 1.000000)');
-  }
-  </script>
-  <script src="js/main.js"></script>
-  <script>
-  // Load latest blog posts for preview
   (function() {
-    fetch('https://helmlab.space/api/blogs?limit=3').then(r => r.json()).then(data => {
-      const el = document.getElementById('blogPreview');
-      if (!data.blogs || !data.blogs.length) { el.innerHTML = '<div style="color:#52525b;text-align:center;padding:40px;grid-column:1/-1">No posts yet.</div>'; return; }
-      el.innerHTML = data.blogs.map(b => {
-        const date = new Date(b.created_at).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'});
-        return '<a href="/blog.html?slug=' + b.slug + '" style="background:#111113;border:1px solid #1f1f23;border-radius:12px;overflow:hidden;text-decoration:none;color:inherit;transition:border-color 0.2s"'
-          + ' onmouseover="this.style.borderColor=\'#3f3f46\'" onmouseout="this.style.borderColor=\'#1f1f23\'">'
-          + (b.cover_image ? '<img src="' + b.cover_image + '" style="width:100%;height:140px;object-fit:cover;display:block" alt="" loading="lazy">' : '')
-          + '<div style="padding:16px">'
-          + '<div style="color:#fafafa;font-weight:700;font-size:1em;margin-bottom:6px;line-height:1.4">' + b.title + '</div>'
-          + '<div style="color:#a1a1aa;font-size:0.85em;margin-bottom:8px">' + (b.excerpt||'').substring(0,100) + '</div>'
-          + '<div style="color:#52525b;font-size:0.78em">' + date + '</div>'
-          + '</div></a>';
-      }).join('');
-    }).catch(() => {});
+    'use strict';
+
+    // ── Color conversions ──────────────────────────────────
+    function sToL(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    function lToS(c){return c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055;}
+    function hexToRgb(h){var m=h.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);return m?[parseInt(m[1],16)/255,parseInt(m[2],16)/255,parseInt(m[3],16)/255]:[0,0,0];}
+    function rgbToHex(r){return'#'+r.map(function(c){return('0'+Math.round(Math.max(0,Math.min(1,c))*255).toString(16)).slice(-2);}).join('');}
+
+    function toOk(rgb){var r=sToL(rgb[0]),g=sToL(rgb[1]),b=sToL(rgb[2]);var l=0.4122214708*r+0.5363325363*g+0.0514459929*b,m=0.2119034982*r+0.6806995451*g+0.1073969566*b,s=0.0883024619*r+0.2817188376*g+0.6299787005*b;var l_=Math.cbrt(l),m_=Math.cbrt(m),s_=Math.cbrt(s);return[0.2104542553*l_+0.7936177850*m_-0.0040720468*s_,1.9779984951*l_-2.4285922050*m_+0.4505937099*s_,0.0259040371*l_+0.7827717662*m_-0.8086757660*s_];}
+    function fromOk(lab){var L=lab[0],a=lab[1],b=lab[2];var l_=L+0.3963377774*a+0.2158037573*b,m_=L-0.1055613458*a-0.0638541728*b,s_=L-0.0894841775*a-1.2914855480*b;var l=l_*l_*l_,m=m_*m_*m_,s=s_*s_*s_;return[lToS(4.0767416621*l-3.3077115913*m+0.2309699292*s),lToS(-1.2684380046*l+2.6097574011*m-0.3413193965*s),lToS(-0.0041960863*l-0.7034186147*m+1.7076147010*s)];}
+
+    function toCie(rgb){var r=sToL(rgb[0]),g=sToL(rgb[1]),b=sToL(rgb[2]);var x=(0.4124564*r+0.3575761*g+0.1804375*b)/0.95047,y=(0.2126729*r+0.7151522*g+0.0721750*b),z=(0.0193339*r+0.1191920*g+0.9503041*b)/1.08883;var d=6/29;function f(t){return t>d*d*d?Math.cbrt(t):t/(3*d*d)+4/29;}return[116*f(y)-16,500*(f(x)-f(y)),200*(f(y)-f(z))];}
+    function fromCie(lab){var L=lab[0],a=lab[1],b=lab[2],d=6/29;function fi(t){return t>d?t*t*t:3*d*d*(t-4/29);}var fy=(L+16)/116;return[lToS(3.2404542*0.95047*fi(fy+a/500)-1.5371385*fi(fy)-0.4985314*1.08883*fi(fy-b/200)),lToS(-0.9692660*0.95047*fi(fy+a/500)+1.8760108*fi(fy)+0.0415560*1.08883*fi(fy-b/200)),lToS(0.0556434*0.95047*fi(fy+a/500)-0.2040259*fi(fy)+1.0572252*1.08883*fi(fy-b/200))];}
+
+    // ── Gradient builders ──────────────────────────────────
+    function buildG(s,e,n,to,from){var c1=hexToRgb(s),c2=hexToRgb(e),r=[];for(var i=0;i<n;i++){var t=i/(n-1),s1=to(c1),s2=to(c2);r.push(rgbToHex(from([s1[0]+(s2[0]-s1[0])*t,s1[1]+(s2[1]-s1[1])*t,s1[2]+(s2[2]-s1[2])*t])));}return r;}
+    function bSrgb(s,e,n){return buildG(s,e,n,function(c){return c;},function(c){return c;});}
+    function bOk(s,e,n){return buildG(s,e,n,toOk,fromOk);}
+    function bCie(s,e,n){return buildG(s,e,n,toCie,fromCie);}
+    function bHl(s,e,n){if(!window.helmlab)return bOk(s,e,n);try{return new window.helmlab.Helmlab().gradient(s,e,n);}catch(_){return bOk(s,e,n);}}
+
+    function renderStrip(id,colors){var el=document.getElementById(id);if(!el)return;el.innerHTML='';colors.forEach(function(c){var d=document.createElement('div');d.style.background=c;el.appendChild(d);});}
+
+    function computeCV(colors){if(!window.helmlab||colors.length<3)return null;try{var hl=new window.helmlab.Helmlab(),ds=[];for(var i=0;i<colors.length-1;i++)ds.push(hl.deltaE(colors[i],colors[i+1]));var m=ds.reduce(function(a,b){return a+b;},0)/ds.length;if(m===0)return 0;var v=ds.reduce(function(a,d){return a+(d-m)*(d-m);},0)/ds.length;return Math.sqrt(v)/m*100;}catch(_){return null;}}
+
+    function setCv(id,cv){var el=document.getElementById(id);if(!el)return;if(cv===null){el.textContent='-';el.className='cv-badge';return;}el.textContent=cv.toFixed(1)+'%';el.className='cv-badge'+(cv<15?' best':cv<30?' mid':' bad');}
+
+    function updateGradients(){
+      var s=document.getElementById('hex-start').value,e=document.getElementById('hex-end').value,n=32;
+      var hg=bHl(s,e,n),og=bOk(s,e,n),cg=bCie(s,e,n),sg=bSrgb(s,e,n);
+      renderStrip('strip-helmlab',hg);renderStrip('strip-oklab',og);renderStrip('strip-cielab',cg);renderStrip('strip-srgb',sg);
+      setCv('cv-helmlab',computeCV(hg));setCv('cv-oklab',computeCV(og));setCv('cv-cielab',computeCV(cg));setCv('cv-srgb',computeCV(sg));
+    }
+
+    // ── DOM Ready ──────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+
+      // GSAP
+      if(typeof gsap!=='undefined'&&typeof ScrollTrigger!=='undefined'){
+        gsap.registerPlugin(ScrollTrigger);
+        var tl=gsap.timeline({defaults:{ease:'power2.out'}});
+        tl.from('.hero-badge',{y:20,autoAlpha:0,duration:0.6})
+          .from('.hero h1',{y:40,autoAlpha:0,duration:0.8},'-=0.3')
+          .from('.hero-sub',{y:20,autoAlpha:0,duration:0.6},'-=0.4')
+          .from('.hero-score',{y:15,autoAlpha:0,duration:0.5},'-=0.3')
+          .from('.hero-footnote',{y:10,autoAlpha:0,duration:0.4},'-=0.3')
+          .from('.hero-install',{y:15,autoAlpha:0,duration:0.5},'-=0.2');
+
+        gsap.from('.metric-card',{y:40,autoAlpha:0,duration:0.6,stagger:0.08,ease:'power2.out',scrollTrigger:{trigger:'.metrics-grid',start:'top 82%'}});
+        gsap.from('.pipe-stage',{y:30,autoAlpha:0,duration:0.5,stagger:0.1,ease:'power2.out',scrollTrigger:{trigger:'.pipe-stages',start:'top 82%'}});
+
+        document.querySelectorAll('.section').forEach(function(sec){
+          var els=sec.querySelectorAll('.section-label, h2, .section-intro');
+          if(els.length)gsap.from(els,{y:30,autoAlpha:0,duration:0.6,stagger:0.08,ease:'power2.out',scrollTrigger:{trigger:sec,start:'top 82%'}});
+        });
+      }
+
+      // Code tabs
+      document.querySelectorAll('.code-tab').forEach(function(tab){
+        tab.addEventListener('click',function(){
+          document.querySelectorAll('.code-tab').forEach(function(t){t.classList.remove('active');});
+          document.querySelectorAll('.code-panel').forEach(function(p){p.classList.remove('active');});
+          tab.classList.add('active');
+          var p=document.querySelector('[data-panel="'+tab.dataset.tab+'"]');
+          if(p)p.classList.add('active');
+        });
+      });
+
+      // Copy
+      document.querySelectorAll('.copy-btn').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          navigator.clipboard.writeText(btn.dataset.copy).then(function(){
+            btn.classList.add('copied');
+            setTimeout(function(){btn.classList.remove('copied');},1500);
+          });
+        });
+      });
+
+      // Gradient tool
+      var cs=document.getElementById('color-start'),ce=document.getElementById('color-end');
+      var hs=document.getElementById('hex-start'),he=document.getElementById('hex-end');
+      if(cs&&ce&&hs&&he){
+        function sync(){cs.value=hs.value;ce.value=he.value;updateGradients();}
+        cs.addEventListener('input',function(){hs.value=cs.value;updateGradients();});
+        ce.addEventListener('input',function(){he.value=ce.value;updateGradients();});
+        hs.addEventListener('change',sync);
+        he.addEventListener('change',sync);
+        document.querySelectorAll('.preset-btn').forEach(function(btn){
+          btn.addEventListener('click',function(){hs.value=btn.dataset.start;he.value=btn.dataset.end;sync();});
+        });
+        var att=0;(function tryInit(){if(window.helmlab){updateGradients();}else if(++att<20){setTimeout(tryInit,250);}else{updateGradients();}})();
+      }
+
+      // Blog preview
+      fetch('https://helmlab.space/api/blogs?limit=3').then(function(r){return r.json();}).then(function(data){
+        var el=document.getElementById('blog-preview');
+        if(!el)return;
+        if(!data.blogs||!data.blogs.length){el.innerHTML='<div class="blog-empty">No posts yet.</div>';return;}
+        el.innerHTML=data.blogs.map(function(b){
+          var d=new Date(b.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+          return'<a class="blog-card" href="/blog.html?slug='+b.slug+'">'+(b.cover_image?'<img src="'+b.cover_image+'" alt="" loading="lazy">':'')+'<div class="blog-card-body"><div class="blog-card-title">'+b.title+'</div><div class="blog-card-excerpt">'+(b.excerpt||'').substring(0,100)+'</div><div class="blog-card-date">'+d+'</div></div></a>';
+        }).join('');
+      }).catch(function(){});
+
+    });
   })();
   </script>
-  <script src="js/components.js"></script>
 </body>
 </html>
