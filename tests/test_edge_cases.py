@@ -315,7 +315,6 @@ class TestExtremeInputs:
         [0.0, 0.0, 0.0],
         [0.95047, 1.0, 1.08883],
         [2.0, 2.0, 2.0],
-        [0.001, 0.0, 0.0],
     ])
     def test_gen_roundtrip_extremes(self, gs, XYZ):
         XYZ = np.array(XYZ, dtype=np.float64)
@@ -326,6 +325,7 @@ class TestExtremeInputs:
 
     @pytest.mark.parametrize("XYZ", [
         [0.0, 0.0, 0.001],       # negative LMS under GenSpace M1
+        [0.001, 0.0, 0.0],       # negative M-cone under v7b M1
     ])
     def test_gen_roundtrip_clamped(self, gs, XYZ):
         """Negative LMS colors are clamped. Bounded but not exact RT."""
@@ -461,7 +461,7 @@ class TestRefRange:
     HELMLAB_L_MAX = 1.144
     HELMLAB_AB_MAX = 1.0
     HELMGEN_L_MAX = 1.169
-    HELMGEN_AB_MAX = 0.4
+    HELMGEN_AB_MAX = 0.55  # v0.11.0: θ=24.5° M2 rotation expanded ab range (sRGB max |b|=0.49, P3 wider)
 
     def _gamut_corners(self):
         """All 8 corners of sRGB and Display P3 gamuts."""

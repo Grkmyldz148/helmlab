@@ -12,7 +12,7 @@
 
 import type { Lab, XYZ } from '../types.js';
 import { clamp } from '../utils/math.js';
-import type { CompiledGenParams, GenParams } from '../core/params.js';
+import type { CompiledGenParams, NormalizedGenParams } from '../core/params.js';
 
 const { cos, sin, sqrt, atan2, exp, abs, PI } = Math;
 
@@ -51,8 +51,12 @@ export class GenSpace {
 
     // 2. Transfer function
     let c0: number, c1: number, c2: number;
-    if (r.transfer === 'softcbrt') {
-      const eps = r.softcbrt_eps ?? 0.001;
+    if (r.transfer === 'depcubic') {
+      c0 = depcubicFwd(lms0, r.depcubic_alpha);
+      c1 = depcubicFwd(lms1, r.depcubic_alpha);
+      c2 = depcubicFwd(lms2, r.depcubic_alpha);
+    } else if (r.transfer === 'softcbrt') {
+      const eps = r.softcbrt_eps;
       const epsCbrt = eps ** (1 / 3);
       c0 = (lms0 + eps) ** (1 / 3) - epsCbrt;
       c1 = (lms1 + eps) ** (1 / 3) - epsCbrt;
@@ -61,6 +65,18 @@ export class GenSpace {
       c0 = lms0 ** g[0];
       c1 = lms1 ** g[1];
       c2 = lms2 ** g[2];
+    }
+
+    // 2.5 Smooth neutral blend (after depcubic, before M2)
+    if (r.transfer === 'depcubic') {
+      const lmsMean = (c0 + c1 + c2) / 3;
+      const lmsMax = Math.max(c0, c1, c2);
+      const lmsMin = Math.min(c0, c1, c2);
+      const spread = (lmsMax - lmsMin) / Math.max(abs(lmsMean), 1e-30);
+      const blendW = exp(-((spread / 1e-5) ** 2));
+      c0 = c0 + blendW * (lmsMean - c0);
+      c1 = c1 + blendW * (lmsMean - c1);
+      c2 = c2 + blendW * (lmsMean - c2);
     }
 
     // 3. LMS_c → Lab_raw
@@ -97,6 +113,11 @@ export class GenSpace {
       L = pwLForward(r, L);
     } else if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
       L = lCorrect(r, L);
+    }
+
+    // 4.25 L-gated hue enrichment (after PW L correction)
+    if (r.enrichment && r.enrichment.type === 'L_gated_hue' && abs(r.enrichment.amp) > 1e-10) {
+      [a, b] = applyEnrichment(r, L, a, b);
     }
 
     // 4.5 Dark L compression
@@ -148,6 +169,11 @@ export class GenSpace {
       L = darkLCompressInv(r, L, h);
     }
 
+    // 4.25 Undo L-gated hue enrichment (before PW undo)
+    if (r.enrichment && r.enrichment.type === 'L_gated_hue' && abs(r.enrichment.amp) > 1e-10) {
+      [a, b] = undoEnrichment(r, L, a, b);
+    }
+
     // 4. Undo L correction (PW takes priority)
     if (r.L_corr_pw && r.L_corr_pw.length > 0) {
       L = pwLInverse(r, L);
@@ -187,14 +213,30 @@ export class GenSpace {
 
     // 3. Lab → LMS_c
     const M2i = this.p.M2_inv;
-    const lc0 = M2i[0] * L + M2i[1] * a + M2i[2] * b;
-    const lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
-    const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
+    let lc0 = M2i[0] * L + M2i[1] * a + M2i[2] * b;
+    let lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
+    let lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
+
+    // 2.5 Smooth neutral blend (matching forward — C∞, branchless)
+    if (r.transfer === 'depcubic') {
+      const lmsMean = (lc0 + lc1 + lc2) / 3;
+      const lmsMax = Math.max(lc0, lc1, lc2);
+      const lmsMin = Math.min(lc0, lc1, lc2);
+      const spread = (lmsMax - lmsMin) / Math.max(abs(lmsMean), 1e-30);
+      const blendW = exp(-((spread / 1e-5) ** 2));
+      lc0 = lc0 + blendW * (lmsMean - lc0);
+      lc1 = lc1 + blendW * (lmsMean - lc1);
+      lc2 = lc2 + blendW * (lmsMean - lc2);
+    }
 
     // 2. Undo transfer function
     let l0: number, l1: number, l2: number;
-    if (r.transfer === 'softcbrt') {
-      const eps = r.softcbrt_eps ?? 0.001;
+    if (r.transfer === 'depcubic') {
+      l0 = depcubicInv(lc0, r.depcubic_alpha);
+      l1 = depcubicInv(lc1, r.depcubic_alpha);
+      l2 = depcubicInv(lc2, r.depcubic_alpha);
+    } else if (r.transfer === 'softcbrt') {
+      const eps = r.softcbrt_eps;
       const epsCbrt = eps ** (1 / 3);
       l0 = (Math.abs(lc0) + epsCbrt) ** 3 - eps;
       l1 = (Math.abs(lc1) + epsCbrt) ** 3 - eps;
@@ -273,19 +315,7 @@ export class GenSpace {
 
 // ── Helper functions (module-private) ────────────────────────────
 
-interface R {
-  hue_cos1: number; hue_sin1: number;
-  hue_cos2: number; hue_sin2: number;
-  hue_cos3: number; hue_sin3: number;
-  hue_cos4: number; hue_sin4: number;
-  L_corr_p1: number; L_corr_p2: number; L_corr_p3: number;
-  lp_dark: number; lp_dark_hcos: number; lp_dark_hsin: number;
-  lc1: number; lc2: number;
-  transfer?: string;
-  softcbrt_eps?: number;
-  L_corr_pw?: number[];
-  L_corr_pw_step?: number;
-}
+type R = NormalizedGenParams;
 
 function hueDelta(r: R, h: number): number {
   return r.hue_cos1 * cos(h) + r.hue_sin1 * sin(h) +
@@ -354,6 +384,80 @@ function darkLCompressInv(r: R, Ln: number, h: number): number {
     L -= f / fp;
   }
   return L;
+}
+
+// ── Depressed cubic transfer ──────────────────────────────────
+
+/** Forward: solve y³ + αy = x via sinh(arcsinh(t)/3) + Halley refinement. */
+function depcubicFwd(x: number, alpha: number): number {
+  const s = sqrt(alpha / 3);
+  const t = x / (2 * s * s * s);
+  let y = 2 * s * Math.sinh(Math.asinh(t) / 3);
+  // Halley refinement
+  const f = y * y * y + alpha * y - x;
+  const fp = 3 * y * y + alpha;
+  const fpp = 6 * y;
+  const denom = 2 * fp * fp - f * fpp;
+  if (abs(denom) > 1e-30) {
+    y = y - 2 * f * fp / denom;
+  }
+  return y;
+}
+
+/** Inverse: exact y³ + αy. */
+function depcubicInv(y: number, alpha: number): number {
+  return y * y * y + alpha * y;
+}
+
+// ── L-gated hue enrichment ──────────────────────────────────
+
+function enrichmentGate(L: number, L_lo: number, L_hi: number): number {
+  const t = Math.max(0, Math.min(1, (L - L_lo) / (L_hi - L_lo)));
+  return sin(PI * t) ** 2;
+}
+
+/** Forward: h' = h + amp * gate(L) * gauss(h - center). */
+function applyEnrichment(r: R, L: number, a: number, b: number): [number, number] {
+  const enr = r.enrichment!;
+  const C = sqrt(a * a + b * b);
+  if (C < 1e-12) return [a, b];
+  const h = atan2(b, a);
+  const gate = enrichmentGate(L, enr.L_lo, enr.L_hi);
+  const centerRad = enr.center_deg * PI / 180;
+  let dh = h - centerRad;
+  // Wrap to [-π, π]
+  dh = ((dh + PI) % (2 * PI) + 2 * PI) % (2 * PI) - PI;
+  const gauss = exp(-0.5 * (dh / enr.sigma) ** 2);
+  const rotation = enr.amp * gate * gauss;
+  const hNew = h + rotation;
+  return [C * cos(hNew), C * sin(hNew)];
+}
+
+/** Inverse: Halley iteration (8 steps). */
+function undoEnrichment(r: R, L: number, a: number, b: number): [number, number] {
+  const enr = r.enrichment!;
+  const C = sqrt(a * a + b * b);
+  if (C < 1e-12) return [a, b];
+  const hTarget = atan2(b, a);
+  const gate = enrichmentGate(L, enr.L_lo, enr.L_hi);
+  const centerRad = enr.center_deg * PI / 180;
+  const sig2 = enr.sigma * enr.sigma;
+  let h = hTarget;
+  for (let i = 0; i < 8; i++) {
+    let dh = h - centerRad;
+    dh = ((dh + PI) % (2 * PI) + 2 * PI) % (2 * PI) - PI;
+    const gauss = exp(-0.5 * (dh / enr.sigma) ** 2);
+    const ag = enr.amp * gate;
+    const F = h + ag * gauss - hTarget;
+    const dg = gauss * (-dh / sig2);
+    const Fp = 1.0 + ag * dg;
+    const ddg = gauss * (-1.0 / sig2 + dh * dh / (sig2 * sig2));
+    const Fpp = ag * ddg;
+    let denom = 2.0 * Fp * Fp - F * Fpp;
+    if (abs(denom) < 1e-30) denom = 1.0;
+    h = h - 2.0 * F * Fp / denom;
+  }
+  return [C * cos(h), C * sin(h)];
 }
 
 // ── Piecewise-linear L correction ─────────────────────────────

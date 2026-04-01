@@ -401,7 +401,7 @@ describe('refRange validation', () => {
   const METRIC_L_MAX = 1.144;
   const METRIC_AB_MAX = 1.0;
   const GEN_L_MAX = 1.169;
-  const GEN_AB_MAX = 0.4;
+  const GEN_AB_MAX = 0.51;
 
   it('MetricSpace: D65 white L within refRange', () => {
     const lab = hl.fromXYZ(D65);

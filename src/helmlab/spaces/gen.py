@@ -85,13 +85,22 @@ class GenParams:
     hue_L_width: float = 1.0   # radians
     hue_L_knee: float = 1.0    # L threshold
 
-    # Transfer function type: "cbrt" (default) or "softcbrt"
+    # Transfer function type: "cbrt" (default), "softcbrt", or "depcubic"
     transfer: str = "cbrt"
     softcbrt_eps: float = 0.001
+    depcubic_alpha: float = 0.020
 
     # Piecewise-linear L correction (analytically invertible, replaces cubic when non-empty)
     L_corr_pw: list = field(default_factory=list)
     L_corr_pw_step: float = 0.05
+
+    # L-gated hue enrichment (post-M2, pre-PW)
+    enrichment_type: str = ""   # "L_gated_hue" or ""
+    enrichment_amp: float = 0.0
+    enrichment_center_deg: float = 240.0
+    enrichment_sigma: float = 0.7
+    enrichment_L_lo: float = 0.37
+    enrichment_L_hi: float = 1.0
 
     def to_dict(self) -> dict:
         return {
@@ -117,8 +126,17 @@ class GenParams:
             "hue_L_knee": self.hue_L_knee,
             "transfer": self.transfer,
             "softcbrt_eps": self.softcbrt_eps,
+            "depcubic_alpha": self.depcubic_alpha,
             "L_corr_pw": self.L_corr_pw,
             "L_corr_pw_step": self.L_corr_pw_step,
+            **({"enrichment": {
+                "type": self.enrichment_type,
+                "amp": self.enrichment_amp,
+                "center_deg": self.enrichment_center_deg,
+                "sigma": self.enrichment_sigma,
+                "L_lo": self.enrichment_L_lo,
+                "L_hi": self.enrichment_L_hi,
+            }} if self.enrichment_type else {}),
         }
 
     @classmethod
@@ -137,7 +155,7 @@ class GenParams:
             hs2 = d.get("hue_sin2", 0.0)
         return cls(
             M1=np.array(d["M1"]),
-            gamma=np.array(d["gamma"]),
+            gamma=np.array(d.get("gamma", [1/3, 1/3, 1/3])),
             M2=np.array(d["M2"]),
             hue_cos1=hc1, hue_sin1=hs1,
             hue_cos2=hc2, hue_sin2=hs2,
@@ -158,8 +176,15 @@ class GenParams:
             hue_L_knee=d.get("hue_L_knee", 1.0),
             transfer=d.get("transfer", "cbrt"),
             softcbrt_eps=d.get("softcbrt_eps", 0.001),
+            depcubic_alpha=d.get("depcubic_alpha", 0.020),
             L_corr_pw=d.get("L_corr_pw", []),
             L_corr_pw_step=d.get("L_corr_pw_step", 0.05),
+            enrichment_type=d.get("enrichment", {}).get("type", ""),
+            enrichment_amp=d.get("enrichment", {}).get("amp", 0.0),
+            enrichment_center_deg=d.get("enrichment", {}).get("center_deg", 240.0),
+            enrichment_sigma=d.get("enrichment", {}).get("sigma", 0.7),
+            enrichment_L_lo=d.get("enrichment", {}).get("L_lo", 0.37),
+            enrichment_L_hi=d.get("enrichment", {}).get("L_hi", 1.0),
         )
 
     def save(self, path: str | Path) -> None:
@@ -214,6 +239,10 @@ class GenSpace(ColorSpace):
         self._has_chroma_power = (p.chroma_power != 1.0)
         self._has_hue_L = (p.hue_L_amp != 0.0)
         self._is_softcbrt = (p.transfer == "softcbrt")
+        self._is_depcubic = (p.transfer == "depcubic")
+        self._has_enrichment = (p.enrichment_type == "L_gated_hue" and abs(p.enrichment_amp) > 1e-10)
+        if self._has_enrichment:
+            self._enr_center = np.radians(p.enrichment_center_deg)
 
         # Piecewise-linear L correction setup
         self._has_pw_L = len(p.L_corr_pw) > 0
@@ -334,6 +363,77 @@ class GenSpace(ColorSpace):
         result = np.where(inside, pw_result, L_arr)
         return result
 
+    # ── Depressed cubic transfer ──────────────────────────────────
+
+    def _depcubic_fwd(self, x):
+        """Forward: solve y³ + αy = x via sinh/asinh + Halley."""
+        alpha = self.params.depcubic_alpha
+        s = np.sqrt(alpha / 3)
+        t = x / (2 * s ** 3)
+        y = 2 * s * np.sinh(np.arcsinh(t) / 3)
+        # Halley refinement
+        f = y ** 3 + alpha * y - x
+        fp = 3 * y ** 2 + alpha
+        fpp = 6 * y
+        denom = 2 * fp * fp - f * fpp
+        safe = np.abs(denom) > 1e-30
+        y = np.where(safe, y - 2 * f * fp / np.where(safe, denom, 1.0), y)
+        return y
+
+    def _depcubic_inv(self, y):
+        """Inverse: exact."""
+        return y ** 3 + self.params.depcubic_alpha * y
+
+    # ── L-gated hue enrichment ──────────────────────────────────
+
+    def _enrichment_gate(self, L):
+        """sin²(π(L-L_lo)/(L_hi-L_lo)), 0 outside [L_lo, L_hi]."""
+        p = self.params
+        t = np.clip((L - p.enrichment_L_lo) / (p.enrichment_L_hi - p.enrichment_L_lo), 0.0, 1.0)
+        return np.sin(np.pi * t) ** 2
+
+    def _apply_enrichment(self, L, a, b):
+        """Forward: h' = h + amp * gate(L) * gauss(h - center)."""
+        p = self.params
+        C = np.sqrt(a ** 2 + b ** 2)
+        is_achromatic = C < 1e-12
+        h = np.arctan2(b, a)
+        gate = self._enrichment_gate(L)
+        dh = h - self._enr_center
+        dh = (dh + np.pi) % (2 * np.pi) - np.pi
+        gauss = np.exp(-0.5 * (dh / p.enrichment_sigma) ** 2)
+        rotation = p.enrichment_amp * gate * gauss
+        h_new = h + rotation
+        a_new = np.where(is_achromatic, a, C * np.cos(h_new))
+        b_new = np.where(is_achromatic, b, C * np.sin(h_new))
+        return a_new, b_new
+
+    def _undo_enrichment(self, L, a, b):
+        """Inverse: Halley iteration for h (cubic convergence)."""
+        p = self.params
+        C = np.sqrt(a ** 2 + b ** 2)
+        is_achromatic = C < 1e-12
+        h_target = np.arctan2(b, a)
+        gate = self._enrichment_gate(L)
+        sig2 = p.enrichment_sigma ** 2
+        h = h_target.copy() if isinstance(h_target, np.ndarray) else h_target
+        for _ in range(8):  # Halley converges cubically
+            dh = h - self._enr_center
+            dh = (dh + np.pi) % (2 * np.pi) - np.pi
+            gauss = np.exp(-0.5 * (dh / p.enrichment_sigma) ** 2)
+            ag = p.enrichment_amp * gate
+            F = h + ag * gauss - h_target
+            dg = gauss * (-dh / sig2)
+            Fp = 1.0 + ag * dg
+            ddg = gauss * (-1.0 / sig2 + dh * dh / (sig2 * sig2))
+            Fpp = ag * ddg
+            denom = 2.0 * Fp * Fp - F * Fpp
+            denom = np.where(np.abs(denom) < 1e-30, np.ones_like(denom), denom)
+            h = h - 2.0 * F * Fp / denom
+        a_new = np.where(is_achromatic, a, C * np.cos(h))
+        b_new = np.where(is_achromatic, b, C * np.sin(h))
+        return a_new, b_new
+
     # ── Dark L compression ─────────────────────────────────────────
 
     def _dark_L_compress(self, L, h=None):
@@ -444,10 +544,22 @@ class GenSpace(ColorSpace):
         LMS = np.maximum(XYZ @ self.params.M1.T, 0.0)
 
         # 2. Transfer function
-        if self._is_softcbrt:
+        if self._is_depcubic:
+            LMS_c = self._depcubic_fwd(LMS)
+        elif self._is_softcbrt:
             LMS_c = self._softcbrt(LMS)
         else:
             LMS_c = LMS ** self.params.gamma
+
+        # 2.5 Smooth neutral blend: C∞ correction for sRGB matrix rounding
+        if self._is_depcubic:
+            lms_mean = np.mean(LMS_c, axis=-1, keepdims=True)
+            lms_spread = (np.max(LMS_c, axis=-1) - np.min(LMS_c, axis=-1)) / np.maximum(np.abs(lms_mean.squeeze()), 1e-30)
+            blend_w = np.exp(-(lms_spread / 1e-5) ** 2)
+            if LMS_c.ndim == 1:
+                LMS_c = LMS_c + blend_w * (lms_mean.squeeze() - LMS_c)
+            else:
+                LMS_c = LMS_c + blend_w[..., None] * (np.broadcast_to(lms_mean, LMS_c.shape) - LMS_c)
 
         # 3. LMS_c → Lab_raw
         Lab = LMS_c @ self.params.M2.T
@@ -468,6 +580,10 @@ class GenSpace(ColorSpace):
             L = self._pw_L_forward(L)
         elif self._has_L_corr:
             L = self._L_correct(L)
+
+        # 4.25 L-gated hue enrichment (after PW L correction)
+        if self._has_enrichment:
+            a, b = self._apply_enrichment(L, a, b)
 
         # 4.5 Dark L compression
         if self._has_dark_L:
@@ -530,6 +646,10 @@ class GenSpace(ColorSpace):
             h = np.arctan2(b, a) if self._has_dark_L_hue else None
             L = self._dark_L_compress_inv(L, h)
 
+        # 4.25 Undo L-gated hue enrichment (before PW undo)
+        if self._has_enrichment:
+            a, b = self._undo_enrichment(L, a, b)
+
         # 4. Undo L correction (PW takes priority over cubic)
         if self._has_pw_L:
             L = self._pw_L_inverse(L)
@@ -548,8 +668,20 @@ class GenSpace(ColorSpace):
         Lab = np.stack([L, a, b], axis=-1)
         LMS_c = Lab @ self._M2_inv.T
 
+        # 2.5 Smooth neutral blend (matching forward — C∞, branchless)
+        if self._is_depcubic:
+            lms_mean = np.mean(LMS_c, axis=-1, keepdims=True)
+            lms_spread = (np.max(LMS_c, axis=-1) - np.min(LMS_c, axis=-1)) / np.maximum(np.abs(lms_mean.squeeze()), 1e-30)
+            blend_w = np.exp(-(lms_spread / 1e-5) ** 2)
+            if LMS_c.ndim == 1:
+                LMS_c = LMS_c + blend_w * (lms_mean.squeeze() - LMS_c)
+            else:
+                LMS_c = LMS_c + blend_w[..., None] * (np.broadcast_to(lms_mean, LMS_c.shape) - LMS_c)
+
         # 2. Undo transfer function
-        if self._is_softcbrt:
+        if self._is_depcubic:
+            LMS = self._depcubic_inv(LMS_c)
+        elif self._is_softcbrt:
             LMS = self._softcbrt_inv(LMS_c)
         else:
             inv_gamma = 1.0 / self.params.gamma
