@@ -529,11 +529,11 @@ const T = {
   stat_hue: 'Hue RMS',
   stat_rt: 'Round-trip',
   s1_title: 'STRESS Benchmark',
-  s1_desc: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab v20b outperforms CIEDE2000 and Oklab across all three datasets.',
+  s1_desc: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab outperforms CIEDE2000 and Oklab across all three datasets.',
   s2_title: 'Gradient Interpolation',
   s2_desc: 'Linear interpolation between two colors. Lower CV% (coefficient of variation) means more perceptually uniform gradients. Bars show successive step distances \u2014 equal height = uniform transition.',
   s3_title: 'Achromatic Axis',
-  s3_desc: '11 gray tones from black to white. Chromaticity (C) is measured for each gray. Helmlab v20b guarantees C < 0.001 for all grays via structural neutral correction (NC). This guarantee is mathematical \u2014 independent of the optimized parameters.',
+  s3_desc: '11 gray tones from black to white. Chromaticity (C) is measured for each gray. Helmlab guarantees C < 0.001 for all grays via structural neutral correction (NC). This guarantee is mathematical \u2014 independent of the optimized parameters.',
   s4_title: 'Lightness Scale',
   s4_desc: 'Only L (lightness) is varied while preserving hue and saturation of a base color. Out-of-gamut colors are automatically brought to the gamut boundary by reducing chroma.',
   s5_title: 'Helmholtz-Kohlrausch Effect',
@@ -559,7 +559,7 @@ const T = {
   preset_w_k: 'White \u2192 Black',
   preset_o_c: 'Orange \u2192 Cyan',
   grad_note: 'Each bar shows the Helmlab distance between consecutive colors. Equal height = perceptually uniform transition.',
-  ach_note: 'Helmlab v20b: structural NC (Neutral Correction) guarantees C \u2248 0 for all grays. Oklab also performs well on the achromatic axis (by design), but Helmlab\u2019s guarantee is structural \u2014 independent of the optimized parameters.',
+  ach_note: 'Helmlab: structural NC (Neutral Correction) guarantees C \u2248 0 for all grays. Oklab also performs well on the achromatic axis (by design), but Helmlab\u2019s guarantee is structural \u2014 independent of the optimized parameters.',
   color_red: 'Red',
   color_orange: 'Orange',
   color_green: 'Green',
@@ -626,19 +626,19 @@ function initPage() {
 function buildStress() {
   const datasets = [
     { name: t('ds_combvd'), data: [
-      {label:'Helmlab v20b', cls:'p', val:23.30},
+      {label:'Helmlab', cls:'p', val:23.30},
       {label:'Oklab', cls:'o', val:27.50},
       {label:'CIEDE2000', cls:'d', val:29.18},
       {label:'CIE Lab dE76', cls:'c', val:30.30},
     ]},
     { name: t('ds_he'), data: [
-      {label:'Helmlab v20b', cls:'p', val:29.03},
+      {label:'Helmlab', cls:'p', val:29.03},
       {label:'CIE Lab dE76', cls:'c', val:30.77},
       {label:'CIEDE2000', cls:'d', val:32.58},
       {label:'Oklab', cls:'o', val:49.04},
     ]},
     { name: t('ds_mac'), data: [
-      {label:'Helmlab v20b', cls:'p', val:20.23},
+      {label:'Helmlab', cls:'p', val:20.23},
       {label:'CIEDE2000', cls:'d', val:22.13},
       {label:'CIE Lab dE76', cls:'c', val:24.53},
       {label:'Oklab', cls:'o', val:32.72},
@@ -941,7 +941,7 @@ function updatePicker() {
   const rtErr = Math.sqrt((r-rt[0])**2 + (g-rt[1])**2 + (b-rt[2])**2);
 
   document.getElementById('pickerVals').innerHTML = `
-    <div class="sp-block"><div class="sp-title blue">Helmlab v20b</div><div class="sp-vals">
+    <div class="sp-block"><div class="sp-title blue">Helmlab</div><div class="sp-vals">
       <div class="sp-val"><div class="k">L</div><div class="v blue mono">${pg[0].toFixed(4)}</div></div>
       <div class="sp-val"><div class="k">a</div><div class="v blue mono">${pg[1].toFixed(4)}</div></div>
       <div class="sp-val"><div class="k">b</div><div class="v blue mono">${pg[2].toFixed(4)}</div></div>
