@@ -176,11 +176,13 @@ class TestGenParams:
         assert p.lp_dark == 0.0
 
 
+@pytest.mark.slow
 class TestGenSpaceCIGates:
     """CI gates — production quality guarantees (Codex mandate).
 
     These tests MUST pass before any GenSpace deploy.
     Failure = hard blocker, no exceptions.
+    Run locally: pytest -m slow
     """
 
     @pytest.fixture

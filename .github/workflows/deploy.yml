@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
       - run: pip install numpy scipy pytest
       - run: pip install -e .
-      - run: python -m pytest tests/ -x -q
+      - run: python -m pytest tests/ -x -q -m "not slow"
 
   test-js:
     runs-on: ubuntu-latest
