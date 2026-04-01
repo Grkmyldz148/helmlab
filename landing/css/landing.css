@@ -311,7 +311,7 @@ noscript .hero-install { visibility: visible !important; }
   flex: 1;
   height: 44px;
   border-radius: 10px;
-  border: 1px solid var(--border);
+  overflow: hidden;
 }
 
 .grad-note {

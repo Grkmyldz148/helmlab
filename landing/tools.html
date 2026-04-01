@@ -453,27 +453,12 @@
 <script src="https://cdn.jsdelivr.net/npm/helmlab@0.11.0/dist/index.global.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// Helmlab v20b params (production)
+// MetricSpace + GenSpace v0.11.0 — loaded from CDN (helmlab global)
 // ═══════════════════════════════════════════════════════════════
-const Q = {
-  M1: [[0.7342943222452644,0.24049249952372878,-0.15763751765949208],[-0.3298489081190054,1.2349200319947062,-0.00011401053364536622],[0.08633204542081865,0.3414453053380001,0.8320187908189167]],
-  gamma: [0.38922300523380954,0.4163225224600994,0.424136411390728],
-  M2: [[-0.4201444325131867,0.4846067800936122,0.641671081311568],[1.9328411649568151,-2.7178725296509234,0.7639609115884012],[0.0056138814291964425,1.6281620091666282,-1.2607966751966067]],
-  hk_weight: 0.3887364763408459, hk_power: 0.8487498478929875, hk_hue_mod: -0.49403221483739856,
-  hk_sin1: 0.3427500673096532, hk_cos2: 0.5057917724092752, hk_sin2: 1.2531214183133925,
-  L_corr_p1: 0.22209286485816096, L_corr_p2: -0.726689699330081, L_corr_p3: 0.6948410518667059,
-  Lh_cos1: -0.08921959945592077, Lh_sin1: -0.03417192933375745,
-  lp_dark: 0.5350532994803492, lp_dark_hcos: 0.01510453094801519, lp_dark_hsin: 0.012001697695947553,
-  cs_cos1: -0.4120602979458365, cs_sin1: 0.3800513618890033, cs_cos2: -0.2528251369568942, cs_sin2: 0.657402155150853,
-  cs_cos3: -0.44403582186509966, cs_sin3: 0.38312823859541884, cs_cos4: 0.10052079558164836, cs_sin4: 0.23091452352663336,
-  cp_cos1: -0.45285545866406535, cp_sin1: -0.402686329735538, cp_cos2: -0.06806724448657032, cp_sin2: 0.33642259938164853,
-  lc1: -0.46309182275553784, lc2: -0.7907362486190921,
-  hlc_cos1: 0.10838825831361108, hlc_sin1: 0.5912853085941397, hlc_cos2: 0.2890874556971346, hlc_sin2: -0.26510357924924527,
-  hl_cos1: 0.07697580724849687, hl_sin1: 0.12261651723570662, hl_cos2: -0.041189966586526024, hl_sin2: -0.012540514326587596,
-  hue_cos1: 0.23826555017017817, hue_sin1: -0.47457402184732383, hue_cos2: 0.015763095458215106, hue_sin2: 0.08210977205919093,
-  hue_cos3: 0.12885828370119579, hue_sin3: -0.08835184701121743, hue_cos4: -0.07188519624223008, hue_sin4: -0.013626221336494375,
-  dist_power: 0.804265429185275, dist_wC: 1.0458243890301122, dist_compress: 1.5903206798028005, dist_post_power: 1.1
-};
+const _ms = new helmlab.MetricSpace(helmlab.compileParams(helmlab.getDefaultParams()), { neutralCorrection: true, abRotateDeg: -28.2 });
+const _gs = new helmlab.GenSpace(helmlab.compileGenParams(helmlab.getDefaultGenParams()));
+function baseLabFwd(X, Y, Z) { return _gs.fromXYZ([X, Y, Z]); }
+function baseLabInv(L, a, b) { return _gs.toXYZ([L, a, b]); }
 
 // ═══════════════════════════════════════════════════════════════
 // Math utilities
@@ -487,35 +472,17 @@ function srgbToXYZ(r,g,b) {
 function xyzToSrgb(X,Y,Z) {
   return [linToSrgb(3.2404542*X-1.5371385*Y-0.4985314*Z), linToSrgb(-0.9692660*X+1.8760108*Y+0.0415560*Z), linToSrgb(0.0556434*X-0.2040259*Y+1.0572252*Z)];
 }
-// Display P3 (same transfer function as sRGB, wider primaries)
 function xyzToP3Lin(X,Y,Z) {
   return [2.4934969*X-0.9313836*Y-0.4027108*Z, -0.8294890*X+1.7626641*Y+0.0236247*Z, 0.0358458*X-0.0761724*Y+0.9568845*Z];
 }
 function xyzToP3(X,Y,Z) { const lin=xyzToP3Lin(X,Y,Z); return [linToSrgb(lin[0]),linToSrgb(lin[1]),linToSrgb(lin[2])]; }
 function inP3(p3) { return p3[0]>=-0.005&&p3[0]<=1.005&&p3[1]>=-0.005&&p3[1]<=1.005&&p3[2]>=-0.005&&p3[2]<=1.005; }
 const hasP3 = typeof window!=='undefined' && window.matchMedia && window.matchMedia('(color-gamut: p3)').matches;
-function mat3(M,v) { return [M[0][0]*v[0]+M[0][1]*v[1]+M[0][2]*v[2], M[1][0]*v[0]+M[1][1]*v[1]+M[1][2]*v[2], M[2][0]*v[0]+M[2][1]*v[1]+M[2][2]*v[2]]; }
-function spow(x,g) { return x >= 0 ? Math.pow(x,g) : -Math.pow(-x,g); }
 function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 function hexToRgb(h) { return [parseInt(h.slice(1,3),16)/255, parseInt(h.slice(3,5),16)/255, parseInt(h.slice(5,7),16)/255]; }
 function rgbToHex(r,g,b) { const c=v=>Math.round(clamp01(v)*255).toString(16).padStart(2,'0'); return '#'+c(r)+c(g)+c(b); }
 function lerp(a,b,t) { return a+(b-a)*t; }
 function inGamut(rgb) { return rgb[0]>=-0.005&&rgb[0]<=1.005&&rgb[1]>=-0.005&&rgb[1]<=1.005&&rgb[2]>=-0.005&&rgb[2]<=1.005; }
-
-function mat3inv(M) {
-  const a=M[0][0],b=M[0][1],c=M[0][2],d=M[1][0],e=M[1][1],f=M[1][2],g=M[2][0],h=M[2][1],i=M[2][2];
-  const det=a*(e*i-f*h)-b*(d*i-f*g)+c*(d*h-e*g); const id=1/det;
-  return [[(e*i-f*h)*id,(c*h-b*i)*id,(b*f-c*e)*id],[(f*g-d*i)*id,(a*i-c*g)*id,(c*d-a*f)*id],[(d*h-e*g)*id,(b*g-a*h)*id,(a*e-b*d)*id]];
-}
-// MetricSpace inverses (for distance computation only)
-const Q_M1_inv = mat3inv(Q.M1), Q_M2_inv = mat3inv(Q.M2), Q_inv_gamma = Q.gamma.map(g => 1/g);
-
-// GenSpace v0.11.0 — loaded from CDN (helmlab global)
-const _gs = new helmlab.GenSpace(helmlab.compileGenParams(helmlab.getDefaultGenParams()));
-function baseLabFwd(X, Y, Z) { return _gs.fromXYZ([X, Y, Z]); }
-function baseLabInv(L, a, b) { return _gs.toXYZ([L, a, b]); }
-// Legacy aliases for MetricSpace inverse
-const M1_inv = Q_M1_inv, M2_inv = Q_M2_inv, inv_gamma = Q_inv_gamma;
 function baseLabFwdSrgb(r, g, b) { return baseLabFwd(...srgbToXYZ(r, g, b)); }
 function baseLabToCSS(L, a, b) {
   const xyz = baseLabInv(L, a, b);
@@ -547,107 +514,12 @@ function wcagCR(rgb1, rgb2) {
   return (Math.max(l1,l2)+0.05) / (Math.min(l1,l2)+0.05);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Helmlab v20b forward (raw, without NC)
-// ═══════════════════════════════════════════════════════════════
-function pFwdRaw(X, Y, Z) {
-  let l = mat3(Q.M1, [X, Y, Z]);
-  l = [spow(l[0], Q.gamma[0]), spow(l[1], Q.gamma[1]), spow(l[2], Q.gamma[2])];
-  let r = mat3(Q.M2, l), L = r[0], a = r[1], b = r[2];
-  let h = Math.atan2(b, a), C = Math.sqrt(a*a + b*b);
-  let d = Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h);
-  a = C*Math.cos(h+d); b = C*Math.sin(h+d);
-  C = Math.sqrt(a*a+b*b); h = Math.atan2(b, a);
-  let hf = 1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
-  L += Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
-  h = Math.atan2(b, a);
-  let Lh = Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h);
-  let t2 = L*(1-L);
-  L = L+Q.L_corr_p1*t2+Q.L_corr_p2*t2*(0.5-L)+Q.L_corr_p3*t2*t2+t2*Lh;
-  let dp = Q.lp_dark+Q.lp_dark_hcos*Math.cos(h)+Q.lp_dark_hsin*Math.sin(h);
-  L = L*Math.exp(Math.max(-30,Math.min(30,dp*L*(1-L)*(1-L))));
-  h = Math.atan2(b, a);
-  let ls = Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
-  a *= Math.exp(ls); b *= Math.exp(ls);
-  h = Math.atan2(b, a); C = Math.sqrt(a*a+b*b);
-  let cp = 1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
-  if (C > 0) { let Cn = Math.pow(C,cp); a = Cn*Math.cos(h); b = Cn*Math.sin(h); }
-  let dL = L-0.5;
-  let T = Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL)));
-  a *= T; b *= T;
-  h = Math.atan2(b, a);
-  let hlcF = Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
-  let hlc = Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF)));
-  a *= hlc; b *= hlc;
-  h = Math.atan2(b, a);
-  L *= Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
-  return [L, a, b];
-}
-
-// NC LUT
-const NC_SIZE = 256, nc_L = [], nc_a = [], nc_b = [];
-function buildNCLut() {
-  for (let i = 0; i < NC_SIZE; i++) {
-    const Y = i/(NC_SIZE-1), X = 0.95047*Y, Z = 1.08883*Y;
-    const lab = pFwdRaw(X, Y, Z);
-    nc_L.push(lab[0]); nc_a.push(lab[1]); nc_b.push(lab[2]);
-  }
-}
-buildNCLut();
-
-function ncInterp(L_val) {
-  if (nc_L.length === 0) return [0, 0];
-  if (L_val <= nc_L[0]) return [nc_a[0], nc_b[0]];
-  if (L_val >= nc_L[NC_SIZE-1]) return [nc_a[NC_SIZE-1], nc_b[NC_SIZE-1]];
-  let lo = 0, hi = NC_SIZE - 1;
-  while (hi - lo > 1) { const mid = (lo+hi)>>1; if (nc_L[mid] <= L_val) lo = mid; else hi = mid; }
-  const t = (L_val - nc_L[lo]) / (nc_L[hi] - nc_L[lo] || 1e-20);
-  return [lerp(nc_a[lo], nc_a[hi], t), lerp(nc_b[lo], nc_b[hi], t)];
-}
-
-const AB_ROT_DEG = -28.2, AB_ROT_RAD = AB_ROT_DEG*Math.PI/180;
-const AB_ROT_COS = Math.cos(AB_ROT_RAD), AB_ROT_SIN = Math.sin(AB_ROT_RAD);
-
-function pFwd(X, Y, Z) {
-  let lab = pFwdRaw(X, Y, Z), L = lab[0], a = lab[1], b = lab[2];
-  const [a_err, b_err] = ncInterp(L);
-  a -= a_err; b -= b_err;
-  return [L, a*AB_ROT_COS - b*AB_ROT_SIN, a*AB_ROT_SIN + b*AB_ROT_COS];
-}
-function pFwdSrgb(r, g, b) { return pFwd(...srgbToXYZ(r, g, b)); }
-
-function pInv(L, a, b) {
-  let a2 = a*AB_ROT_COS + b*AB_ROT_SIN, b2 = -a*AB_ROT_SIN + b*AB_ROT_COS;
-  const [a_err, b_err] = ncInterp(L); a2 += a_err; b2 += b_err;
-  let h, C;
-  h = Math.atan2(b2, a2);
-  L /= Math.exp(Q.hl_cos1*Math.cos(h)+Q.hl_sin1*Math.sin(h)+Q.hl_cos2*Math.cos(2*h)+Q.hl_sin2*Math.sin(2*h));
-  let hlcF = Q.hlc_cos1*Math.cos(h)+Q.hlc_sin1*Math.sin(h)+Q.hlc_cos2*Math.cos(2*h)+Q.hlc_sin2*Math.sin(2*h);
-  let hlcS = Math.exp(Math.max(-30,Math.min(30,(L-0.5)*hlcF))); a2 /= hlcS; b2 /= hlcS;
-  let dL = L-0.5, T = Math.exp(Math.max(-30,Math.min(30,Q.lc1*dL+Q.lc2*dL*dL))); a2 /= T; b2 /= T;
-  h = Math.atan2(b2, a2); C = Math.sqrt(a2*a2+b2*b2);
-  let cp = 1+Q.cp_cos1*Math.cos(h)+Q.cp_sin1*Math.sin(h)+Q.cp_cos2*Math.cos(2*h)+Q.cp_sin2*Math.sin(2*h);
-  if (C > 0) { let Cn = Math.pow(C,1/cp); a2 = Cn*Math.cos(h); b2 = Cn*Math.sin(h); }
-  h = Math.atan2(b2, a2);
-  let ls = Q.cs_cos1*Math.cos(h)+Q.cs_sin1*Math.sin(h)+Q.cs_cos2*Math.cos(2*h)+Q.cs_sin2*Math.sin(2*h)+Q.cs_cos3*Math.cos(3*h)+Q.cs_sin3*Math.sin(3*h)+Q.cs_cos4*Math.cos(4*h)+Q.cs_sin4*Math.sin(4*h);
-  a2 /= Math.exp(ls); b2 /= Math.exp(ls);
-  h = Math.atan2(b2, a2);
-  let dp = Q.lp_dark+Q.lp_dark_hcos*Math.cos(h)+Q.lp_dark_hsin*Math.sin(h), Ltar = L;
-  for (let i = 0; i < 15; i++) { let u=L*(1-L)*(1-L), eu=Math.exp(Math.max(-30,Math.min(30,dp*u))), f=L*eu-Ltar, du2=(1-L)*(1-3*L), fp=eu*(1+dp*L*du2); if(Math.abs(fp)>1e-20) L-=f/fp; }
-  Ltar = L;
-  for (let i = 0; i < 15; i++) { let Lh2=Q.Lh_cos1*Math.cos(h)+Q.Lh_sin1*Math.sin(h), t2=L*(1-L), Lout=L+Q.L_corr_p1*t2+Q.L_corr_p2*t2*(0.5-L)+Q.L_corr_p3*t2*t2+t2*Lh2, dt=1-2*L, dLout=1+Q.L_corr_p1*dt+Q.L_corr_p2*(dt*(0.5-L)+t2*(-1))+Q.L_corr_p3*2*t2*dt+dt*Lh2; if(Math.abs(dLout)>1e-20) L-=(Lout-Ltar)/dLout; }
-  C = Math.sqrt(a2*a2+b2*b2); h = Math.atan2(b2, a2);
-  let hf = 1+Q.hk_hue_mod*Math.cos(h)+Q.hk_sin1*Math.sin(h)+Q.hk_cos2*Math.cos(2*h)+Q.hk_sin2*Math.sin(2*h);
-  L -= Q.hk_weight*Math.pow(Math.max(C,1e-10),Q.hk_power)*hf;
-  let htar = Math.atan2(b2, a2); h = htar;
-  for (let i = 0; i < 10; i++) { let delta=Q.hue_cos1*Math.cos(h)+Q.hue_sin1*Math.sin(h)+Q.hue_cos2*Math.cos(2*h)+Q.hue_sin2*Math.sin(2*h)+Q.hue_cos3*Math.cos(3*h)+Q.hue_sin3*Math.sin(3*h)+Q.hue_cos4*Math.cos(4*h)+Q.hue_sin4*Math.sin(4*h); let dd=-Q.hue_cos1*Math.sin(h)+Q.hue_sin1*Math.cos(h)-2*Q.hue_cos2*Math.sin(2*h)+2*Q.hue_sin2*Math.cos(2*h)-3*Q.hue_cos3*Math.sin(3*h)+3*Q.hue_sin3*Math.cos(3*h)-4*Q.hue_cos4*Math.sin(4*h)+4*Q.hue_sin4*Math.cos(4*h); let fp2=1+dd; if(Math.abs(fp2)>1e-20) h-=(h+delta-htar)/fp2; }
-  C = Math.sqrt(a2*a2+b2*b2); a2 = C*Math.cos(h); b2 = C*Math.sin(h);
-  let lms = mat3(M2_inv, [L, a2, b2]);
-  lms = [spow(lms[0],inv_gamma[0]), spow(lms[1],inv_gamma[1]), spow(lms[2],inv_gamma[2])];
-  return mat3(M1_inv, lms);
-}
-function pInvSrgb(L, a, b) { return xyzToSrgb(...pInv(L, a, b)); }
-function pInvP3(L, a, b) { return xyzToP3(...pInv(L, a, b)); }
+// MetricSpace v20b — from CDN
+function pFwd(X,Y,Z) { return _ms.fromXYZ([X,Y,Z]); }
+function pFwdSrgb(r,g,b) { return pFwd(...srgbToXYZ(r,g,b)); }
+function pInv(L,a,b) { return _ms.toXYZ([L,a,b]); }
+function pInvSrgb(L,a,b) { return xyzToSrgb(...pInv(L,a,b)); }
+function pInvP3(L,a,b) { return xyzToP3(...pInv(L,a,b)); }
 
 // Color output: prefer P3 CSS string for wider gamut, fall back to sRGB hex
 function colorCSS(L, aa, bb) {
@@ -735,12 +607,10 @@ function interpHelmlabBatchCSS(c1, c2, N) {
     return baseLabToCSS(L, a, b);
   });
 }
-// Helmlab distance
+// Helmlab distance (from CDN)
 function pDist(rgb1, rgb2) {
   const a=pFwdSrgb(...rgb1), b2=pFwdSrgb(...rgb2);
-  const dL=a[0]-b2[0],da=a[1]-b2[1],db=a[2]-b2[2], pw=Q.dist_power;
-  const raw=Math.pow(Math.abs(dL)**pw+Q.dist_wC*(Math.abs(da)**pw+Math.abs(db)**pw),1/pw);
-  return Math.pow(raw/(1+Q.dist_compress*raw), Q.dist_post_power);
+  return _ms.distance(a, b2);
 }
 
 // Gamut mapping
