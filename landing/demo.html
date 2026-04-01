@@ -530,7 +530,7 @@ const T = {
   stat_hue: 'Hue RMS',
   stat_rt: 'Round-trip',
   s1_title: 'STRESS Benchmark',
-  s1_desc: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab outperforms CIEDE2000 and Oklab across all three datasets.',
+  s1_desc: 'STRESS measures how well a color space\u2019s predicted distance (\u0394E) matches perceptual differences (\u0394V) from human experiments. Lower = more accurate perceptual prediction. Helmlab MetricSpace outperforms CIEDE2000 and Oklab across all three datasets.',
   s2_title: 'Gradient Interpolation',
   s2_desc: 'Linear interpolation between two colors. Lower CV% (coefficient of variation) means more perceptually uniform gradients. Bars show successive step distances \u2014 equal height = uniform transition.',
   s3_title: 'Achromatic Axis',
@@ -627,19 +627,19 @@ function initPage() {
 function buildStress() {
   const datasets = [
     { name: t('ds_combvd'), data: [
-      {label:'Helmlab', cls:'p', val:23.30},
+      {label:'Helmlab MetricSpace', cls:'p', val:23.30},
       {label:'Oklab', cls:'o', val:27.50},
       {label:'CIEDE2000', cls:'d', val:29.18},
       {label:'CIE Lab dE76', cls:'c', val:30.30},
     ]},
     { name: t('ds_he'), data: [
-      {label:'Helmlab', cls:'p', val:29.03},
+      {label:'Helmlab MetricSpace', cls:'p', val:29.03},
       {label:'CIE Lab dE76', cls:'c', val:30.77},
       {label:'CIEDE2000', cls:'d', val:32.58},
       {label:'Oklab', cls:'o', val:49.04},
     ]},
     { name: t('ds_mac'), data: [
-      {label:'Helmlab', cls:'p', val:20.23},
+      {label:'Helmlab MetricSpace', cls:'p', val:20.23},
       {label:'CIEDE2000', cls:'d', val:22.13},
       {label:'CIE Lab dE76', cls:'c', val:24.53},
       {label:'Oklab', cls:'o', val:32.72},
