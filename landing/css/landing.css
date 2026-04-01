@@ -36,6 +36,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
+  overflow-x: hidden;
 }
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 a { color: var(--blue); text-decoration: none; transition: color 0.15s; }
