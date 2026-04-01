@@ -72,24 +72,34 @@
     return xyzToSrgb(labFInv(fx) * D65[0], labFInv(fy) * D65[1], labFInv(fz) * D65[2]);
   }
 
-  // CIEDE2000 (simplified for uniformity measurement)
+  // CIEDE2000 (full implementation — matches helmlab package)
   function ciede2000(lab1, lab2) {
-    var dL = lab2[0] - lab1[0];
-    var da = lab2[1] - lab1[1];
-    var db = lab2[2] - lab1[2];
-    var C1 = Math.sqrt(lab1[1] * lab1[1] + lab1[2] * lab1[2]);
-    var C2 = Math.sqrt(lab2[1] * lab2[1] + lab2[2] * lab2[2]);
-    var dC = C2 - C1;
-    var dH2 = da * da + db * db - dC * dC;
-    var dH = dH2 > 0 ? Math.sqrt(dH2) : 0;
-    var avgL = (lab1[0] + lab2[0]) / 2;
-    var avgC = (C1 + C2) / 2;
-    var SL = 1 + 0.015 * Math.pow(avgL - 50, 2) / Math.sqrt(20 + Math.pow(avgL - 50, 2));
-    var SC = 1 + 0.045 * avgC;
-    var SH = 1 + 0.015 * avgC;
-    return Math.sqrt(
-      Math.pow(dL / SL, 2) + Math.pow(dC / SC, 2) + Math.pow(dH / SH, 2)
-    );
+    var L1=lab1[0],a1=lab1[1],b1=lab1[2],L2=lab2[0],a2=lab2[1],b2=lab2[2];
+    var PI=Math.PI,sqrt=Math.sqrt,pow=Math.pow,abs=Math.abs,sin=Math.sin,cos=Math.cos,atan2=Math.atan2;
+    var C1=sqrt(a1*a1+b1*b1),C2=sqrt(a2*a2+b2*b2);
+    var Cab=(C1+C2)/2,Cab7=pow(Cab,7),p257=pow(25,7);
+    var G=0.5*(1-sqrt(Cab7/(Cab7+p257)));
+    var ap1=(1+G)*a1,ap2=(1+G)*a2;
+    var Cp1=sqrt(ap1*ap1+b1*b1),Cp2=sqrt(ap2*ap2+b2*b2);
+    var hp1=atan2(b1,ap1),hp2=atan2(b2,ap2);
+    if(hp1<0)hp1+=2*PI;if(hp2<0)hp2+=2*PI;
+    var dLp=L2-L1,dCp=Cp2-Cp1;
+    var dhp=0;
+    if(Cp1*Cp2!==0){dhp=hp2-hp1;if(dhp>PI)dhp-=2*PI;if(dhp<-PI)dhp+=2*PI;}
+    var dHp=2*sqrt(Cp1*Cp2)*sin(dhp/2);
+    var Lp=(L1+L2)/2,Cp=(Cp1+Cp2)/2;
+    var hp=0;
+    if(Cp1*Cp2===0)hp=hp1+hp2;
+    else{hp=(hp1+hp2)/2;if(abs(hp1-hp2)>PI){hp+=hp<PI?PI:-PI;}}
+    var T=1-0.17*cos(hp-PI/6)+0.24*cos(2*hp)+0.32*cos(3*hp+PI/30)-0.20*cos(4*hp-63*PI/180);
+    var Lp50=Lp-50;
+    var SL=1+0.015*Lp50*Lp50/sqrt(20+Lp50*Lp50);
+    var SC=1+0.045*Cp,SH=1+0.015*Cp*T;
+    var Cp7=pow(Cp,7),RC=2*sqrt(Cp7/(Cp7+p257));
+    var hpDeg=hp*180/PI;
+    var dth=30*Math.exp(-pow((hpDeg-275)/25,2));
+    var RT=-sin(2*dth*PI/180)*RC;
+    return sqrt(pow(dLp/SL,2)+pow(dCp/SC,2)+pow(dHp/SH,2)+RT*(dCp/SC)*(dHp/SH));
   }
 
   // Hex conversions
