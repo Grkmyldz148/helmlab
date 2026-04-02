@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**50-6 vs OKLab** on ColorBench's 61 metrics, 360/360 gamut cusps, zero gamut holes).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**59-8 vs OKLab** on ColorBench's 83 metrics, 360/360/360 gamut cusps, zero monotonicity violations).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -13,10 +13,11 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 ## Key Features
 
 - **State-of-the-art color difference** — MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 on COMBVD (3,813 pairs)
-- **Superior gradient generation** — GenSpace: **50 wins** vs OKLab's 6 across 61 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero gamut holes
-- **Depressed cubic transfer** — `y³ + αy = x` (α=0.02): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
+- **Superior gradient generation** — GenSpace: **59 wins** vs OKLab's 8 across 83 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
+- **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
+- **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
 - **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
-- **True blue gradients** — Blue→White midpoint is sky blue (G/R = 1.52), not lavender
+- **True blue gradients** — Blue→White midpoint is sky blue (G/R = 1.51), not lavender
 - **Perfect achromatic axis** — Grays map to C* < 10⁻¹⁵ (structural guarantee from uniform transfer function)
 - **Perfectly uniform gradients** — Built-in CIEDE2000 arc-length reparameterization, CV ≈ 0% on any pair
 - **Embedded Helmholtz-Kohlrausch** — MetricSpace: lightness is chroma-dependent, learned from data
@@ -112,7 +113,7 @@ Helmlab (UI layer)
 │   XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
 │
 └── GenSpace — generation-optimized pipeline (gradient, palette)
-    XYZ → M₁ → depcubic(α) → M₂ → L-gated enrichment → PW_L_corr → Lab
+    XYZ → M₁ → depcubic(α) → M₂ → C^cp → L-gated enrichment → PW_L_corr → Lab
     + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
@@ -120,39 +121,42 @@ Helmlab (UI layer)
 
 Jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation. STRESS 23.30 — the lowest published figure on COMBVD.
 
-### GenSpace (v0.11.0 — Depressed Cubic + L-Gated Enrichment)
+### GenSpace (v0.11.1 — Depressed Cubic + Chroma Power + L-Gated Enrichment)
 
-Pipeline: `XYZ → M₁ → depcubic(α=0.02) → M₂ → L-gated hue enrichment → PW L_corr → Lab`
+Pipeline: `XYZ → M₁ → depcubic(α=0.021) → M₂ → chroma_power(0.978) → L-gated hue enrichment → PW L_corr → Lab`
 
-**Transfer function:** `y³ + αy = x` (depressed cubic, α=0.02)
+**Transfer function:** `y³ + αy = x` (depressed cubic, α=0.021)
 
 Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`, refined with a single Halley iteration for full precision. The inverse is trivial: `x = y³ + αy`. This depressed cubic has a finite derivative at zero (unlike standard `x^(1/3)`), which eliminates gamut boundary singularities.
+
+**Chroma power:** `C' = C^0.978` — mild chroma compression applied post-M2 that improves gradient step uniformity. Analytically invertible (`C = C'^(1/0.978)`).
 
 **L-gated hue enrichment:** A targeted hue rotation `h' = h + A·gate(L)·gauss(h−center)` applied post-M2, where the gate function `sin²(π·(L−L_lo)/(L_hi−L_lo))` activates only in mid-to-high lightness and the Gaussian targets the blue hue region. This fixes the blue→white purple shift with zero impact on achromatic colors or other hue regions. Invertible via Halley iteration (cubic convergence, 8 iterations).
 
 **Key properties:**
-- 360/360 valid cusps in sRGB, Display P3, and Rec.2020 (OKLab: 299)
-- Zero gamut holes in all gamuts (OKLab: 474 interior holes in sRGB)
-- Blue→White gradient: sky blue midpoint (G/R = 1.52), no lavender shift
+- 360/360/360 valid cusps in sRGB, Display P3, and Rec.2020 (OKLab: 299/308/360)
+- Zero monotonicity violations and zero invalid cusps across all gamuts
+- Blue→White gradient: sky blue midpoint (G/R = 1.51), no lavender shift
 - Achromatic: C* < 10⁻¹⁵ (structural guarantee — uniform transfer × orthogonal M₂)
-- Munsell Value uniformity: 0.03% (OKLab: 2.80% — 93x better)
+- Munsell Value uniformity: 0.16% (OKLab: 2.80% — 18x better)
 - Adaptive gamut clipping with cusp-finding (Ottosson-style L0 calculation)
 - Piecewise-linear L correction with 19 breakpoints (analytically invertible)
 
-**ColorBench evaluation (61 metrics, 3,038 gradient pairs, 3 gamuts):**
+**ColorBench evaluation (83 metrics, 3,038 gradient pairs, 3 gamuts):**
 
-| | GenSpace v0.11.0 | OKLab |
-|---|---|---|
-| **Head-to-head** | **50 wins** | 6 wins |
-| sRGB valid cusps | **360** | 299 |
-| Gamut holes | **0** | 474 |
-| Blue→White G/R | **1.52** | 1.41 |
-| Munsell Value | **0.03%** | 2.80% |
-| Cusp smoothness | **0.079** | 0.801 |
-| Gray precision | **< 10⁻¹⁵** | 3.7×10⁻⁸ |
-| Round-trip (1000×) | **4×10⁻¹⁴** | 5×10⁻¹³ |
+| Category | GenSpace wins | OKLab wins | Tie |
+|----------|-------------|------------|-----|
+| Gamut geometry | **25** | 0 | 2 |
+| Application | **10** | 0 | 2 |
+| Gradient quality | **5** | 3 | 2 |
+| Perceptual accuracy | **5** | 0 | 0 |
+| Structural | **4** | 2 | 2 |
+| Other (hue, achromatic, banding, special, accessibility, advanced, numerical) | **10** | 3 | 8 |
+| **Total** | **59** | **8** | **16** |
 
-> GenSpace's 6 losses are non-critical: floating-point precision differences, CVD structural (shared M₁ basis), and paradigm differences (CIE Lab hue agreement). 5 ties. None affect practical use.
+**Known trade-offs:** Slightly reduced round-trip precision in sRGB (~5.6×10⁻⁸ vs OKLab's ~1.6×10⁻¹⁵, due to enrichment Halley iteration — invisible in 8-bit pipelines), minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
+
+**Blue-region gamut fold:** All power-law based M1→f→M2 spaces exhibit tiny non-contiguous gamut regions near h≈260° in sRGB due to cubic polynomial roots in the inverse. OKLab has 46 such holes; GenSpace has 5, each ~0.001 chroma wide (sub-pixel, invisible). See [color.js#81](https://github.com/color-js/color.js/issues/81).
 
 ## Benchmarks
 
@@ -188,17 +192,23 @@ Scale: 0 = perfect, 100 = no correlation. Full methodology: [arXiv:2602.23010](h
 
 ### Gradient Quality (GenSpace)
 
-Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (61 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
+Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (83 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
 
 | Category | GenSpace wins | OKLab wins | Tie |
 |----------|-------------|------------|-----|
-| Gradient quality | 14 | 2 | 0 |
-| Gamut integrity | 10 | 1 | 0 |
-| Perceptual accuracy | 8 | 2 | 0 |
-| Hue uniformity | 9 | 1 | 0 |
-| Accessibility (CVD) | 5 | 0 | 2 |
-| Engineering | 4 | 0 | 3 |
-| **Total** | **50** | **6** | **5** |
+| Gamut geometry | **25** | 0 | 2 |
+| Application | **10** | 0 | 2 |
+| Gradient quality | **5** | 3 | 2 |
+| Perceptual accuracy | **5** | 0 | 0 |
+| Structural | **4** | 2 | 2 |
+| Hue | **2** | 0 | 0 |
+| Achromatic | **2** | 0 | 0 |
+| Advanced | **2** | 0 | 4 |
+| Banding | **1** | 0 | 1 |
+| Special | **2** | 1 | 0 |
+| Accessibility | **1** | 1 | 0 |
+| Numerical | 0 | 1 | 2 |
+| **Total** | **59** | **8** | **16** |
 
 ### Gradient Uniformity
 
@@ -240,7 +250,7 @@ src/helmlab/
 
 packages/helmlab-js/        # npm package (TypeScript)
 packages/postcss-helmlab/   # PostCSS plugin
-colorbench/                 # ColorBench evaluation suite (48 metrics)
+colorbench/                 # ColorBench evaluation suite (83 metrics)
 tests/                      # 609+ tests (413 Python + 196 JavaScript)
 ```
 
@@ -253,7 +263,7 @@ cd packages/helmlab-js && npx vitest run # 196 JS tests
 
 ## Research
 
-The optimization experiments, checkpoints, and analysis scripts that led to the current GenSpace v0.11.0 are available in a separate repository:
+The optimization experiments, checkpoints, and analysis scripts that led to the current GenSpace v0.11.1 are available in a separate repository:
 
 **[helmlab-experimental](https://github.com/Grkmyldz148/helmlab-experimental)** — 480+ experiments across 4 transfer functions, 3 M₁ variants, and systematic grid searches. Includes all checkpoints, optimization scripts, and the full experiment report.
 
