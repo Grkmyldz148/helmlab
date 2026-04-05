@@ -108,6 +108,16 @@ export class GenSpace {
       b = C * sin(hNew);
     }
 
+    // 3.75 Chroma power
+    if (r.chroma_power !== 1.0) {
+      const C = sqrt(a * a + b * b);
+      if (C > 1e-12) {
+        const s = Math.pow(C, r.chroma_power - 1);
+        a *= s;
+        b *= s;
+      }
+    }
+
     // 4. L correction (PW takes priority over cubic)
     if (r.L_corr_pw && r.L_corr_pw.length > 0) {
       L = pwLForward(r, L);
@@ -179,6 +189,16 @@ export class GenSpace {
       L = pwLInverse(r, L);
     } else if (r.L_corr_p1 !== 0 || r.L_corr_p2 !== 0 || r.L_corr_p3 !== 0) {
       L = lCorrectInv(r, L);
+    }
+
+    // 3.75 Undo chroma power
+    if (r.chroma_power !== 1.0) {
+      const C = sqrt(a * a + b * b);
+      if (C > 1e-12) {
+        const s = Math.pow(C, 1 / r.chroma_power - 1);
+        a *= s;
+        b *= s;
+      }
     }
 
     // 3.5 Undo hue correction
