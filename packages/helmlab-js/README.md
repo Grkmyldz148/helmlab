@@ -1,138 +1,214 @@
-# helmlab
+# Helmlab
+
+A family of purpose-built color spaces for UI design systems.
+
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**59-8 vs OKLab** on ColorBench's 83 metrics, 360/360/360 gamut cusps, zero monotonicity violations).
+
+[![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
+[![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
+[![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
+
+**[Website](https://helmlab.space)** | **[Documentation](https://helmlab.space/docs.html)** | **[Demo](https://helmlab.space/demo.html)** | **[Paper](https://arxiv.org/abs/2602.23010)**
+
+## Key Features
+
+- **State-of-the-art color difference** — MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 on COMBVD (3,813 pairs)
+- **Superior gradient generation** — GenSpace: **59 wins** vs OKLab's 8 across 83 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
+- **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
+- **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
+- **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
+- **True blue gradients** — Blue→White midpoint is sky blue (G/R = 1.51), not lavender
+- **Perfect achromatic axis** — Grays map to C* < 10⁻¹⁵ (structural guarantee from uniform transfer function)
+- **Perfectly uniform gradients** — Built-in CIEDE2000 arc-length reparameterization, CV ≈ 0% on any pair
+- **Embedded Helmholtz-Kohlrausch** — MetricSpace: lightness is chroma-dependent, learned from data
+- **UI tooling** — Gamut mapping, WCAG contrast enforcement, palette generation, dark/light mode adaptation
+- **Token export** — CSS (`oklch()`), Android XML, iOS Swift (Display P3), Tailwind, JSON
+
+## Installation
+
+### npm (TypeScript / JavaScript)
 
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
-[![npm downloads](https://img.shields.io/npm/dm/helmlab.svg)](https://www.npmjs.com/package/helmlab)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/helmlab)](https://bundlephobia.com/package/helmlab)
-[![license](https://img.shields.io/npm/l/helmlab.svg)](https://github.com/Grkmyldz148/helmlab/blob/main/LICENSE)
-
-A data-driven analytical color space for UI design systems. Two purpose-built spaces: **MetricSpace** for perceptual distance, **GenSpace** for gradients and palettes.
-
-- **~12KB gzipped**, zero dependencies
-- ESM + CJS dual output with full TypeScript types
-- Trained on 64,000+ human color-difference judgments
-- MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 (20% better)
-- GenSpace: **50 wins** vs OKLab's 6 on 61 ColorBench metrics, zero gamut holes
-- `gradient()` with CIEDE2000 arc-length reparameterization (CV ≈ 0% on any pair)
-
-**[Website](https://helmlab.space)** · **[Documentation](https://helmlab.space/docs.html)** · **[Demo](https://helmlab.space/demo.html)** · **[npm](https://www.npmjs.com/package/helmlab)**
-
-## Install
 
 ```bash
 npm install helmlab
 ```
-
-Also available via CDN:
-
-```html
-<script type="module">
-  import { Helmlab } from 'https://esm.sh/helmlab';
-</script>
-```
-
-## Quick Start
 
 ```ts
 import { Helmlab } from 'helmlab';
 
 const hl = new Helmlab();
 
-// Convert (MetricSpace — perceptual distance)
-const lab = hl.fromHex('#3B82F6');       // → [0.713, -0.306, -0.387]
-const hex = hl.toHex([0.5, -0.1, 0.2]); // → '#rrggbb'
-
-// Convert (GenSpace — gradients & palettes)
-const glab = hl.genFromHex('#3B82F6');   // → GenSpace Lab
-const ghex = hl.genToHex(glab);          // → '#rrggbb' (gamut mapped)
-
-// Contrast (WCAG)
-hl.contrastRatio('#ffffff', '#3B82F6');            // → 3.68
-hl.ensureContrast('#3B82F6', '#ffffff', 4.5);      // → adjusted hex meeting 4.5:1
-hl.meetsContrast('#000000', '#ffffff', 'AA');       // → true
-
-// Distance
-hl.deltaE('#ff0000', '#00ff00');  // → 1.09
-
-// Gradient (GenSpace + arc-length reparameterization)
-hl.gradient('#ff0000', '#0000ff', 8);  // → 8 perfectly uniform hex steps
-
-// Palette
-hl.palette('#3B82F6', 5);        // → ['#c4d5ff', '#7eaafc', '#3b82f6', '#0060d0', '#003d8e']
-hl.semanticScale('#3B82F6');      // → { '50': '#b3c7ff', '500': '#3b82f6', '900': '#00184b', ... }
-hl.paletteHues(0.6, 0.15, 12);   // → 12 evenly-spaced hues
+const lab = hl.fromHex('#3B82F6');                    // Hex → Helmlab Lab
+const hex = hl.toHex([0.5, -0.1, 0.2]);              // Lab → hex (gamut mapped)
+hl.contrastRatio('#ffffff', '#3B82F6');                // → 3.68
+hl.ensureContrast('#3B82F6', '#ffffff', 4.5);         // Adjust to meet 4.5:1
+hl.deltaE('#ff0000', '#00ff00');                      // Perceptual distance
+hl.gradient('#ff0000', '#0000ff', 8);                 // Perfectly uniform gradient
+hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950 scale
 ```
 
-## API
+~12KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. See the [npm package README](packages/helmlab-js/README.md) for the full API.
 
-### Core Conversions
+### PostCSS
 
-| Method | Description |
-|--------|-------------|
-| `fromHex(hex)` | Hex → MetricSpace Lab |
-| `toHex(lab)` | MetricSpace Lab → hex (gamut mapped) |
-| `fromSrgb(rgb)` | sRGB [0,1] → MetricSpace Lab |
-| `toSrgb(lab)` | MetricSpace Lab → sRGB [0,1] (gamut mapped) |
-| `fromXYZ(xyz)` | CIE XYZ → MetricSpace Lab |
-| `toXYZ(lab)` | MetricSpace Lab → CIE XYZ |
-| `genFromHex(hex)` | Hex → GenSpace Lab |
-| `genToHex(lab)` | GenSpace Lab → hex (gamut mapped) |
-| `toDisplayP3(lab)` | MetricSpace Lab → Display P3 [0,1] |
+[![npm version](https://img.shields.io/npm/v/postcss-helmlab.svg)](https://www.npmjs.com/package/postcss-helmlab)
 
-### Contrast
+Use Helmlab color spaces directly in CSS — transformed to `rgb()` at build time:
 
-| Method | Description |
-|--------|-------------|
-| `contrastRatio(fg, bg)` | WCAG contrast ratio (1–21) |
-| `ensureContrast(fg, bg, ratio)` | Adjust fg to meet minimum ratio |
-| `meetsContrast(fg, bg, level)` | Check AA (4.5:1) or AAA (7:1) |
-
-### Gradient & Palette
-
-| Method | Description |
-|--------|-------------|
-| `gradient(start, end, steps)` | Uniform gradient via CIEDE2000 arc-length reparameterization (CV ≈ 0%) |
-| `palette(hex, steps)` | Lightness ramp from base color |
-| `semanticScale(hex)` | Tailwind-style 50–950 scale |
-| `paletteHues(L, C, steps)` | Hue ring at fixed L and chroma |
-
-### Distance & Info
-
-| Method | Description |
-|--------|-------------|
-| `deltaE(hex1, hex2)` | Euclidean distance in Helmlab Lab |
-| `perceptualDistance(lab1, lab2)` | Full perceptual metric (Minkowski + compression) |
-| `info(hex)` | Color info: Lab, L, C, H |
-| `isInSrgb(lab)` | Gamut check |
-
-## Advanced Usage
-
-Lower-level exports are available for custom pipelines:
-
-```ts
-import {
-  MetricSpace, GenSpace, compileParams,
-  getDefaultParams, getDefaultGenParams,
-  hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb,
-  gamutMap, isInGamut, contrastRatio,
-} from 'helmlab';
+```bash
+npm install postcss-helmlab
 ```
 
-## How It Works
+```css
+/* Input */
+.card { color: helmlab(0.78 0.52 -0.20); }
+.bg   { background: linear-gradient(in helmgen, #e63946, #457b9d); }
 
-Helmlab is a family of two purpose-built color spaces:
-
-**MetricSpace** (72 parameters) — optimized for perceptual distance:
-```
-XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
-```
-
-**GenSpace** (v0.11.0) — optimized for generation (gradients, palettes):
-```
-XYZ → M₁ → depcubic(α=0.02) → M₂ → L-gated enrichment → PW L_corr → Lab
-+ CIEDE2000 arc-length reparameterization for gradient()
+/* Output */
+.card { color: rgb(255, 76, 119); }
+.bg   { background: linear-gradient(#e63946 0.0%, ..., #457b9d 100.0%); }
 ```
 
-MetricSpace is trained on 64,000+ human color-difference observations (COMBVD + 6 datasets). Every stage is exactly invertible. GenSpace uses a depressed cubic pipeline with L-gated hue enrichment (v0.11.0) — **50 wins vs OKLab's 6** on 61 ColorBench metrics (3,038 gradient pairs, 3 gamuts), with 360/360/360 cusps, zero gamut holes, and sky-blue Blue→White gradients (no purple shift).
+### Python (pip)
+
+[![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
+
+```bash
+pip install helmlab
+```
+
+## Quick Start (Python)
+
+```python
+from helmlab import Helmlab
+
+hl = Helmlab()
+
+# sRGB to Helmlab Lab
+lab = hl.from_srgb([0.2, 0.5, 0.8])
+print(f"L={lab[0]:.3f}, a={lab[1]:.3f}, b={lab[2]:.3f}")
+
+# Color difference between two sRGB colors
+dist = hl.delta_e("#ff0000", "#00ff00")
+
+# Perfectly uniform gradient (arc-length reparameterized)
+gradient = hl.gradient("#ff0000", "#0000ff", 8)
+
+# Ensure WCAG AA contrast (4.5:1)
+adjusted = hl.ensure_contrast("#ffffff", "#3B82F6", min_ratio=4.5)
+
+# Generate a palette (Tailwind-style 50-950 scale)
+scale = hl.semantic_scale("#3B82F6")
+```
+
+## Architecture
+
+Helmlab is a family of purpose-built color spaces:
+
+```
+Helmlab (UI layer)
+├── MetricSpace — 72-param enriched pipeline (distance, deltaE)
+│   XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
+│
+└── GenSpace — generation-optimized pipeline (gradient, palette)
+    XYZ → M₁ → depcubic(α) → M₂ → C^cp → L-gated enrichment → PW_L_corr → Lab
+    + CIEDE2000 arc-length reparameterization for gradient()
+```
+
+### MetricSpace (72 parameters)
+
+Jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation. STRESS 23.30 — the lowest published figure on COMBVD.
+
+### GenSpace (v0.11.1 — Depressed Cubic + Chroma Power + L-Gated Enrichment)
+
+Pipeline: `XYZ → M₁ → depcubic(α=0.021) → M₂ → chroma_power(0.978) → L-gated hue enrichment → PW L_corr → Lab`
+
+**Transfer function:** `y³ + αy = x` (depressed cubic, α=0.021)
+
+Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`, refined with a single Halley iteration for full precision. The inverse is trivial: `x = y³ + αy`. This depressed cubic has a finite derivative at zero (unlike standard `x^(1/3)`), which eliminates gamut boundary singularities.
+
+**Chroma power:** `C' = C^0.978` — mild chroma compression applied post-M2 that improves gradient step uniformity. Analytically invertible (`C = C'^(1/0.978)`).
+
+**L-gated hue enrichment:** A targeted hue rotation `h' = h + A·gate(L)·gauss(h−center)` applied post-M2, where the gate function `sin²(π·(L−L_lo)/(L_hi−L_lo))` activates only in mid-to-high lightness and the Gaussian targets the blue hue region. This fixes the blue→white purple shift with zero impact on achromatic colors or other hue regions. Invertible via Halley iteration (cubic convergence, 8 iterations).
+
+**Key properties:**
+- 360/360/360 valid cusps in sRGB, Display P3, and Rec.2020 (OKLab: 299/308/360)
+- Zero monotonicity violations and zero invalid cusps across all gamuts
+- Blue→White gradient: sky blue midpoint (G/R = 1.51), no lavender shift
+- Achromatic: C* < 10⁻¹⁵ (structural guarantee — uniform transfer × orthogonal M₂)
+- Munsell Value uniformity: 0.16% (OKLab: 2.80% — 18x better)
+- Adaptive gamut clipping with cusp-finding (Ottosson-style L0 calculation)
+- Piecewise-linear L correction with 19 breakpoints (analytically invertible)
+
+**ColorBench evaluation (83 metrics, 3,038 gradient pairs, 3 gamuts):**
+
+| Category | GenSpace wins | OKLab wins | Tie |
+|----------|-------------|------------|-----|
+| Gamut geometry | **25** | 0 | 2 |
+| Application | **10** | 0 | 2 |
+| Gradient quality | **5** | 3 | 2 |
+| Perceptual accuracy | **5** | 0 | 0 |
+| Structural | **4** | 2 | 2 |
+| Other (hue, achromatic, banding, special, accessibility, advanced, numerical) | **10** | 3 | 8 |
+| **Total** | **59** | **8** | **16** |
+
+**Known trade-offs:** Slightly reduced round-trip precision in sRGB (~5.6×10⁻⁸ vs OKLab's ~1.6×10⁻¹⁵, due to enrichment Halley iteration — invisible in 8-bit pipelines), minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
+
+**Blue-region gamut fold:** All power-law based M1→f→M2 spaces exhibit tiny non-contiguous gamut regions near h≈260° in sRGB due to cubic polynomial roots in the inverse. OKLab has 46 such holes; GenSpace has 5, each ~0.001 chroma wide (sub-pixel, invisible). See [color.js#81](https://github.com/color-js/color.js/issues/81).
+
+## Benchmarks
+
+### Perceptual Distance (MetricSpace)
+
+STRESS on COMBVD (3,813 pairs). Lower is better.
+
+| Method | COMBVD STRESS | vs CIEDE2000 |
+|--------|--------------|-------------|
+| **Helmlab v20b** | **23.30** | **-20.1%** |
+| CIEDE2000 | 29.18 | — |
+| CIE94 | 33.59 | +15.1% |
+| CAM16-UCS (Euclid.) | 33.90 | +16.2% |
+| ΔE CMC | 34.04 | +16.6% |
+| IPT (Euclid.) | 41.21 | +41.3% |
+| CIE Lab ΔE76 | 42.80 | +46.7% |
+| Oklab (Euclid.) | 47.46 | +62.7% |
+
+<details>
+<summary><strong>How was STRESS measured?</strong></summary>
+
+STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is a combined visual-difference dataset of 3,813 color pairs from 6 independent psychophysical experiments (Luo & Rigg 1986, RIT-DuPont, Witt, Leeds, BFD, He et al. 2022), containing 64,000+ individual human judgments.
+
+For each pair *i*, let ΔVᵢ = human visual difference, ΔEᵢ = predicted distance. STRESS finds the optimal scale *F* minimizing residuals:
+
+```
+STRESS = 100 × √( Σ(ΔEᵢ − F·ΔVᵢ)² / Σ(ΔEᵢ)² )
+```
+
+Scale: 0 = perfect, 100 = no correlation. Full methodology: [arXiv:2602.23010](https://arxiv.org/abs/2602.23010).
+
+</details>
+
+### Gradient Quality (GenSpace)
+
+Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (83 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
+
+| Category | GenSpace wins | OKLab wins | Tie |
+|----------|-------------|------------|-----|
+| Gamut geometry | **25** | 0 | 2 |
+| Application | **10** | 0 | 2 |
+| Gradient quality | **5** | 3 | 2 |
+| Perceptual accuracy | **5** | 0 | 0 |
+| Structural | **4** | 2 | 2 |
+| Hue | **2** | 0 | 0 |
+| Achromatic | **2** | 0 | 0 |
+| Advanced | **2** | 0 | 4 |
+| Banding | **1** | 0 | 1 |
+| Special | **2** | 1 | 0 |
+| Accessibility | **1** | 1 | 0 |
+| Numerical | 0 | 1 | 2 |
+| **Total** | **59** | **8** | **16** |
 
 ### Gradient Uniformity
 
@@ -145,29 +221,67 @@ CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
 | Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
 | CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
 
-> **Note:** `gradient()` achieves ≈ 0% via CIEDE2000 arc-length reparameterization — an algorithm that redistributes steps to equal perceptual spacing. The same technique could be applied to any space; Helmlab ships it built-in.
+> **Note:** `gradient()` achieves ≈ 0% via CIEDE2000 arc-length reparameterization. This redistributes steps to equal perceptual spacing — an algorithm that could be applied to any space. Helmlab ships it built-in.
 
-<details>
-<summary><strong>How was STRESS 23.30 measured?</strong></summary>
+## Project Structure
 
-STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is a combined dataset of 3,813 color pairs from 6 psychophysical experiments (64,000+ human judgments). Observers viewed color pairs under controlled D65 lighting and rated perceived differences. STRESS = 100 × √( Σ(ΔEᵢ − F·ΔVᵢ)² / Σ(ΔEᵢ)² ), where 0 = perfect and 100 = no correlation. Helmlab's 72 parameters were optimized with L-BFGS-B (8 random restarts). 5-fold CV confirms generalization (mean ≈ 23.5). Bootstrap 95% CI: Helmlab [22.50, 23.93] vs CIEDE2000 [27.64, 30.84] — zero overlap, p < 10⁻⁴. Full methodology: [arXiv:2602.23010](https://arxiv.org/abs/2602.23010).
+```
+src/helmlab/
+├── helmlab.py              # Main API (Helmlab class)
+├── spaces/
+│   ├── metric.py           # MetricSpace — 72-param enriched pipeline
+│   ├── gen.py              # GenSpace — depcubic + enrichment pipeline
+│   ├── base.py             # Abstract base class
+│   └── ...                 # Baseline spaces (CAM16, IPT, Oklch, etc.)
+├── metrics/
+│   ├── delta_e.py          # Color difference formulas
+│   ├── stress.py           # STRESS computation
+│   └── benchmarks.py       # Cross-method benchmarking
+├── utils/
+│   ├── srgb_convert.py     # sRGB/Display P3 conversions
+│   ├── gamut.py            # Gamut mapping (binary search + adaptive clipping)
+│   └── ...                 # Converters, I/O, visualization
+├── data/
+│   ├── metric_params.json  # MetricSpace params (v20b, STRESS 23.30)
+│   ├── gen_params.json     # GenSpace params (v0.11.0, depcubic + enrichment)
+│   └── ...                 # Dataset loaders (COMBVD, Munsell, etc.)
+├── export.py               # Token export (CSS, Android, iOS, Tailwind)
+└── feedback/               # Human feedback collection tools
 
-</details>
+packages/helmlab-js/        # npm package (TypeScript)
+packages/postcss-helmlab/   # PostCSS plugin
+colorbench/                 # ColorBench evaluation suite (83 metrics)
+tests/                      # 609+ tests (413 Python + 196 JavaScript)
+```
 
-## PostCSS Plugin
-
-Use Helmlab color spaces directly in your CSS:
+## Tests
 
 ```bash
-npm install postcss-helmlab
+python -m pytest tests/ -q              # 413 Python tests
+cd packages/helmlab-js && npx vitest run # 196 JS tests
 ```
 
-```css
-.card { color: helmlab(0.78 0.52 -0.20); }
-.bg   { background: linear-gradient(in helmgen, #e63946, #457b9d); }
+## Research
+
+The optimization experiments, checkpoints, and analysis scripts that led to the current GenSpace v0.11.1 are available in a separate repository:
+
+**[helmlab-experimental](https://github.com/Grkmyldz148/helmlab-experimental)** — 480+ experiments across 4 transfer functions, 3 M₁ variants, and systematic grid searches. Includes all checkpoints, optimization scripts, and the full experiment report.
+
+## Citation
+
+```bibtex
+@article{yildiz2025helmlab,
+  title={Helmlab: A Data-Driven Analytical Color Space for UI Design Systems},
+  author={Y{\i}ld{\i}z, G{\"o}rkem},
+  journal={arXiv preprint arXiv:2602.23010},
+  year={2025},
+  url={https://arxiv.org/abs/2602.23010}
+}
 ```
 
-Transforms to `rgb()` at build time. Supports all four spaces, alpha, gradients, and `color-mix()`. See [postcss-helmlab](https://www.npmjs.com/package/postcss-helmlab).
+## Author
+
+**[Gorkem Yildiz](https://gorkemyildiz.com)** — [helmlab.space](https://helmlab.space)
 
 ## License
 
