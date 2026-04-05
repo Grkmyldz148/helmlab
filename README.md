@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**59-8 vs OKLab** on ColorBench's 83 metrics, 360/360/360 gamut cusps, zero monotonicity violations).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**60-8 vs OKLab** on ColorBench's 83 metrics, 360/360/360 gamut cusps, zero monotonicity violations).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -13,7 +13,7 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 ## Key Features
 
 - **State-of-the-art color difference** — MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 on COMBVD (3,813 pairs)
-- **Superior gradient generation** — GenSpace: **59 wins** vs OKLab's 8 across 83 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
+- **Superior gradient generation** — GenSpace: **60 wins** vs OKLab's 8 across 83 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
 - **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
 - **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
 - **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
@@ -113,7 +113,7 @@ Helmlab (UI layer)
 │   XYZ → M₁ → γ → M₂ → Hue → H-K → L → C → HL → NC → φ → Lab
 │
 └── GenSpace — generation-optimized pipeline (gradient, palette)
-    XYZ → M₁ → depcubic(α) → M₂ → C^cp → L-gated enrichment → PW_L_corr → Lab
+    XYZ → M₁ → depcubic(α) → M₂ → C^cp → PW_L_corr → L-gated enrichment → Lab
     + CIEDE2000 arc-length reparameterization for gradient()
 ```
 
@@ -123,7 +123,7 @@ Jointly optimized against COMBVD using L-BFGS-B with 8 random restarts. 13-stage
 
 ### GenSpace (v0.11.1 — Depressed Cubic + Chroma Power + L-Gated Enrichment)
 
-Pipeline: `XYZ → M₁ → depcubic(α=0.021) → M₂ → chroma_power(0.978) → L-gated hue enrichment → PW L_corr → Lab`
+Pipeline: `XYZ → M₁ → depcubic(α=0.021) → M₂ → chroma_power(0.978) → PW L_corr → L-gated hue enrichment → Lab`
 
 **Transfer function:** `y³ + αy = x` (depressed cubic, α=0.021)
 
@@ -152,7 +152,7 @@ Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`,
 | Perceptual accuracy | **5** | 0 | 0 |
 | Structural | **4** | 2 | 2 |
 | Other (hue, achromatic, banding, special, accessibility, advanced, numerical) | **10** | 3 | 8 |
-| **Total** | **59** | **8** | **16** |
+| **Total** | **60** | **8** | **15** |
 
 **Known trade-offs:** Slightly reduced round-trip precision in sRGB (~5.6×10⁻⁸ vs OKLab's ~1.6×10⁻¹⁵, due to enrichment Halley iteration — invisible in 8-bit pipelines), minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
 
@@ -208,7 +208,7 @@ Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Gr
 | Special | **2** | 1 | 0 |
 | Accessibility | **1** | 1 | 0 |
 | Numerical | 0 | 1 | 2 |
-| **Total** | **59** | **8** | **16** |
+| **Total** | **60** | **8** | **15** |
 
 ### Gradient Uniformity
 
@@ -243,7 +243,7 @@ src/helmlab/
 │   └── ...                 # Converters, I/O, visualization
 ├── data/
 │   ├── metric_params.json  # MetricSpace params (v20b, STRESS 23.30)
-│   ├── gen_params.json     # GenSpace params (v0.11.0, depcubic + enrichment)
+│   ├── gen_params.json     # GenSpace params (v0.11.1, depcubic + enrichment)
 │   └── ...                 # Dataset loaders (COMBVD, Munsell, etc.)
 ├── export.py               # Token export (CSS, Android, iOS, Tailwind)
 └── feedback/               # Human feedback collection tools
