@@ -6,8 +6,8 @@
 
 | Platform | Version | Params | Benchmark |
 |----------|---------|--------|-----------|
-| PyPI | `helmlab==0.11.6` | `src/helmlab/data/gen_params.json` | **60-8** vs OKLab |
-| npm | `helmlab@0.11.6` | `packages/helmlab-js/src/data/gen-params.json` | **60-8** vs OKLab |
+| PyPI | `helmlab==0.11.7` | `src/helmlab/data/metric_params.json` (MetricSpace v21) | COMBVD=22.48★ |
+| npm | `helmlab@0.11.7` | `packages/helmlab-js/src/data/params.json` (MetricSpace v21) | COMBVD=22.48★ |
 | color.js PR #722 | — | fork M2 (renormed for Color.js D65) | **59-8** vs OKLab |
 
 ## MetricSpace v21 — PRODUCTION READY
