@@ -48,6 +48,17 @@ L_sorted = L_sorted[mask]
 a_sorted = a_sorted[mask]
 b_sorted = b_sorted[mask]
 
+# Extend LUT beyond gray-axis peak (L≈1.29) with constant (clamped) values.
+# Chromatic colors (P3 magenta) can reach L≈2.2; the gray axis has no reference
+# there. Clamping to the last measured value is physically reasonable and
+# ensures both Python PCHIP and JS linear interpolation give the same result.
+L_ext = np.arange(L_sorted[-1] + 0.01, 2.6, 0.01)
+a_ext = np.full(len(L_ext), a_sorted[-1])
+b_ext = np.full(len(L_ext), b_sorted[-1])
+L_sorted = np.concatenate([L_sorted, L_ext])
+a_sorted = np.concatenate([a_sorted, a_ext])
+b_sorted = np.concatenate([b_sorted, b_ext])
+
 lut = {
     "L": [round(float(x), 10) for x in L_sorted],
     "a_err": [round(float(x), 10) for x in a_sorted],

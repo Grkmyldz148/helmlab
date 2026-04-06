@@ -868,9 +868,19 @@ class MetricSpace(ColorSpace):
         a_sorted = a_sorted[mask]
         b_sorted = b_sorted[mask]
 
+        # Extend LUT beyond the gray-axis peak with constant (clamped) values.
+        # Chromatic colors (e.g. P3 magenta) can have L >> gray-white; clamping
+        # to the last measured value avoids PCHIP cubic overshoot.
+        L_ext = np.arange(L_sorted[-1] + 0.01, 2.6, 0.01)
+        a_ext = np.full(len(L_ext), a_sorted[-1])
+        b_ext = np.full(len(L_ext), b_sorted[-1])
+        L_sorted = np.concatenate([L_sorted, L_ext])
+        a_sorted = np.concatenate([a_sorted, a_ext])
+        b_sorted = np.concatenate([b_sorted, b_ext])
+
         self._nc_L_range = (L_sorted[0], L_sorted[-1])
-        self._nc_a_interp = PchipInterpolator(L_sorted, a_sorted, extrapolate=True)
-        self._nc_b_interp = PchipInterpolator(L_sorted, b_sorted, extrapolate=True)
+        self._nc_a_interp = PchipInterpolator(L_sorted, a_sorted, extrapolate=False)
+        self._nc_b_interp = PchipInterpolator(L_sorted, b_sorted, extrapolate=False)
         self._nc_lut_built = True
 
     def _neutral_error(self, L: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -924,12 +934,11 @@ class MetricSpace(ColorSpace):
             S = self._surround
         dS = S - 0.5  # centered — all S params multiply by dS
 
-        # 1. XYZ -> LMS (clamp: cone responses are physically non-negative;
-        #    negative values from M1 indicate out-of-human-gamut colors)
-        LMS = np.maximum(XYZ @ self.params.M1.T, 0.0)
+        # 1. XYZ -> LMS (sign-preserving: handles out-of-gamut negatives exactly)
+        LMS = XYZ @ self.params.M1.T
 
-        # 2. Power compression
-        LMS_c = LMS ** self.params.gamma
+        # 2. Power compression (sign-preserving for exact invertibility)
+        LMS_c = np.sign(LMS) * np.abs(LMS) ** self.params.gamma
 
         # 3. LMS_c -> Lab_raw
         Lab = LMS_c @ self.params.M2.T
@@ -1154,9 +1163,9 @@ class MetricSpace(ColorSpace):
         Lab = np.stack([L_raw, a_raw, b_raw], axis=-1)
         LMS_c = Lab @ self._M2_inv.T
 
-        # 2. Undo power compression (LMS_c is non-negative after forward clamp)
+        # 2. Undo power compression (sign-preserving inverse)
         inv_gamma = 1.0 / self.params.gamma
-        LMS = np.maximum(LMS_c, 0.0) ** inv_gamma
+        LMS = np.sign(LMS_c) * np.abs(LMS_c) ** inv_gamma
 
         # 1. LMS -> XYZ
         return LMS @ self._M1_inv.T

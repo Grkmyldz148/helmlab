@@ -44,15 +44,15 @@ export class AnalyticalSpace {
     const M2 = this.p.M2;
     const g = this.p.gamma;
 
-    // 1. XYZ → LMS (clamp: cone responses are physically non-negative)
-    const lms0 = Math.max(M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2], 0);
-    const lms1 = Math.max(M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2], 0);
-    const lms2 = Math.max(M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2], 0);
+    // 1. XYZ → LMS (sign-preserving: handles out-of-gamut negatives exactly)
+    const lms0 = M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2];
+    const lms1 = M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2];
+    const lms2 = M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2];
 
-    // 2. Power compression
-    const c0 = lms0 ** g[0];
-    const c1 = lms1 ** g[1];
-    const c2 = lms2 ** g[2];
+    // 2. Power compression (sign-preserving for exact invertibility)
+    const c0 = (lms0 < 0 ? -((-lms0) ** g[0]) : lms0 ** g[0]);
+    const c1 = (lms1 < 0 ? -((-lms1) ** g[1]) : lms1 ** g[1]);
+    const c2 = (lms2 < 0 ? -((-lms2) ** g[2]) : lms2 ** g[2]);
 
     // 3. LMS_c → Lab_raw (via M2)
     let L = M2[0] * c0 + M2[1] * c1 + M2[2] * c2;
@@ -266,11 +266,11 @@ export class AnalyticalSpace {
     const lc1 = M2i[3] * L + M2i[4] * a + M2i[5] * b;
     const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
 
-    // 2. Undo power compression (LMS_c non-negative after forward clamp)
+    // 2. Undo power compression (sign-preserving inverse)
     const ig = this.p.inv_gamma;
-    const l0 = Math.max(lc0, 0) ** ig[0];
-    const l1 = Math.max(lc1, 0) ** ig[1];
-    const l2 = Math.max(lc2, 0) ** ig[2];
+    const l0 = (lc0 < 0 ? -((-lc0) ** ig[0]) : lc0 ** ig[0]);
+    const l1 = (lc1 < 0 ? -((-lc1) ** ig[1]) : lc1 ** ig[1]);
+    const l2 = (lc2 < 0 ? -((-lc2) ** ig[2]) : lc2 ** ig[2]);
 
     // 1. LMS → XYZ (via M1_inv)
     const M1i = this.p.M1_inv;
@@ -289,13 +289,13 @@ export class AnalyticalSpace {
     const M2 = this.p.M2;
     const g = this.p.gamma;
 
-    const lms0 = Math.max(M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2], 0);
-    const lms1 = Math.max(M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2], 0);
-    const lms2 = Math.max(M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2], 0);
+    const lms0 = M1[0] * xyz[0] + M1[1] * xyz[1] + M1[2] * xyz[2];
+    const lms1 = M1[3] * xyz[0] + M1[4] * xyz[1] + M1[5] * xyz[2];
+    const lms2 = M1[6] * xyz[0] + M1[7] * xyz[1] + M1[8] * xyz[2];
 
-    const c0 = lms0 ** g[0];
-    const c1 = lms1 ** g[1];
-    const c2 = lms2 ** g[2];
+    const c0 = (lms0 < 0 ? -((-lms0) ** g[0]) : lms0 ** g[0]);
+    const c1 = (lms1 < 0 ? -((-lms1) ** g[1]) : lms1 ** g[1]);
+    const c2 = (lms2 < 0 ? -((-lms2) ** g[2]) : lms2 ** g[2]);
 
     return [
       M2[0] * c0 + M2[1] * c1 + M2[2] * c2,
@@ -313,9 +313,9 @@ export class AnalyticalSpace {
     const lc2 = M2i[6] * L + M2i[7] * a + M2i[8] * b;
 
     const ig = this.p.inv_gamma;
-    const l0 = Math.max(lc0, 0) ** ig[0];
-    const l1 = Math.max(lc1, 0) ** ig[1];
-    const l2 = Math.max(lc2, 0) ** ig[2];
+    const l0 = (lc0 < 0 ? -((-lc0) ** ig[0]) : lc0 ** ig[0]);
+    const l1 = (lc1 < 0 ? -((-lc1) ** ig[1]) : lc1 ** ig[1]);
+    const l2 = (lc2 < 0 ? -((-lc2) ** ig[2]) : lc2 ** ig[2]);
 
     const M1i = this.p.M1_inv;
     return [
