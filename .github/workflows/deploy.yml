@@ -41,7 +41,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build helmlab-js (local file: dependency)
+      - name: Build helmlab-js local dependency
         run: cd packages/helmlab-js && npm ci && npm run build
 
       - name: Install landing dependencies
