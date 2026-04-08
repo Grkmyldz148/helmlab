@@ -32,7 +32,7 @@ jobs:
 
   # ─── 2. Build & Deploy landing-new (Astro) ────────────
   deploy:
-    needs: [test-python, test-js]
+    needs: [test-js]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,7 +74,7 @@ jobs:
 
   # ─── 3. Publish npm (only when version changes) ────────
   publish-npm:
-    needs: [test-python, test-js]
+    needs: [test-js]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -108,7 +108,7 @@ jobs:
 
   # ─── 4. Publish PyPI (only when version changes) ───────
   publish-pypi:
-    needs: [test-python, test-js]
+    needs: [test-python]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
