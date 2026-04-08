@@ -11,28 +11,28 @@ Important notes:
 
 ## Docs
 
-- [Documentation](https://helmlab.dev/docs): Full API reference for Python and JavaScript with identical method signatures
-- [Quick Start](https://helmlab.dev/docs#quick-start): Three-line install and usage example
-- [GenSpace API](https://helmlab.dev/docs#genspace): Forward/inverse transforms, gradient, palette, semanticScale methods
-- [MetricSpace API](https://helmlab.dev/docs#metricspace): deltaE, perceptualDistance, contrastRatio, ensureContrast methods
-- [TypeScript types](https://helmlab.dev/docs#typescript): Type definitions for GenParams, MetricParams, and Helmlab class
+- [Documentation](https://helmlab.space/docs): Full API reference for Python and JavaScript with identical method signatures
+- [Quick Start](https://helmlab.space/docs#quick-start): Three-line install and usage example
+- [GenSpace API](https://helmlab.space/docs#genspace): Forward/inverse transforms, gradient, palette, semanticScale methods
+- [MetricSpace API](https://helmlab.space/docs#metricspace): deltaE, perceptualDistance, contrastRatio, ensureContrast methods
+- [TypeScript types](https://helmlab.space/docs#typescript): Type definitions for GenParams, MetricParams, and Helmlab class
 
 ## Benchmarks
 
-- [Full benchmark report](https://helmlab.dev/benchmark): 90 metrics across 13 categories, complete transparency including losses
-- [STRESS scores](https://helmlab.dev/benchmark#stress): Comparison vs 9 competitors (CIEDE2000, CIE94, DIN99, OKLab, Jzazbz, CAM16-UCS, etc.) on 3 psychophysical datasets
-- [Independent validation](https://helmlab.dev/benchmark#independent): Hung-Berns 1995, Ebner-Fairchild 1998, Pointer 1980 — datasets OKLab was optimized on, where GenSpace wins 6-1
-- [Overfitting analysis](https://helmlab.dev/benchmark#overfitting): Train/test split results showing +1.8 STRESS gap, still beats all competitors
+- [Full benchmark report](https://helmlab.space/benchmark): 90 metrics across 13 categories, complete transparency including losses
+- [STRESS scores](https://helmlab.space/benchmark#stress): Comparison vs 9 competitors (CIEDE2000, CIE94, DIN99, OKLab, Jzazbz, CAM16-UCS, etc.) on 3 psychophysical datasets
+- [Independent validation](https://helmlab.space/benchmark#independent): Hung-Berns 1995, Ebner-Fairchild 1998, Pointer 1980 — datasets OKLab was optimized on, where GenSpace wins 6-1
+- [Overfitting analysis](https://helmlab.space/benchmark#overfitting): Train/test split results showing +1.8 STRESS gap, still beats all competitors
 
 ## Tools
 
-- [Interactive playground](https://helmlab.dev/playground): Live tools running helmlab.js client-side
-- [Gradient Tool](https://helmlab.dev/playground#gradient): Helmlab vs OKLab vs CIE Lab side-by-side with CV uniformity badges
-- [Palette Generator](https://helmlab.dev/playground#palette): 50-950 Tailwind-style scales from any base color
-- [Distance Calculator](https://helmlab.dev/playground#distance): MetricSpace deltaE with JND interpretation
-- [Contrast Checker](https://helmlab.dev/playground#contrast): WCAG checker with hue-preserving auto-fix
-- [Color Harmony](https://helmlab.dev/playground#harmony): Complementary, analogous, triadic, tetradic, split-complementary
-- [Mode Adapter](https://helmlab.dev/playground#mode): Light/dark mode color adaptation with contrast verification
+- [Interactive playground](https://helmlab.space/playground): Live tools running helmlab.js client-side
+- [Gradient Tool](https://helmlab.space/playground#gradient): Helmlab vs OKLab vs CIE Lab side-by-side with CV uniformity badges
+- [Palette Generator](https://helmlab.space/playground#palette): 50-950 Tailwind-style scales from any base color
+- [Distance Calculator](https://helmlab.space/playground#distance): MetricSpace deltaE with JND interpretation
+- [Contrast Checker](https://helmlab.space/playground#contrast): WCAG checker with hue-preserving auto-fix
+- [Color Harmony](https://helmlab.space/playground#harmony): Complementary, analogous, triadic, tetradic, split-complementary
+- [Mode Adapter](https://helmlab.space/playground#mode): Light/dark mode color adaptation with contrast verification
 
 ## Source
 
@@ -44,6 +44,6 @@ Important notes:
 ## Optional
 
 - [BENCHMARK.md](https://raw.githubusercontent.com/Grkmyldz148/helmlab/main/BENCHMARK.md): Full 560-line benchmark report with all 90 metric values, sub-dataset breakdowns, and architecture diagrams
-- [GenSpace pipeline details](https://helmlab.dev/benchmark#genspace-architecture): XYZ to M1 to depcubic transfer to M2 to enrichment to neutral correction
-- [MetricSpace pipeline details](https://helmlab.dev/benchmark#metricspace-architecture): 13-stage enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, and pair-dependent SL/SC weighting
+- [GenSpace pipeline details](https://helmlab.space/benchmark#genspace-architecture): XYZ to M1 to depcubic transfer to M2 to enrichment to neutral correction
+- [MetricSpace pipeline details](https://helmlab.space/benchmark#metricspace-architecture): 13-stage enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, and pair-dependent SL/SC weighting
 - [color.js integration PR](https://github.com/color-js/color.js/pull/722): Pull request adding Helmlab to color.js

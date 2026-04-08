@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://helmlab.dev/sitemap-index.xml
+Sitemap: https://helmlab.space/sitemap-index.xml

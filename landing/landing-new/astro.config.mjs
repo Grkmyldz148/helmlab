@@ -8,7 +8,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://helmlab.dev',
+  site: 'https://helmlab.space',
   integrations: [react(), sitemap()],
 
   vite: {

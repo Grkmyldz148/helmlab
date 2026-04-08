@@ -15,7 +15,7 @@ const {
   ogImage = "/og-card.png",
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://helmlab.dev");
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://helmlab.space");
 ---
 
 <!doctype html>
@@ -52,8 +52,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://helmlab.
       "@type": "SoftwareApplication",
       "name": "Helmlab",
       "description": description,
-      "url": "https://helmlab.dev",
-      "image": "https://helmlab.dev/og-card.png",
+      "url": "https://helmlab.space",
+      "image": "https://helmlab.space/og-card.png",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Any",
       "softwareVersion": "0.11.8",
