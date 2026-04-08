@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GradientTool from '../components/react/GradientTool';
+import PaletteTool from '../components/react/PaletteTool';
+import ColorHarmony from '../components/react/ColorHarmony';
+import ColorPicker from '../components/react/ColorPicker';
+import ContrastChecker from '../components/react/ContrastChecker';
+import ModeAdapter from '../components/react/ModeAdapter';
+import DistanceCalculator from '../components/react/DistanceCalculator';
+---
+
+<BaseLayout title="Playground — Helmlab" description="Interactive color space tools. Compare gradients, generate palettes, and inspect colors across Helmlab, OKLab, and CIE Lab.">
+  <section class="py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-6 text-center mb-16">
+      <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Interactive</span>
+      <h1 class="text-4xl sm:text-5xl font-bold mt-3 mb-4">Playground</h1>
+      <p class="for-designer text-[#a1a1aa] max-w-2xl mx-auto">See the difference yourself. Pick colors and compare results.</p>
+      <p class="for-dev text-[#a1a1aa] max-w-2xl mx-auto">Live helmlab.js comparison tools. All computation runs client-side.</p>
+    </div>
+    <div class="max-w-6xl mx-auto px-6 flex flex-col gap-20">
+      <GradientTool client:visible />
+      <PaletteTool client:visible />
+      <DistanceCalculator client:visible />
+      <ColorHarmony client:visible />
+      <ColorPicker client:visible />
+      <ContrastChecker client:visible />
+      <ModeAdapter client:visible />
+    </div>
+  </section>
+</BaseLayout>

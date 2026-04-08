@@ -42,3 +42,14 @@ Thumbs.db
 landing/api/comments.json
 .env
 *.env
+
+# Landing site build artifacts
+landing/landing-new/dist/
+landing/landing-new/node_modules/
+landing/landing-new/.astro/
+
+# landing-old kept locally as backup, not committed
+landing/landing-old/
+
+# Local editor/video work
+landing/video/

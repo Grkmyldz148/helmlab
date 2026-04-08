@@ -1,0 +1,119 @@
+---
+// UseCases — when to use / when not to use Helmlab
+const useCases = [
+  {
+    title: "Design System Palettes",
+    desc: "Munsell Value CV: 0.16% vs OKLab 2.80%. 18x better lightness uniformity.",
+  },
+  {
+    title: "Gradient Interpolation",
+    desc: "31% less max hue drift, 18% better cross-lightness CV. G/R=1.51 (OKLab: 1.41).",
+  },
+  {
+    title: "Gamut Mapping",
+    desc: "360/360 cusps, 0 mono violations, cusp smoothness 0.072 (OKLab: 0.805). 11x smoother.",
+  },
+  {
+    title: "Data Visualization",
+    desc: "Higher min pairwise delta-E (14.50 vs 14.34). Better perceptual distinctiveness.",
+  },
+  {
+    title: "Dark UI Themes",
+    desc: "Dark gradient CV: 37.24% vs OKLab 47.28%. 26% better uniformity in L<0.4.",
+  },
+  {
+    title: "Color Animation",
+    desc: "Frame-to-frame CV: 60.1% vs 62.1%. Fewer quantization artifacts in 8-bit.",
+  },
+  {
+    title: "Wide Gamut (P3, Rec.2020)",
+    desc: "P3 cusps: 360/360 (OKLab: 308). Zero P3 mono violations (OKLab: 71).",
+  },
+  {
+    title: "Blue / Yellow Design",
+    desc: "Blue G/R=1.513 (OKLab: 1.408). Yellow chroma 0.333 (OKLab: 0.211, +58%).",
+  },
+];
+
+const antiCases = [
+  {
+    title: "Near-Achromatic Gradients",
+    recommend: "OKLab",
+    desc: "Near-achromatic CV: OKLab 85.95% vs Helmlab 106.73%. 24% gap.",
+  },
+  {
+    title: "CVD Deutan Palettes",
+    recommend: "OKLab",
+    desc: "Deutan min step delta-E: OKLab 0.157 vs Helmlab 0.110. 30% gap.",
+  },
+  {
+    title: "CSS oklch() Required",
+    recommend: "OKLab",
+    desc: "oklch() is in CSS Color Level 4. Zero bundle cost.",
+  },
+  {
+    title: "HDR / PQ Content",
+    recommend: "Jzazbz",
+    desc: "Perceptual quantization for luminance >1000 cd/m2. Untested territory.",
+  },
+  {
+    title: "Minimal Bundle Size",
+    recommend: "OKLab",
+    desc: "OKLab: ~2KB. Helmlab: 11.6KB gzipped. 6x larger.",
+  },
+  {
+    title: "CIE Lab Hue Compatibility",
+    recommend: "CIE Lab",
+    desc: "Legacy system interop. Hue agreement: CIE Lab 0 deg vs Helmlab 8.3 deg.",
+  },
+];
+---
+
+<section class="py-16 md:py-24" id="use-cases">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- When to use -->
+    <div class="mb-20">
+      <div class="text-center mb-12 md:mb-16">
+        <span class="text-xs uppercase tracking-widest text-[#34d399] font-medium">Recommended</span>
+        <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">When to Use Helmlab</h2>
+        <p class="text-[#a1a1aa] max-w-2xl mx-auto">
+          Tasks where GenSpace or MetricSpace measurably outperforms alternatives.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {useCases.map((uc) => (
+          <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-5 hover:border-[#34d399]/20 transition-colors">
+            <h3 class="text-sm font-semibold text-[#fafafa] mb-2">{uc.title}</h3>
+            <p class="text-xs text-[#a1a1aa] leading-relaxed">{uc.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- When NOT to use -->
+    <div>
+      <div class="text-center mb-12 md:mb-16">
+        <span class="text-xs uppercase tracking-widest text-[#f87171] font-medium">Honest</span>
+        <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">When NOT to Use Helmlab</h2>
+        <p class="text-[#a1a1aa] max-w-2xl mx-auto">
+          We believe in honest recommendations. These tools are better for specific use cases.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {antiCases.map((ac) => (
+          <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-semibold text-[#fafafa]">{ac.title}</h3>
+              <span class="text-[10px] uppercase tracking-wider rounded-full bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 text-[#a1a1aa] whitespace-nowrap">
+                Use {ac.recommend}
+              </span>
+            </div>
+            <p class="text-xs text-[#52525b] leading-relaxed">{ac.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

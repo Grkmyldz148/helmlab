@@ -1,0 +1,133 @@
+---
+// SpaceCards — two side-by-side cards for GenSpace and MetricSpace
+---
+
+<section class="py-16 md:py-24" id="architecture">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-12 md:mb-16">
+      <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Architecture</span>
+      <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">Two Spaces, One Library</h2>
+      <p class="text-[#a1a1aa] max-w-2xl mx-auto">
+        GenSpace for creating colors, MetricSpace for measuring them. Same library, different pipelines optimized for different objectives.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- GenSpace Card -->
+      <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-8">
+        <div class="inline-flex items-center rounded-full bg-[#34d399]/10 border border-[#34d399]/20 px-3 py-1 text-xs font-medium text-[#34d399] mb-4">
+          GenSpace
+        </div>
+        <h3 class="text-2xl font-bold mb-2">For Generation</h3>
+        <p class="text-[#a1a1aa] text-sm mb-6">
+          ~35 parameters, depressed cubic transfer, CMA-ES optimized M1/M2 matrices, structural achromatic.
+        </p>
+
+        <!-- Key stats -->
+        <div class="flex flex-wrap gap-4 mb-6">
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">66-9</span>
+            <span class="text-xs text-[#52525b]">vs OKLab</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">360/360</span>
+            <span class="text-xs text-[#52525b]">sRGB cusps</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">0 deps</span>
+            <span class="text-xs text-[#52525b]">11.6KB gzip</span>
+          </div>
+        </div>
+
+        <!-- Mini pipeline -->
+        <div class="rounded-xl bg-[#09090b] border border-white/[0.04] p-4">
+          <div class="text-[10px] uppercase tracking-widest text-[#52525b] mb-2">Pipeline</div>
+          <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">XYZ</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M1</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-[#34d399]/10 px-2 py-1 text-[#34d399]">depcubic</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M2</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">enrich</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">PW-L</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">NC</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#fafafa] font-semibold">Lab</span>
+          </div>
+        </div>
+
+        <!-- Methods -->
+        <div class="flex flex-wrap gap-2 mt-4">
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">gradient()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">palette()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">semanticScale()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">gamutMap()</code>
+        </div>
+      </div>
+
+      <!-- MetricSpace Card -->
+      <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-8">
+        <div class="inline-flex items-center rounded-full bg-[#60a5fa]/10 border border-[#60a5fa]/20 px-3 py-1 text-xs font-medium text-[#60a5fa] mb-4">
+          MetricSpace v21
+        </div>
+        <h3 class="text-2xl font-bold mb-2">For Measurement</h3>
+        <p class="text-[#a1a1aa] text-sm mb-6">
+          72-parameter enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, pair-dependent SL/SC weighting.
+        </p>
+
+        <!-- Key stats -->
+        <div class="flex flex-wrap gap-4 mb-6">
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">22.48</span>
+            <span class="text-xs text-[#52525b]">STRESS</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">72</span>
+            <span class="text-xs text-[#52525b]">parameters</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-bold text-[#fafafa]">23%</span>
+            <span class="text-xs text-[#52525b]">better than CIEDE2000</span>
+          </div>
+        </div>
+
+        <!-- Mini pipeline -->
+        <div class="rounded-xl bg-[#09090b] border border-white/[0.04] p-4">
+          <div class="text-[10px] uppercase tracking-widest text-[#52525b] mb-2">Pipeline</div>
+          <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">XYZ</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-[#60a5fa]/10 px-2 py-1 text-[#60a5fa]">CAT</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M1</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">&gamma;</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M2</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">hue</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">H-K</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">NC</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#fafafa] font-semibold">Lab</span>
+          </div>
+        </div>
+
+        <!-- Methods -->
+        <div class="flex flex-wrap gap-2 mt-4">
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">deltaE()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">fromHex()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">info()</code>
+          <code class="text-xs rounded bg-white/[0.04] px-2 py-1 text-[#a1a1aa]">stress()</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

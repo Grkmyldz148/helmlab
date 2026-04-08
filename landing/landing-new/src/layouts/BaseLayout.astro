@@ -1,0 +1,100 @@
+---
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title = "Helmlab — Perceptual Color Space",
+  description = "A perceptually uniform color space engineered for designers and developers. Beats CIEDE2000 on color difference, gradient smoothness, and gamut mapping.",
+  ogImage = "/og-card.png",
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://helmlab.dev");
+---
+
+<!doctype html>
+<html lang="en" class="audience-developer">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL.href} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="canonical" href={canonicalURL.href} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- JSON-LD Structured Data: SoftwareApplication -->
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Helmlab",
+      "description": description,
+      "url": "https://helmlab.dev",
+      "image": "https://helmlab.dev/og-card.png",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "softwareVersion": "0.11.8",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "license": "https://opensource.org/licenses/MIT",
+      "author": {
+        "@type": "Person",
+        "name": "Grkmyldz148",
+        "url": "https://github.com/Grkmyldz148"
+      },
+      "codeRepository": "https://github.com/Grkmyldz148/helmlab",
+      "programmingLanguage": ["Python", "JavaScript", "TypeScript"],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "reviewCount": "1"
+      }
+    })} />
+
+    <!-- Render-blocking: set audience class before paint to prevent flash -->
+    <script is:inline>
+      (function() {
+        var s = localStorage.getItem("helmlab-audience");
+        if (s === "designer" || s === "developer") {
+          document.documentElement.className = document.documentElement.className
+            .replace("audience-developer", "").replace("audience-designer", "").trim()
+            + " audience-" + s;
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-[#09090b] text-[#fafafa] antialiased">
+    <Nav />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+
+  </body>
+</html>

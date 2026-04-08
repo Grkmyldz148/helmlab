@@ -1,0 +1,760 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const sections = [
+  { id: "installation", label: "Installation" },
+  { id: "quick-start", label: "Quick Start" },
+  { id: "genspace", label: "GenSpace" },
+  { id: "metricspace", label: "MetricSpace" },
+  { id: "helmlab-class", label: "Helmlab Class" },
+  { id: "typescript", label: "TypeScript" },
+  { id: "advanced", label: "Advanced" },
+];
+---
+
+<BaseLayout
+  title="Docs — Helmlab"
+  description="API documentation for Helmlab color space. Python and JavaScript with identical APIs. GenSpace for generation, MetricSpace for measurement."
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+    <div class="lg:grid lg:grid-cols-[220px_1fr] lg:gap-10">
+
+      <!-- Sidebar TOC (desktop: sticky, mobile: dropdown) -->
+      <aside class="mb-8 lg:mb-0">
+        <!-- Mobile dropdown -->
+        <div class="lg:hidden mb-6">
+          <label for="docs-toc-toggle" class="flex items-center justify-between w-full rounded-lg border border-white/[0.06] bg-[#0c0c0f] px-4 py-3 text-sm font-medium text-[#a1a1aa] cursor-pointer">
+            <span>On this page</span>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </label>
+          <input type="checkbox" id="docs-toc-toggle" class="peer hidden" />
+          <nav class="hidden peer-checked:block mt-2 rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-3">
+            <ul class="space-y-1">
+              {sections.map((s) => (
+                <li>
+                  <a href={`#${s.id}`} class="block rounded-md px-3 py-2 text-sm text-[#a1a1aa] transition-colors hover:text-white hover:bg-white/[0.04]">
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+
+        <!-- Desktop sticky sidebar -->
+        <nav class="hidden lg:block sticky top-20">
+          <p class="text-xs uppercase tracking-widest text-[#52525b] font-medium mb-4">On this page</p>
+          <ul class="space-y-1">
+            {sections.map((s) => (
+              <li>
+                <a href={`#${s.id}`} class="block rounded-md px-3 py-1.5 text-sm text-[#a1a1aa] transition-colors hover:text-white hover:bg-white/[0.04]">
+                  {s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div class="mt-8 pt-6 border-t border-white/[0.06]">
+            <a href="https://github.com/Grkmyldz148/helmlab" target="_blank" rel="noopener noreferrer" class="text-xs text-[#52525b] hover:text-[#a1a1aa] transition-colors">
+              Edit on GitHub
+            </a>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <div class="max-w-4xl">
+        <h1 class="text-3xl sm:text-4xl font-bold mb-3">Documentation</h1>
+        <p class="text-[#a1a1aa] text-lg mb-12">
+          Python and JavaScript with identical APIs. TypeScript types included.
+        </p>
+
+        <!-- Language tab switcher (CSS-only via radio inputs) -->
+        <div class="docs-lang-switcher flex gap-1 mb-12 rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-1 w-fit">
+          <input type="radio" name="docs-lang" id="lang-python" value="python" class="peer/py hidden" checked />
+          <label for="lang-python" class="docs-lang-btn rounded-md px-4 py-2 text-sm font-medium cursor-pointer transition-colors text-[#52525b] peer-checked/py:bg-white/[0.06] peer-checked/py:text-[#fafafa]">
+            Python
+          </label>
+          <input type="radio" name="docs-lang" id="lang-js" value="js" class="peer/js hidden" />
+          <label for="lang-js" class="docs-lang-btn rounded-md px-4 py-2 text-sm font-medium cursor-pointer transition-colors text-[#52525b] peer-checked/js:bg-white/[0.06] peer-checked/js:text-[#fafafa]">
+            JavaScript / TypeScript
+          </label>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- INSTALLATION -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="installation" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">Installation</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              Helmlab works in both Python and JavaScript. Pick whichever your team already uses. If you just want to try it out, the JS package is the easiest to get going with.
+            </p>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              Zero dependencies in the JS package (~12KB gzipped). Python requires NumPy. Both packages ship the same default parameters and produce identical output.
+            </p>
+          </div>
+
+          <!-- Python install -->
+          <div class="docs-py mb-4">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Python</span>
+<span class="text-[#34d399]">pip install helmlab</span></code></pre>
+          </div>
+
+          <!-- JS install -->
+          <div class="docs-js mb-4">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># npm</span>
+<span class="text-[#34d399]">npm install helmlab</span>
+
+<span class="text-[#52525b]"># or yarn / pnpm</span>
+<span class="text-[#34d399]">yarn add helmlab</span></code></pre>
+          </div>
+
+          <div class="for-dev">
+            <p class="text-sm text-[#52525b] mt-4">
+              PostCSS plugin also available: <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-xs">npm install postcss-helmlab</code>
+            </p>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- QUICK START -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="quick-start" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">Quick Start</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              The <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">Helmlab</code> class is the main entry point. It gives you everything: palettes, gradients, contrast checking, and color measurement -- all in one place.
+            </p>
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4 mb-4">
+              <p class="text-sm text-[#a1a1aa]">
+                <strong class="text-[#fafafa]">What you get:</strong> Pass in any hex color and get back a full palette, smooth gradients, or a Tailwind-style 50-950 semantic scale. Every output is gamut-mapped to valid sRGB.
+              </p>
+            </div>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">Helmlab</code> is the high-level API wrapping both GenSpace (generation) and MetricSpace (measurement). It accepts hex strings, returns hex strings, and handles gamut mapping internally.
+            </p>
+          </div>
+
+          <!-- Python quick start -->
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab</span> <span class="text-[#c084fc]">import</span> Helmlab
+
+hl = Helmlab()
+
+<span class="text-[#52525b]"># Generate a 10-shade palette</span>
+palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">10</span>)
+
+<span class="text-[#52525b]"># Smooth gradient from red to blue (16 steps)</span>
+gradient = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">"#ef4444"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">16</span>)
+
+<span class="text-[#52525b]"># Perceptual color distance</span>
+dist = hl.<span class="text-[#34d399]">delta_e</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
+
+<span class="text-[#52525b]"># Ensure WCAG AA contrast (adjusts color if needed)</span>
+adjusted = hl.<span class="text-[#34d399]">ensure_contrast</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, <span class="text-[#fb923c]">"#ffffff"</span>, min_ratio=<span class="text-[#f97316]">4.5</span>)
+
+<span class="text-[#52525b]"># Tailwind-style semantic scale</span>
+scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)</code></pre>
+          </div>
+
+          <!-- JS quick start -->
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} Helmlab {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> hl = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">Helmlab</span>();
+
+<span class="text-[#52525b]">// Generate a 10-shade palette</span>
+<span class="text-[#c084fc]">const</span> palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">10</span>);
+
+<span class="text-[#52525b]">// Smooth gradient from red to blue (16 steps)</span>
+<span class="text-[#c084fc]">const</span> gradient = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">'#ef4444'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">16</span>);
+
+<span class="text-[#52525b]">// Perceptual color distance</span>
+<span class="text-[#c084fc]">const</span> dist = hl.<span class="text-[#34d399]">deltaE</span>(<span class="text-[#fb923c]">'#ff0000'</span>, <span class="text-[#fb923c]">'#00ff00'</span>);
+
+<span class="text-[#52525b]">// Ensure WCAG AA contrast (adjusts color if needed)</span>
+<span class="text-[#c084fc]">const</span> adjusted = hl.<span class="text-[#34d399]">ensureContrast</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#f97316]">4.5</span>);
+
+<span class="text-[#52525b]">// Tailwind-style semantic scale</span>
+<span class="text-[#c084fc]">const</span> scale = hl.<span class="text-[#34d399]">semanticScale</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);</code></pre>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- GENSPACE -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="genspace" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">GenSpace</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              GenSpace is the color space optimized for <strong class="text-[#fafafa]">creating</strong> colors -- gradients, palettes, and gamut mapping. It produces smooth, visually pleasing gradients without the lavender shift that plagues OKLab in the blue region.
+            </p>
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4 mb-4">
+              <p class="text-sm text-[#a1a1aa]">
+                <strong class="text-[#fafafa]">When to use:</strong> Generating color palettes, creating gradients, building design tokens, gamut mapping for display.
+              </p>
+            </div>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              GenSpace uses a depressed cubic transfer function (<code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">y&sup3; + &alpha;y = x</code>) with L-gated hue enrichment. Pipeline: <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">XYZ &rarr; M1 &rarr; depcubic &rarr; M2 &rarr; C^cp &rarr; PW_L &rarr; enrichment &rarr; Lab</code>. All transforms have exact analytical inverses.
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-8">Forward / Inverse Transform</h3>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.gen</span> <span class="text-[#c084fc]">import</span> GenSpace
+
+gen = GenSpace()
+
+<span class="text-[#52525b]"># sRGB [0,1] &rarr; Helmlab Lab [L, a, b]</span>
+lab = gen.<span class="text-[#34d399]">from_srgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>])
+
+<span class="text-[#52525b]"># Helmlab Lab &rarr; sRGB [0,1]</span>
+rgb = gen.<span class="text-[#34d399]">to_srgb</span>(lab)
+
+<span class="text-[#52525b]"># XYZ &rarr; Lab (lower level)</span>
+lab = gen.<span class="text-[#34d399]">forward</span>(xyz)
+xyz = gen.<span class="text-[#34d399]">inverse</span>(lab)</code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} GenSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> gen = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">GenSpace</span>();
+
+<span class="text-[#52525b]">// sRGB [0,1] &rarr; Helmlab Lab [L, a, b]</span>
+<span class="text-[#c084fc]">const</span> lab = gen.<span class="text-[#34d399]">fromSrgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>]);
+
+<span class="text-[#52525b]">// Helmlab Lab &rarr; sRGB [0,1]</span>
+<span class="text-[#c084fc]">const</span> rgb = gen.<span class="text-[#34d399]">toSrgb</span>(lab);
+
+<span class="text-[#52525b]">// XYZ &rarr; Lab (lower level)</span>
+<span class="text-[#c084fc]">const</span> lab2 = gen.<span class="text-[#34d399]">forward</span>(xyz);
+<span class="text-[#c084fc]">const</span> xyz2 = gen.<span class="text-[#34d399]">inverse</span>(lab2);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">Gradient Generation</h3>
+
+          <div class="for-designer mb-4">
+            <p class="text-[#a1a1aa] mb-4">
+              Helmlab gradients use arc-length reparameterization to ensure each step looks equally spaced to human eyes. This means no bunching near the endpoints and no sudden jumps in the middle.
+            </p>
+          </div>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab</span> <span class="text-[#c084fc]">import</span> Helmlab
+
+hl = Helmlab()
+
+<span class="text-[#52525b]"># 16-step gradient with arc-length reparameterization</span>
+grad = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">"#ef4444"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">16</span>)
+<span class="text-[#52525b]"># Returns: ['#ef4444', '#d4538d', '#b560c1', ..., '#3b82f6']</span></code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} Helmlab {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> hl = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">Helmlab</span>();
+
+<span class="text-[#52525b]">// 16-step gradient with arc-length reparameterization</span>
+<span class="text-[#c084fc]">const</span> grad = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">'#ef4444'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">16</span>);
+<span class="text-[#52525b]">// Returns: ['#ef4444', '#d4538d', '#b560c1', ..., '#3b82f6']</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">Palette Generation</h3>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Generate a 10-shade palette (dark to light)</span>
+palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">10</span>)
+<span class="text-[#52525b]"># Returns: ['#0a1628', '#132d50', ..., '#3b82f6', ..., '#dbe8fd']</span></code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Generate a 10-shade palette (dark to light)</span>
+<span class="text-[#c084fc]">const</span> palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">10</span>);
+<span class="text-[#52525b]">// Returns: ['#0a1628', '#132d50', ..., '#3b82f6', ..., '#dbe8fd']</span></code></pre>
+          </div>
+
+          <div class="for-dev mt-6">
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4">
+              <p class="text-sm text-[#a1a1aa]">
+                <strong class="text-[#fafafa]">Key properties:</strong> 360/360/360 valid cusps across sRGB, Display P3, and Rec.2020. Zero monotonicity violations. Blue-to-white gradient produces sky blue midpoint (G/R = 1.51), not lavender. Achromatic precision: C* &lt; 10<sup>-15</sup>.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- METRICSPACE -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="metricspace" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">MetricSpace</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              MetricSpace is optimized for <strong class="text-[#fafafa]">measuring</strong> how different two colors look. It answers the question "how far apart do these colors appear to a human?" more accurately than any existing formula, including the industry-standard CIEDE2000.
+            </p>
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4 mb-4">
+              <p class="text-sm text-[#a1a1aa]">
+                <strong class="text-[#fafafa]">When to use:</strong> Comparing colors, finding closest matches, evaluating palette consistency, quality control for design tokens.
+              </p>
+            </div>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              72-parameter enriched pipeline jointly optimized against COMBVD (3,813 pairs, 64,000+ human judgments). STRESS 22.48 -- 23% better than CIEDE2000's 29.18. Pipeline: <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">XYZ &rarr; M1 &rarr; &gamma; &rarr; M2 &rarr; Hue &rarr; H-K &rarr; L &rarr; C &rarr; HL &rarr; NC &rarr; &phi; &rarr; Lab</code>.
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-8">Color Difference</h3>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab</span> <span class="text-[#c084fc]">import</span> Helmlab
+
+hl = Helmlab()
+
+<span class="text-[#52525b]"># Perceptual distance between two colors</span>
+dist = hl.<span class="text-[#34d399]">delta_e</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
+<span class="text-[#52525b]"># &rarr; 0.423 (lower = more similar)</span>
+
+<span class="text-[#52525b]"># Contrast ratio (WCAG-compatible)</span>
+ratio = hl.<span class="text-[#34d399]">contrast_ratio</span>(<span class="text-[#fb923c]">"#ffffff"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>)
+<span class="text-[#52525b]"># &rarr; 3.68</span></code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} Helmlab {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> hl = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">Helmlab</span>();
+
+<span class="text-[#52525b]">// Perceptual distance between two colors</span>
+<span class="text-[#c084fc]">const</span> dist = hl.<span class="text-[#34d399]">deltaE</span>(<span class="text-[#fb923c]">'#ff0000'</span>, <span class="text-[#fb923c]">'#00ff00'</span>);
+<span class="text-[#52525b]">// &rarr; 0.423 (lower = more similar)</span>
+
+<span class="text-[#52525b]">// Contrast ratio (WCAG-compatible)</span>
+<span class="text-[#c084fc]">const</span> ratio = hl.<span class="text-[#34d399]">contrastRatio</span>(<span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>);
+<span class="text-[#52525b]">// &rarr; 3.68</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">STRESS Evaluation</h3>
+
+          <div class="for-dev">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto docs-py"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.metric</span> <span class="text-[#c084fc]">import</span> MetricSpace
+
+metric = MetricSpace()
+
+<span class="text-[#52525b]"># Forward transform: XYZ &rarr; MetricSpace Lab</span>
+lab = metric.<span class="text-[#34d399]">forward</span>(xyz)
+
+<span class="text-[#52525b]"># Distance with the full enriched formula</span>
+dist = metric.<span class="text-[#34d399]">distance</span>(lab1, lab2)</code></pre>
+
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto docs-js"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} MetricSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> metric = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">MetricSpace</span>();
+
+<span class="text-[#52525b]">// Forward transform: XYZ &rarr; MetricSpace Lab</span>
+<span class="text-[#c084fc]">const</span> lab = metric.<span class="text-[#34d399]">forward</span>(xyz);
+
+<span class="text-[#52525b]">// Distance with the full enriched formula</span>
+<span class="text-[#c084fc]">const</span> dist = metric.<span class="text-[#34d399]">distance</span>(lab1, lab2);</code></pre>
+          </div>
+
+          <div class="for-dev mt-6">
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4">
+              <p class="text-sm text-[#a1a1aa]">
+                <strong class="text-[#fafafa]">Benchmark:</strong> STRESS 22.48 on COMBVD (with Bradford CAT). Beats CIEDE2000 (29.18), CIE94 (33.59), CAM16-UCS (33.90), and all other published formulas. Includes Helmholtz-Kohlrausch compensation, hue-dependent lightness, chroma scaling, and neutral correction.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- HELMLAB CLASS -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="helmlab-class" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">Helmlab Class</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              The Helmlab class is the single import you need for most tasks. It wraps both GenSpace and MetricSpace and provides a clean hex-in, hex-out API.
+            </p>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              High-level API class. Accepts hex strings, handles sRGB conversion and gamut mapping internally. Uses GenSpace for generation methods and MetricSpace for distance/contrast methods.
+            </p>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-8">palette()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Generate a lightness-uniform palette from a single color.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">10</span>)
+<span class="text-[#52525b]"># Returns list of hex strings: ['#0a1628', '#132d50', ...]</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">10</span>);
+<span class="text-[#52525b]">// Returns string[]: ['#0a1628', '#132d50', ...]</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">gradient()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Generate a perceptually uniform gradient between two colors using CIEDE2000 arc-length reparameterization.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">grad = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">"#ef4444"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">16</span>)
+<span class="text-[#52525b]"># Steps are equally spaced in CIEDE2000 perceptual distance</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> grad = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">'#ef4444'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">16</span>);
+<span class="text-[#52525b]">// Steps are equally spaced in CIEDE2000 perceptual distance</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">semanticScale()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Generate a Tailwind-style 50-950 semantic scale from a base color.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)
+<span class="text-[#52525b]"># Returns dict: {"{"}50: '#eff6ff', 100: '#dbeafe', ..., 950: '#0a1628'{"}"}</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> scale = hl.<span class="text-[#34d399]">semanticScale</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);
+<span class="text-[#52525b]">// Returns Record&lt;number, string&gt;: {"{"}50: '#eff6ff', 100: '#dbeafe', ...{"}"}</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">adaptToMode()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Adapt a color for dark or light mode while preserving its perceptual identity.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Adapt a light-mode color for dark mode</span>
+dark = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, mode=<span class="text-[#fb923c]">"dark"</span>)
+
+<span class="text-[#52525b]"># Adapt a dark-mode color for light mode</span>
+light = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#93c5fd"</span>, mode=<span class="text-[#fb923c]">"light"</span>)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Adapt a light-mode color for dark mode</span>
+<span class="text-[#c084fc]">const</span> dark = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'dark'</span>);
+
+<span class="text-[#52525b]">// Adapt a dark-mode color for light mode</span>
+<span class="text-[#c084fc]">const</span> light = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#93c5fd'</span>, <span class="text-[#fb923c]">'light'</span>);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">ensureContrast()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Adjust a color to meet a minimum WCAG contrast ratio against a background.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Ensure WCAG AA (4.5:1) contrast</span>
+adjusted = hl.<span class="text-[#34d399]">ensure_contrast</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, <span class="text-[#fb923c]">"#ffffff"</span>, min_ratio=<span class="text-[#f97316]">4.5</span>)
+
+<span class="text-[#52525b]"># Ensure WCAG AAA (7:1) contrast</span>
+adjusted = hl.<span class="text-[#34d399]">ensure_contrast</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, <span class="text-[#fb923c]">"#ffffff"</span>, min_ratio=<span class="text-[#f97316]">7.0</span>)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Ensure WCAG AA (4.5:1) contrast</span>
+<span class="text-[#c084fc]">const</span> adjusted = hl.<span class="text-[#34d399]">ensureContrast</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#f97316]">4.5</span>);
+
+<span class="text-[#52525b]">// Ensure WCAG AAA (7:1) contrast</span>
+<span class="text-[#c084fc]">const</span> adjusted2 = hl.<span class="text-[#34d399]">ensureContrast</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#f97316]">7.0</span>);</code></pre>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- TYPESCRIPT -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="typescript" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">TypeScript</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              If you use TypeScript, Helmlab ships complete type definitions. Your editor will autocomplete every method and parameter.
+            </p>
+          </div>
+
+          <div class="for-dev mb-6">
+            <p class="text-[#a1a1aa] mb-4">
+              Full TypeScript declarations included. ESM and CJS builds. All parameter interfaces are exported for custom configurations.
+            </p>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> <span class="text-[#c084fc]">type</span> {"{"} Lab, GenParams, MetricParams {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+<span class="text-[#c084fc]">import</span> {"{"} Helmlab, GenSpace, MetricSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#52525b]">// Lab is a [number, number, number] tuple</span>
+<span class="text-[#c084fc]">const</span> color: <span class="text-[#60a5fa]">Lab</span> = [<span class="text-[#f97316]">0.5</span>, <span class="text-[#f97316]">-0.1</span>, <span class="text-[#f97316]">0.2</span>];
+
+<span class="text-[#52525b]">// GenParams / MetricParams for custom spaces</span>
+<span class="text-[#c084fc]">const</span> params: <span class="text-[#60a5fa]">GenParams</span> = {"{"}
+  M1: [[...], [...], [...]],
+  M2: [[...], [...], [...]],
+  alpha: <span class="text-[#f97316]">0.021</span>,
+  chroma_power: <span class="text-[#f97316]">0.978</span>,
+  <span class="text-[#52525b]">// ... other parameters</span>
+{"}"};</code></pre>
+          </div>
+
+          <div class="docs-py">
+            <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4">
+              <p class="text-sm text-[#52525b]">
+                Python type hints are available via <code class="text-[#a1a1aa]">py.typed</code> marker. Works with mypy and pyright.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- ADVANCED -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="advanced" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">Advanced</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-dev">
+            <h3 class="text-lg font-semibold mb-4 mt-4">Custom Parameters</h3>
+            <p class="text-[#a1a1aa] mb-4">
+              Both GenSpace and MetricSpace accept custom parameter objects. Use this for research or when training on your own datasets.
+            </p>
+
+            <div class="docs-py">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> <span class="text-[#60a5fa]">json</span>
+<span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.gen</span> <span class="text-[#c084fc]">import</span> GenSpace
+
+<span class="text-[#52525b]"># Load custom parameters</span>
+<span class="text-[#c084fc]">with</span> <span class="text-[#34d399]">open</span>(<span class="text-[#fb923c]">"my_params.json"</span>) <span class="text-[#c084fc]">as</span> f:
+    params = json.<span class="text-[#34d399]">load</span>(f)
+
+gen = GenSpace(params=params)</code></pre>
+            </div>
+
+            <div class="docs-js">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} GenSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+<span class="text-[#c084fc]">import</span> params <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'./my_params.json'</span>;
+
+<span class="text-[#c084fc]">const</span> gen = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">GenSpace</span>(params);</code></pre>
+            </div>
+
+            <h3 class="text-lg font-semibold mb-4 mt-10">Raw Space Access</h3>
+            <p class="text-[#a1a1aa] mb-4">
+              For maximum control, use GenSpace or MetricSpace directly instead of the Helmlab wrapper. This gives you access to the raw Lab coordinates without hex conversion or gamut mapping.
+            </p>
+
+            <div class="docs-py">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.gen</span> <span class="text-[#c084fc]">import</span> GenSpace
+<span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.metric</span> <span class="text-[#c084fc]">import</span> MetricSpace
+
+gen = GenSpace()
+metric = MetricSpace()
+
+<span class="text-[#52525b]"># Convert sRGB to Lab (both spaces)</span>
+gen_lab = gen.<span class="text-[#34d399]">from_srgb</span>([<span class="text-[#f97316]">0.2</span>, <span class="text-[#f97316]">0.5</span>, <span class="text-[#f97316]">0.8</span>])
+met_lab = metric.<span class="text-[#34d399]">from_srgb</span>([<span class="text-[#f97316]">0.2</span>, <span class="text-[#f97316]">0.5</span>, <span class="text-[#f97316]">0.8</span>])
+
+<span class="text-[#52525b]"># These are different spaces -- different Lab values</span>
+<span class="text-[#c084fc]">print</span>(gen_lab)   <span class="text-[#52525b]"># [0.584, -0.087, -0.194]</span>
+<span class="text-[#c084fc]">print</span>(met_lab)   <span class="text-[#52525b]"># [0.571, -0.052, -0.183]</span></code></pre>
+            </div>
+
+            <div class="docs-js">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} GenSpace, MetricSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#c084fc]">const</span> gen = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">GenSpace</span>();
+<span class="text-[#c084fc]">const</span> metric = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">MetricSpace</span>();
+
+<span class="text-[#52525b]">// Convert sRGB to Lab (both spaces)</span>
+<span class="text-[#c084fc]">const</span> genLab = gen.<span class="text-[#34d399]">fromSrgb</span>([<span class="text-[#f97316]">0.2</span>, <span class="text-[#f97316]">0.5</span>, <span class="text-[#f97316]">0.8</span>]);
+<span class="text-[#c084fc]">const</span> metLab = metric.<span class="text-[#34d399]">fromSrgb</span>([<span class="text-[#f97316]">0.2</span>, <span class="text-[#f97316]">0.5</span>, <span class="text-[#f97316]">0.8</span>]);
+
+<span class="text-[#52525b]">// These are different spaces -- different Lab values</span>
+console.<span class="text-[#34d399]">log</span>(genLab);  <span class="text-[#52525b]">// [0.584, -0.087, -0.194]</span>
+console.<span class="text-[#34d399]">log</span>(metLab);  <span class="text-[#52525b]">// [0.571, -0.052, -0.183]</span></code></pre>
+            </div>
+
+            <h3 class="text-lg font-semibold mb-4 mt-10">Neutral Correction Toggle</h3>
+            <p class="text-[#a1a1aa] mb-4">
+              MetricSpace includes a neutral correction (NC) stage that improves STRESS on achromatic and near-achromatic pairs. You can disable it if needed.
+            </p>
+
+            <div class="docs-py">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Disable neutral correction</span>
+metric = MetricSpace(enable_nc=<span class="text-[#f97316]">False</span>)</code></pre>
+            </div>
+
+            <div class="docs-js">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Disable neutral correction</span>
+<span class="text-[#c084fc]">const</span> metric = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">MetricSpace</span>({"{"} enableNc: <span class="text-[#f97316]">false</span> {"}"});</code></pre>
+            </div>
+
+            <h3 class="text-lg font-semibold mb-4 mt-10">Token Export</h3>
+            <p class="text-[#a1a1aa] mb-4">
+              Export color palettes as design tokens for CSS, Android, iOS, Tailwind, or JSON.
+            </p>
+
+            <div class="docs-py">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.export</span> <span class="text-[#c084fc]">import</span> export_tokens
+
+<span class="text-[#52525b]"># Export as CSS custom properties</span>
+css = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class="text-[#fb923c]">"css"</span>)
+<span class="text-[#52525b]"># --color-50: #eff6ff;</span>
+<span class="text-[#52525b]"># --color-100: #dbeafe;</span>
+<span class="text-[#52525b]"># ...</span>
+
+<span class="text-[#52525b]"># Export as Tailwind config</span>
+tw = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class="text-[#fb923c]">"tailwind"</span>)</code></pre>
+            </div>
+
+            <div class="docs-js">
+              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} exportTokens {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+
+<span class="text-[#52525b]">// Export as CSS custom properties</span>
+<span class="text-[#c084fc]">const</span> css = <span class="text-[#34d399]">exportTokens</span>(scale, <span class="text-[#fb923c]">'css'</span>);
+
+<span class="text-[#52525b]">// Export as Tailwind config</span>
+<span class="text-[#c084fc]">const</span> tw = <span class="text-[#34d399]">exportTokens</span>(scale, <span class="text-[#fb923c]">'tailwind'</span>);</code></pre>
+            </div>
+          </div>
+
+          <div class="for-designer">
+            <p class="text-[#a1a1aa] mb-4">
+              Helmlab can export your palettes directly to CSS custom properties, Tailwind configs, Swift (iOS), Android XML, or raw JSON. Ask your developer to check the Python or JavaScript docs for the <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">export_tokens</code> function.
+            </p>
+          </div>
+        </section>
+
+        <!-- Bottom nav -->
+        <div class="flex items-center justify-between pt-8 border-t border-white/[0.06]">
+          <a href="/" class="text-sm text-[#a1a1aa] hover:text-white transition-colors">&larr; Home</a>
+          <a href="https://github.com/Grkmyldz148/helmlab" target="_blank" rel="noopener noreferrer" class="text-sm text-[#a1a1aa] hover:text-white transition-colors">
+            View on GitHub &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Language tab switcher
+    var radios = document.querySelectorAll('input[name="docs-lang"]');
+
+    function updateLangVisibility(lang) {
+      document.querySelectorAll('.docs-py').forEach(function(el) {
+        el.style.display = lang === 'python' ? '' : 'none';
+      });
+      document.querySelectorAll('.docs-js').forEach(function(el) {
+        el.style.display = lang === 'js' ? '' : 'none';
+      });
+    }
+
+    var checked = document.querySelector('input[name="docs-lang"]:checked');
+    if (checked) updateLangVisibility(checked.value);
+
+    radios.forEach(function(radio) {
+      radio.addEventListener('change', function(e) {
+        updateLangVisibility(e.target.value);
+      });
+    });
+
+    // Highlight current section in sidebar (scroll-based, not IntersectionObserver)
+    console.log('[docs] script starting...');
+    var sections = Array.from(document.querySelectorAll('section[id]'));
+    var sidebarLinks = document.querySelectorAll('aside nav a[href^="#"]');
+    var currentActive = null;
+    console.log('[docs] sections found:', sections.length, sections.map(function(s) { return s.id; }));
+    console.log('[docs] sidebar links found:', sidebarLinks.length, Array.from(sidebarLinks).map(function(l) { return l.getAttribute('href'); }));
+
+    function setActive(id) {
+      if (currentActive === id) return;
+      console.log('[docs] setActive:', id, '(was:', currentActive + ')');
+      currentActive = id;
+      sidebarLinks.forEach(function(link) {
+        link.style.color = '';
+        link.style.backgroundColor = '';
+        link.style.fontWeight = '';
+        link.style.borderRadius = '';
+      });
+      // Apply to ALL matching links (mobile + desktop sidebars)
+      var activeLinks = document.querySelectorAll('aside nav a[href="#' + id + '"]');
+      console.log('[docs] activeLinks found:', activeLinks.length, 'for id:', id);
+      activeLinks.forEach(function(activeLink) {
+        activeLink.style.color = '#fafafa';
+        activeLink.style.backgroundColor = 'rgba(255,255,255,0.06)';
+        activeLink.style.fontWeight = '500';
+        activeLink.style.borderRadius = '6px';
+      });
+    }
+
+    function updateActiveOnScroll() {
+      var offset = 100;
+      var current = sections[0];
+      var positions = [];
+      for (var i = 0; i < sections.length; i++) {
+        var rect = sections[i].getBoundingClientRect();
+        positions.push({ id: sections[i].id, top: Math.round(rect.top) });
+        if (rect.top <= offset) {
+          current = sections[i];
+        } else {
+          break;
+        }
+      }
+      console.log('[docs] scroll check, scrollY:', Math.round(window.scrollY), 'positions:', positions, 'picked:', current && current.id);
+      if (current) setActive(current.id);
+    }
+
+    // Initial state
+    console.log('[docs] initial hash:', window.location.hash);
+    if (window.location.hash) {
+      setActive(window.location.hash.slice(1));
+      setTimeout(function() {
+        console.log('[docs] post-hash settle scroll check');
+        updateActiveOnScroll();
+      }, 200);
+    } else {
+      updateActiveOnScroll();
+    }
+
+    // Update on scroll (throttled with requestAnimationFrame)
+    var ticking = false;
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        window.requestAnimationFrame(function() {
+          updateActiveOnScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Also update when clicking sidebar links
+    sidebarLinks.forEach(function(link) {
+      link.addEventListener('click', function(e) {
+        var href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          setActive(href.slice(1));
+          setTimeout(updateActiveOnScroll, 500);
+        }
+      });
+    });
+  </script>
+</BaseLayout>

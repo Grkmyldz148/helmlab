@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1200, initial-scale=1">
+<title>Helmlab OG Card — 1200x630</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 1200px;
+    min-width: 1200px;
+    min-height: 630px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background: #18181b;
+    color: #fafafa;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .card {
+    position: relative;
+    width: 1200px;
+    height: 630px;
+    min-width: 1200px;
+    min-height: 630px;
+    max-width: 1200px;
+    max-height: 630px;
+    background: #09090b;
+    overflow: hidden;
+    padding: 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  /* Grid background */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 40%, transparent 90%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 40%, transparent 90%);
+  }
+
+  /* Orange accent blob */
+  .accent-blob {
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.25) 0%, rgba(249, 115, 22, 0) 70%);
+    filter: blur(20px);
+  }
+
+  /* Blue accent blob */
+  .blue-blob {
+    position: absolute;
+    bottom: -200px;
+    left: -150px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0) 70%);
+    filter: blur(20px);
+  }
+
+  .content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  /* Top: logo + version */
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-icon {
+    width: 56px;
+    height: 56px;
+    display: block;
+  }
+
+  .logo-text {
+    font-size: 32px;
+  }
+
+  .logo-dot {
+    color: #f97316;
+  }
+
+  .version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 14px;
+    color: #a1a1aa;
+    font-weight: 500;
+  }
+
+  .version-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 12px rgba(52, 211, 153, 0.6);
+  }
+
+  /* Middle: headline */
+  .middle {
+    margin-top: 30px;
+  }
+
+  .label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #f97316;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .headline {
+    font-size: 82px;
+    font-weight: 800;
+    letter-spacing: -3px;
+    line-height: 0.95;
+    margin-bottom: 24px;
+    max-width: 960px;
+  }
+
+  .headline .accent {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 22px;
+    color: #a1a1aa;
+    line-height: 1.5;
+    max-width: 820px;
+  }
+
+  /* Bottom: stats + URL */
+  .bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 48px;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-size: 38px;
+    font-weight: 800;
+    color: #fafafa;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .stat-value.orange {
+    background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .stat-value sup {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: #52525b;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+  }
+
+  .url-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 22px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 16px;
+    color: #fafafa;
+    font-weight: 500;
+  }
+
+  .url-box .prompt {
+    color: #52525b;
+  }
+
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="grid-bg"></div>
+    <div class="accent-blob"></div>
+    <div class="blue-blob"></div>
+
+    <div class="content">
+      <!-- Top -->
+      <div class="top">
+        <div class="logo">
+          <img src="/logo-icon.svg" alt="" class="logo-icon" />
+          <div class="logo-text">Helmlab<span class="logo-dot">.</span></div>
+        </div>
+        <div class="version-badge">
+          <div class="version-dot"></div>
+          v0.11.8 — MIT
+        </div>
+      </div>
+
+      <!-- Middle -->
+      <div class="middle">
+        <div class="label">Perceptual Color Space</div>
+        <div class="headline">
+          Your colors<br>deserve <span class="accent">better math.</span>
+        </div>
+        <div class="subtitle">
+          Two purpose-built Lab spaces: GenSpace for generation,<br>
+          MetricSpace for measurement. Python &amp; JavaScript.
+        </div>
+      </div>
+
+      <!-- Bottom -->
+      <div class="bottom">
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value orange">66-9</div>
+            <div class="stat-label">vs OKLab</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">22.48</div>
+            <div class="stat-label">STRESS</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">360/360</div>
+            <div class="stat-label">Gamut Cusps</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value">18<sup>×</sup></div>
+            <div class="stat-label">Lightness</div>
+          </div>
+        </div>
+        <div class="url-box">
+          <span class="prompt">→</span>
+          helmlab.dev
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

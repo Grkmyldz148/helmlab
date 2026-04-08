@@ -1,0 +1,96 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = [
+  {
+    slug: "color-palette-wrong",
+    title: "Your Color Palette is Wrong",
+    date: "2026-03-20",
+    excerpt: "Most design systems generate palettes by shifting HSL lightness. Here is why that produces muddy midtones and what a perceptually uniform space fixes.",
+    tag: "design",
+  },
+  {
+    slug: "rigid-rotation",
+    title: "Rigid Rotation: Free Hue Fix",
+    date: "2026-03-25",
+    excerpt: "A single rotation matrix applied post-pipeline reduces maximum hue drift from 48 degrees to 20 degrees -- at zero cost to color difference accuracy.",
+    tag: "research",
+  },
+  {
+    slug: "oklch-vs-helmlab",
+    title: "OKLch vs Helmlab: Gradient Quality Compared",
+    date: "2026-03-15",
+    excerpt: "A side-by-side comparison of gradient smoothness across 3,038 color pairs in sRGB, Display P3, and Rec.2020. Measured with ColorBench's 83 metrics.",
+    tag: "comparison",
+  },
+  {
+    slug: "wcag-contrast",
+    title: "WCAG Contrast in Helmlab",
+    date: "2026-03-10",
+    excerpt: "How Helmlab's ensureContrast() adjusts colors to meet accessibility standards while preserving hue identity. AA and AAA compliance made easy.",
+    tag: "accessibility",
+  },
+  {
+    slug: "why-another-color-space",
+    title: "Why Another Color Space?",
+    date: "2026-03-01",
+    excerpt: "OKLab is great. CIELAB is everywhere. So why build something new? The answer starts with 3,813 color pairs and 64,000 human judgments.",
+    tag: "explainer",
+  },
+  {
+    slug: "depressed-cubic",
+    title: "The Depressed Cubic Transfer Function",
+    date: "2026-03-28",
+    excerpt: "Why we replaced the standard cube root with a depressed cubic, and how it eliminates gamut boundary singularities while keeping an exact analytical inverse.",
+    tag: "research",
+  },
+];
+
+const tagColors: Record<string, string> = {
+  design: "text-[#f97316]",
+  research: "text-[#a78bfa]",
+  comparison: "text-[#60a5fa]",
+  accessibility: "text-[#34d399]",
+  explainer: "text-[#fb923c]",
+};
+---
+
+<BaseLayout
+  title="Blog — Helmlab"
+  description="Articles on color science, perceptual uniformity, and building design systems with Helmlab."
+>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+    <div class="mb-12 md:mb-16">
+      <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Blog</span>
+      <h1 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">Articles</h1>
+      <p class="text-[#a1a1aa] max-w-2xl">
+        Color science deep dives, benchmark comparisons, and practical guides for using Helmlab in your design system.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {posts.map((post) => (
+        <a
+          href={`/blog/${post.slug}`}
+          class="group block rounded-2xl border border-white/[0.06] bg-[#0c0c0f]/50 p-6 transition-all duration-200 hover:border-white/[0.12] hover:bg-[#0c0c0f]"
+        >
+          <div class="flex items-center gap-3 mb-4">
+            <span class={`text-xs uppercase tracking-wider font-medium ${tagColors[post.tag] || "text-[#52525b]"}`}>
+              {post.tag}
+            </span>
+            <span class="text-xs text-[#52525b]">{post.date}</span>
+          </div>
+          <h2 class="text-lg font-semibold mb-2 text-[#fafafa] group-hover:text-white transition-colors">
+            {post.title}
+          </h2>
+          <p class="text-sm text-[#a1a1aa] leading-relaxed">
+            {post.excerpt}
+          </p>
+          <span class="inline-block mt-4 text-sm text-[#52525b] group-hover:text-[#a1a1aa] transition-colors">
+            Read more &rarr;
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

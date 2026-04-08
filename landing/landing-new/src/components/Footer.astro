@@ -1,0 +1,29 @@
+---
+const links = [
+  { href: "https://github.com/Grkmyldz148/helmlab", label: "GitHub" },
+  { href: "https://www.npmjs.com/package/helmlab", label: "npm" },
+  { href: "https://pypi.org/project/helmlab/", label: "PyPI" },
+];
+---
+
+<footer class="border-t border-white/[0.06] bg-[#09090b]">
+  <div
+    class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6 lg:px-8"
+  >
+    <p class="text-sm text-[#52525b]">Helmlab &copy; 2026</p>
+    <div class="flex items-center gap-4">
+      {
+        links.map((link) => (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm text-[#52525b] transition-colors hover:text-[#a1a1aa]"
+          >
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</footer>

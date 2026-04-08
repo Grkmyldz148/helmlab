@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import DesignerFlow from "../components/react/DesignerFlow";
+import DeveloperFlow from "../components/DeveloperFlow.astro";
+---
+
+<BaseLayout
+  title="Helmlab — The Most Accurate Color Space"
+  description="Two purpose-built Lab spaces: GenSpace for generation (66-9 vs OKLab), MetricSpace for measurement (STRESS 22.48, beats CIEDE2000). Python and JavaScript. MIT licensed."
+>
+  <Hero />
+
+  <!-- Designer experience: story-driven, visual, problem-solution -->
+  <div class="for-designer">
+    <DesignerFlow client:load />
+  </div>
+
+  <!-- Developer experience: data-driven, technical, benchmark-focused -->
+  <div class="for-dev">
+    <DeveloperFlow />
+  </div>
+</BaseLayout>

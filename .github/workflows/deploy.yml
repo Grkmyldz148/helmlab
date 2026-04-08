@@ -30,12 +30,25 @@ jobs:
           node-version: 20
       - run: cd packages/helmlab-js && npm ci && npx vitest run
 
-  # ─── 2. Deploy landing + docs to server ────────────────
+  # ─── 2. Build & Deploy landing-new (Astro) ────────────
   deploy:
     needs: [test-python, test-js]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build helmlab-js (local file: dependency)
+        run: cd packages/helmlab-js && npm ci && npm run build
+
+      - name: Install landing dependencies
+        run: cd landing/landing-new && npm install
+
+      - name: Build Astro site
+        run: cd landing/landing-new && npm run build
 
       - name: Setup SSH
         run: |
@@ -44,42 +57,19 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H 89.252.184.6 >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Deploy landing
+      - name: Deploy static site
         run: |
           rsync -avz --delete \
-            --exclude='api/comments.json' \
-            --exclude='api/node_modules' \
-            --exclude='api/.env' \
-            --exclude='uploads' \
             --exclude='.DS_Store' \
             -e "ssh -i ~/.ssh/deploy_key" \
-            landing/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/
+            landing/landing-new/dist/ root@89.252.184.6:/home/ismailyagci/web/helmlab.space/public_html/
 
-      - name: Update server repo & install API deps
+      - name: Stop legacy API & fix permissions
         run: |
           ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
-            cd /home/ismailyagci/helmlab-repo && git fetch origin && git reset --hard origin/main
-            cd /home/ismailyagci/web/helmlab.space/public_html/api && npm install mongodb 2>/dev/null || true
-          "
-
-      - name: Write .env and restart helmlab-api
-        run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
-            cd /home/ismailyagci/web/helmlab.space/public_html/api
-            printf 'MONGO_URI=${{ secrets.MONGO_URI }}\nBLOG_SECRET=${{ secrets.BLOG_SECRET }}\n' > .env
-            chmod 600 .env
-            chown ismailyagci:www-data .env
             pm2 delete helmlab-api 2>/dev/null || true
-            pm2 start server.js --name helmlab-api
-            pm2 save
-          "
-
-      - name: Fix permissions
-        run: |
-          ssh -i ~/.ssh/deploy_key root@89.252.184.6 "
+            pm2 save 2>/dev/null || true
             chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/
-            mkdir -p /home/ismailyagci/web/helmlab.space/public_html/uploads/blog
-            chown -R ismailyagci:www-data /home/ismailyagci/web/helmlab.space/public_html/uploads/
           "
 
   # ─── 3. Publish npm (only when version changes) ────────

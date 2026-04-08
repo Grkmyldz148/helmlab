@@ -1,0 +1,122 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const { slug } = Astro.params;
+
+const posts: Record<string, { title: string; date: string; tag: string; excerpt: string }> = {
+  "color-palette-wrong": {
+    title: "Your Color Palette is Wrong",
+    date: "2026-03-20",
+    tag: "design",
+    excerpt: "Most design systems generate palettes by shifting HSL lightness. Here is why that produces muddy midtones and what a perceptually uniform space fixes.",
+  },
+  "rigid-rotation": {
+    title: "Rigid Rotation: Free Hue Fix",
+    date: "2026-03-25",
+    tag: "research",
+    excerpt: "A single rotation matrix applied post-pipeline reduces maximum hue drift from 48 degrees to 20 degrees -- at zero cost to color difference accuracy.",
+  },
+  "oklch-vs-helmlab": {
+    title: "OKLch vs Helmlab: Gradient Quality Compared",
+    date: "2026-03-15",
+    tag: "comparison",
+    excerpt: "A side-by-side comparison of gradient smoothness across 3,038 color pairs in sRGB, Display P3, and Rec.2020. Measured with ColorBench's 83 metrics.",
+  },
+  "wcag-contrast": {
+    title: "WCAG Contrast in Helmlab",
+    date: "2026-03-10",
+    tag: "accessibility",
+    excerpt: "How Helmlab's ensureContrast() adjusts colors to meet accessibility standards while preserving hue identity. AA and AAA compliance made easy.",
+  },
+  "why-another-color-space": {
+    title: "Why Another Color Space?",
+    date: "2026-03-01",
+    tag: "explainer",
+    excerpt: "OKLab is great. CIELAB is everywhere. So why build something new? The answer starts with 3,813 color pairs and 64,000 human judgments.",
+  },
+  "depressed-cubic": {
+    title: "The Depressed Cubic Transfer Function",
+    date: "2026-03-28",
+    tag: "research",
+    excerpt: "Why we replaced the standard cube root with a depressed cubic, and how it eliminates gamut boundary singularities while keeping an exact analytical inverse.",
+  },
+};
+
+const post = posts[slug!] || null;
+
+if (!post) {
+  return Astro.redirect("/404");
+}
+
+const tagColors: Record<string, string> = {
+  design: "text-[#f97316]",
+  research: "text-[#a78bfa]",
+  comparison: "text-[#60a5fa]",
+  accessibility: "text-[#34d399]",
+  explainer: "text-[#fb923c]",
+};
+
+export function getStaticPaths() {
+  return [
+    { params: { slug: "color-palette-wrong" } },
+    { params: { slug: "rigid-rotation" } },
+    { params: { slug: "oklch-vs-helmlab" } },
+    { params: { slug: "wcag-contrast" } },
+    { params: { slug: "why-another-color-space" } },
+    { params: { slug: "depressed-cubic" } },
+  ];
+}
+---
+
+<BaseLayout title={`${post.title} — Helmlab Blog`}>
+  <article class="max-w-3xl mx-auto px-6 py-16 md:py-24">
+    <!-- Back link -->
+    <a href="/blog" class="inline-flex items-center gap-1.5 text-sm text-[#52525b] hover:text-[#a1a1aa] transition-colors mb-8">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      Back to blog
+    </a>
+
+    <!-- Header -->
+    <div class="mb-12">
+      <div class="flex items-center gap-3 mb-4">
+        <span class={`text-xs uppercase tracking-wider font-medium ${tagColors[post.tag] || "text-[#52525b]"}`}>
+          {post.tag}
+        </span>
+        <span class="text-xs text-[#52525b]">{post.date}</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4">{post.title}</h1>
+      <p class="text-lg text-[#a1a1aa]">{post.excerpt}</p>
+    </div>
+
+    <!-- Content placeholder -->
+    <div class="rounded-2xl border border-dashed border-white/[0.08] bg-[#0c0c0f]/50 p-12 text-center mb-12">
+      <span class="text-xs uppercase tracking-widest text-[#52525b] font-medium">Coming Soon</span>
+      <p class="text-[#a1a1aa] mt-2 text-sm">
+        Full article coming soon. Content will be loaded from the blog API.
+      </p>
+    </div>
+
+    <!-- Author -->
+    <div class="flex items-center gap-4 pb-8 border-b border-white/[0.06]">
+      <div class="w-10 h-10 rounded-full bg-[#111115] flex items-center justify-center text-sm font-semibold text-[#a1a1aa]">
+        GY
+      </div>
+      <div>
+        <p class="text-sm font-medium text-[#fafafa]">Gorkem Yildiz</p>
+        <a href="https://helmlab.space" class="text-xs text-[#52525b] hover:text-[#a1a1aa] transition-colors">helmlab.space</a>
+      </div>
+    </div>
+
+    <!-- Comments placeholder -->
+    <div class="mt-12">
+      <h3 class="text-lg font-semibold mb-4">Comments</h3>
+      <div class="rounded-2xl border border-dashed border-white/[0.08] bg-[#0c0c0f]/50 p-8 text-center">
+        <p class="text-sm text-[#52525b]">
+          Comments will be available when the blog API is connected.
+        </p>
+      </div>
+    </div>
+  </article>
+</BaseLayout>

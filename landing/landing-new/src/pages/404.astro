@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404 — Page Not Found">
+  <div class="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+    <p class="text-8xl font-bold text-[#18181b] select-none">404</p>
+    <h1 class="text-2xl font-bold mt-4 mb-2">Page not found</h1>
+    <p class="text-[#a1a1aa] mb-8 max-w-md">
+      The page you are looking for does not exist or has been moved.
+    </p>
+    <a
+      href="/"
+      class="inline-flex items-center gap-2 rounded-lg bg-white/[0.06] border border-white/[0.06] px-5 py-2.5 text-sm font-medium text-[#fafafa] transition-colors hover:bg-white/[0.10]"
+    >
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+      </svg>
+      Back to home
+    </a>
+  </div>
+</BaseLayout>

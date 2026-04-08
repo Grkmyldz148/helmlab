@@ -1,0 +1,187 @@
+---
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/benchmark", label: "Benchmark" },
+  { href: "/playground", label: "Playground" },
+  { href: "/docs", label: "Docs" },
+];
+
+const path = Astro.url.pathname;
+function isActive(href: string): boolean {
+  if (href === "/") return path === "/";
+  return path === href || path.startsWith(href + "/");
+}
+---
+
+<header
+  class="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl"
+>
+  <nav class="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <!-- Logo -->
+    <a href="/" class="flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
+      <img src="/logo-icon.svg" alt="" class="h-6 w-6" />
+      Helmlab<span class="text-[#f97316]">.</span>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="hidden items-center gap-1 md:flex">
+      {
+        navLinks.map((link) => (
+          <a
+            href={link.href}
+            class:list={[
+              "rounded-md px-3 py-1.5 text-sm transition-colors",
+              isActive(link.href)
+                ? "text-white bg-white/[0.06] font-medium"
+                : "text-[#a1a1aa] hover:text-white",
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href="https://github.com/Grkmyldz148/helmlab"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-md px-3 py-1.5 text-sm text-[#a1a1aa] transition-colors hover:text-white"
+      >
+        GitHub
+        <span class="sr-only">(opens in new tab)</span>
+      </a>
+    </div>
+
+    <!-- Right side: audience toggle placeholder + mobile menu button -->
+    <div class="flex items-center gap-3">
+      <button
+        id="audience-toggle"
+        type="button"
+        class="flex items-center rounded-full border border-white/[0.08] bg-white/[0.03] p-0.5 text-xs"
+        aria-label="Switch audience mode"
+      >
+        <span id="at-designer" class="rounded-full px-2.5 py-1 transition-all duration-200 text-[#52525b]">Designer</span>
+        <span id="at-developer" class="rounded-full px-2.5 py-1 transition-all duration-200 bg-[#60a5fa] text-white font-medium">Developer</span>
+      </button>
+
+      <!-- Mobile hamburger -->
+      <button
+        id="mobile-menu-btn"
+        type="button"
+        class="inline-flex items-center justify-center rounded-md p-2 text-[#a1a1aa] transition-colors hover:text-white md:hidden"
+        aria-label="Toggle menu"
+        aria-expanded="false"
+      >
+        <!-- Hamburger icon -->
+        <svg
+          id="menu-icon-open"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"
+          ></path>
+        </svg>
+        <!-- Close icon (hidden by default) -->
+        <svg
+          id="menu-icon-close"
+          class="hidden h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile dropdown -->
+  <div
+    id="mobile-menu"
+    class="hidden border-t border-white/[0.06] bg-[#09090b]/95 backdrop-blur-xl md:hidden"
+  >
+    <div class="space-y-1 px-4 py-3">
+      {
+        navLinks.map((link) => (
+          <a
+            href={link.href}
+            class:list={[
+              "block rounded-md px-3 py-2 text-sm transition-colors",
+              isActive(link.href)
+                ? "text-white bg-white/[0.06] font-medium"
+                : "text-[#a1a1aa] hover:bg-white/[0.04] hover:text-white",
+            ]}
+          >
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href="https://github.com/Grkmyldz148/helmlab"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="block rounded-md px-3 py-2 text-sm text-[#a1a1aa] transition-colors hover:bg-white/[0.04] hover:text-white"
+      >
+        GitHub
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Spacer to offset fixed header -->
+<div class="h-14"></div>
+
+<script is:inline>
+  // Mobile menu
+  (function() {
+    var btn = document.getElementById("mobile-menu-btn");
+    var menu = document.getElementById("mobile-menu");
+    var iconOpen = document.getElementById("menu-icon-open");
+    var iconClose = document.getElementById("menu-icon-close");
+    if (btn) btn.addEventListener("click", function() {
+      var isOpen = menu && !menu.classList.contains("hidden");
+      if (isOpen) {
+        menu.classList.add("hidden");
+        iconOpen && iconOpen.classList.remove("hidden");
+        iconClose && iconClose.classList.add("hidden");
+        btn.setAttribute("aria-expanded", "false");
+      } else {
+        menu && menu.classList.remove("hidden");
+        iconOpen && iconOpen.classList.add("hidden");
+        iconClose && iconClose.classList.remove("hidden");
+        btn.setAttribute("aria-expanded", "true");
+      }
+    });
+
+    // Audience toggle
+    var toggle = document.getElementById("audience-toggle");
+    var dSpan = document.getElementById("at-designer");
+    var vSpan = document.getElementById("at-developer");
+
+    function applyToggleUI(mode) {
+      if (!dSpan || !vSpan) return;
+      if (mode === "designer") {
+        dSpan.className = "rounded-full px-2.5 py-1 transition-all duration-200 bg-[#f97316] text-white font-medium";
+        vSpan.className = "rounded-full px-2.5 py-1 transition-all duration-200 text-[#52525b]";
+      } else {
+        dSpan.className = "rounded-full px-2.5 py-1 transition-all duration-200 text-[#52525b]";
+        vSpan.className = "rounded-full px-2.5 py-1 transition-all duration-200 bg-[#60a5fa] text-white font-medium";
+      }
+    }
+
+    // Set initial state from localStorage (matches head script)
+    var current = localStorage.getItem("helmlab-audience") || "developer";
+    applyToggleUI(current);
+
+    if (toggle) toggle.addEventListener("click", function() {
+      var next = (localStorage.getItem("helmlab-audience") || "developer") === "developer" ? "designer" : "developer";
+      localStorage.setItem("helmlab-audience", next);
+      document.documentElement.classList.remove("audience-designer", "audience-developer");
+      document.documentElement.classList.add("audience-" + next);
+      applyToggleUI(next);
+    });
+  })();
+</script>

@@ -1,0 +1,113 @@
+---
+// Hero section — full viewport height with animated grid background
+---
+
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+  <!-- Animated CSS grid background -->
+  <div class="hero-grid absolute inset-0 z-0"></div>
+  <div class="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-[#09090b]/60 to-[#09090b]"></div>
+
+  <div class="relative z-10 max-w-4xl mx-auto px-6 text-center py-24">
+    <!-- Version badge -->
+    <div class="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-sm text-[#a1a1aa] mb-8">
+      v0.11.8 — MetricSpace + GenSpace
+    </div>
+
+    <!-- Single H1 for SEO (contains both audience variants via spans) -->
+    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+      <span class="for-designer">
+        Your Colors Deserve<br /><span class="bg-gradient-to-r from-[#f97316] to-[#fb923c] bg-clip-text text-transparent">Better Math</span>
+      </span>
+      <span class="for-dev">
+        Two Purpose-Built<br /><span class="bg-gradient-to-r from-[#f97316] to-[#fb923c] bg-clip-text text-transparent">Lab Spaces</span>
+      </span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="for-designer text-lg sm:text-xl text-[#a1a1aa] max-w-2xl mx-auto mb-8">
+      You know the problem: blue-to-white gradients go purple. Dark palettes have muddy holes.
+      Yellows look washed out. <strong class="text-white">Helmlab fixes all of that.</strong>
+    </p>
+    <p class="for-dev text-lg sm:text-xl text-[#a1a1aa] max-w-2xl mx-auto mb-8">
+      GenSpace for generation. MetricSpace for measurement.<br />
+      Same library, two pipelines optimized for different objectives.
+    </p>
+
+    <!-- Score badge -->
+    <div class="for-designer inline-flex items-center gap-3 rounded-full bg-[#f97316]/10 border border-[#f97316]/20 px-5 py-2.5 mb-8">
+      <span class="text-[#f97316] font-bold text-lg">Wins 66 out of 90</span>
+      <span class="text-[#a1a1aa] text-sm">quality tests vs OKLab</span>
+    </div>
+    <div class="for-dev inline-flex items-center gap-3 rounded-full bg-[#f97316]/10 border border-[#f97316]/20 px-5 py-2.5 mb-8">
+      <span class="text-[#f97316] font-bold text-lg">66-9</span>
+      <span class="text-[#a1a1aa] text-sm">vs OKLab on 90 benchmarks (15 ties)</span>
+    </div>
+
+    <!-- Install commands -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-2">
+      <div class="install-cmd group flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 font-mono text-sm">
+        <span class="text-[#a1a1aa] select-none">$</span>
+        <code class="text-[#fafafa]">pip install helmlab</code>
+        <button
+          type="button"
+          class="copy-btn ml-2 p-1 rounded-md text-[#52525b] hover:text-[#fafafa] hover:bg-white/[0.06] transition-colors"
+          data-copy="pip install helmlab"
+          aria-label="Copy pip install command"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="install-cmd group flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 font-mono text-sm">
+        <span class="text-[#a1a1aa] select-none">$</span>
+        <code class="text-[#fafafa]">npm install helmlab</code>
+        <button
+          type="button"
+          class="copy-btn ml-2 p-1 rounded-md text-[#52525b] hover:text-[#fafafa] hover:bg-white/[0.06] transition-colors"
+          data-copy="npm install helmlab"
+          aria-label="Copy npm install command"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+    animation: grid-drift 20s linear infinite;
+  }
+
+  @keyframes grid-drift {
+    0% { background-position: 0 0; }
+    100% { background-position: 64px 64px; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy');
+      if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            const original = svg.innerHTML;
+            svg.innerHTML = '<polyline points="20 6 9 17 4 12" />';
+            setTimeout(() => { svg.innerHTML = original; }, 1500);
+          }
+        });
+      }
+    });
+  });
+</script>

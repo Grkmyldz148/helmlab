@@ -1,9 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://helmlab.space/api/sitemap.xml
-Llms-txt: https://helmlab.space/llms.txt
-
-# Private pages
-Disallow: /admin.html
-Disallow: /api/

@@ -1,0 +1,80 @@
+---
+// MetricHighlights — 6 key metric cards in a responsive grid
+const metrics = [
+  {
+    value: "22.48",
+    unit: "",
+    designerLabel: "Predicts what humans see",
+    designerDesc: "When you ask \"do these two colors match?\" — Helmlab's answer agrees with human observers better than any other tool.",
+    devLabel: "STRESS score on COMBVD (3813 pairs)",
+    devDesc: "23% better than CIEDE2000",
+  },
+  {
+    value: "66-9",
+    unit: "",
+    designerLabel: "Wins almost every test",
+    designerDesc: "Out of 90 quality checks — gradient smoothness, gamut coverage, palette uniformity — Helmlab wins 66. OKLab wins 9.",
+    devLabel: "90 metrics, 13 categories",
+    devDesc: "Including 6-1 on independent 3rd-party datasets",
+  },
+  {
+    value: "360/360",
+    unit: "",
+    designerLabel: "No gamut holes",
+    designerDesc: "Every hue angle has a clean, usable boundary. No sudden clipping artifacts when you push saturation.",
+    devLabel: "sRGB + P3 valid cusp coverage",
+    devDesc: "OKLab: 299/360 sRGB, 308/360 P3",
+  },
+  {
+    value: "18",
+    unit: "x",
+    designerLabel: "Even lightness steps",
+    designerDesc: "Your 50-950 palette scale looks evenly spaced. No dark hole at 800, no bright jump at 200.",
+    devLabel: "Munsell Value: 0.16% vs 2.80%",
+    devDesc: "Uniform L channel by construction",
+  },
+  {
+    value: "1.513",
+    unit: "",
+    designerLabel: "Blue stays blue",
+    designerDesc: "Blue-to-white gradients actually look blue in the middle — not lavender or purple like in OKLab.",
+    devLabel: "Blue-to-White midpoint G/R ratio",
+    devDesc: "OKLab: 1.408 (purple-shifted)",
+  },
+  {
+    value: "10",
+    unit: null,
+    sup: "-15",
+    designerLabel: "Perfect neutrals",
+    designerDesc: "Gray is truly gray. No color tint sneaking into your neutral palette, ever.",
+    devLabel: "Achromatic purity (D65 C*)",
+    devDesc: "1M times better than OKLab",
+  },
+];
+---
+
+<section class="py-16 md:py-24" id="benchmarks">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-12 md:mb-16">
+      <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Key Metrics</span>
+      <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">Numbers that speak for themselves</h2>
+      <p class="text-[#a1a1aa] max-w-2xl mx-auto">
+        ColorBench: 90 metrics, 3,038 gradient pairs, 3 gamuts, float64 precision. Head-to-head vs OKLab.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {metrics.map((m) => (
+        <div class="group rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 hover:border-white/[0.12] transition-colors">
+          <div class="text-4xl font-bold text-[#fafafa] mb-1">
+            {m.value}
+            {m.unit !== null && !m.sup && <span class="text-2xl text-[#a1a1aa]">{m.unit}</span>}
+            {m.sup && <sup class="text-lg text-[#a1a1aa]">{m.sup}</sup>}
+          </div>
+          <div class="text-sm text-[#fafafa] mb-1">{m.devLabel}</div>
+          <div class="text-xs text-[#52525b]">{m.devDesc}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,32 @@
+---
+// DeveloperFlow — Data-driven technical experience for developers
+// Reuses existing components
+import MetricHighlights from "./MetricHighlights.astro";
+import MiniPlayground from "./react/MiniPlayground";
+import SpaceCards from "./SpaceCards.astro";
+import UseCases from "./UseCases.astro";
+import HonestLimits from "./HonestLimits.astro";
+import CodeExamples from "./CodeExamples.astro";
+import InstallBlock from "./InstallBlock.astro";
+import FaqSection from "./FaqSection.astro";
+---
+
+<MetricHighlights />
+
+<div id="playground" class="py-16 md:py-24">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-8">
+      <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Live Demo</span>
+      <h2 class="text-2xl sm:text-3xl font-bold mt-3 mb-2">Gradient Comparison</h2>
+      <p class="text-sm text-[#a1a1aa]">Helmlab vs OKLab vs CIE Lab — pick any two colors.</p>
+    </div>
+    <MiniPlayground client:visible />
+  </div>
+</div>
+
+<SpaceCards />
+<UseCases />
+<HonestLimits />
+<CodeExamples />
+<InstallBlock />
+<FaqSection />

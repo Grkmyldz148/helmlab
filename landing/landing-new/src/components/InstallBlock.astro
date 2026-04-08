@@ -1,0 +1,78 @@
+---
+// InstallBlock — two install commands side by side
+---
+
+<section class="py-16 md:py-24" id="install">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-10">
+      <h2 class="text-3xl sm:text-4xl font-bold mb-4">Get Started</h2>
+      <p class="text-[#a1a1aa]">Python and JavaScript. Same API. Same results.</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-2xl mx-auto">
+      <!-- pip -->
+      <div class="w-full sm:w-auto flex-1 flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#0c0c0f] px-6 py-4">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="text-[#f97316] text-sm font-bold shrink-0">Python</span>
+          <code class="font-mono text-sm text-[#fafafa] truncate">pip install helmlab</code>
+        </div>
+        <button
+          type="button"
+          class="install-copy-btn shrink-0 p-2 rounded-lg text-[#52525b] hover:text-[#fafafa] hover:bg-white/[0.06] transition-colors"
+          data-copy="pip install helmlab"
+          aria-label="Copy pip install command"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- npm -->
+      <div class="w-full sm:w-auto flex-1 flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-[#0c0c0f] px-6 py-4">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="text-[#34d399] text-sm font-bold shrink-0">JS / TS</span>
+          <code class="font-mono text-sm text-[#fafafa] truncate">npm install helmlab</code>
+        </div>
+        <button
+          type="button"
+          class="install-copy-btn shrink-0 p-2 rounded-lg text-[#52525b] hover:text-[#fafafa] hover:bg-white/[0.06] transition-colors"
+          data-copy="npm install helmlab"
+          aria-label="Copy npm install command"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="text-center mt-6">
+      <div class="flex items-center justify-center gap-6 text-xs text-[#52525b]">
+        <span>MIT License</span>
+        <span>Zero Dependencies (JS)</span>
+        <span>TypeScript Included</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.install-copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-copy');
+      if (text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const svg = btn.querySelector('svg');
+          if (svg) {
+            const original = svg.innerHTML;
+            svg.innerHTML = '<polyline points="20 6 9 17 4 12" />';
+            setTimeout(() => { svg.innerHTML = original; }, 1500);
+          }
+        });
+      }
+    });
+  });
+</script>

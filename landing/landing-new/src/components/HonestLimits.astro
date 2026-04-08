@@ -1,0 +1,89 @@
+---
+// HonestLimits — transparent about where we lose
+const metricLosses = [
+  {
+    title: "COMBVD sub-datasets",
+    detail: "CIEDE2000 beats MetricSpace on LEEDS (19.25 vs 21.84), RIT-DuPont (19.47 vs 21.90), and WITT (30.22 vs 30.93). Our lead comes from the larger BFD-P datasets.",
+  },
+  {
+    title: "Mild overfitting",
+    detail: "72 params on 3813 data points. Train/test gap of +1.8 STRESS. Published 22.48 is a training metric; cross-validated estimate is ~24.3. Still #1 among all competitors.",
+  },
+  {
+    title: "No HDR optimization",
+    detail: "Jzazbz was designed for HDR/WCG. MetricSpace v21 is optimized for SDR psychophysical datasets. HDR color difference prediction is untested.",
+  },
+  {
+    title: "No surround adaptation",
+    detail: "CAM16 models viewing conditions (dark/dim/light surround). MetricSpace has basic parameters but is not optimized for cross-surround.",
+  },
+];
+
+const genLosses = [
+  { metric: "sRGB Round-trip", ours: "5.64e-08", theirs: "1.67e-15", gap: "34M x", note: "NC LUT adds noise. Below visual threshold." },
+  { metric: "Near-ach gradient CV", ours: "106.73%", theirs: "85.95%", gap: "24%", note: "Real weakness. Grays less uniform." },
+  { metric: "Bright gradient CV", ours: "32.76%", theirs: "32.18%", gap: "2%", note: "Marginal. Within noise." },
+  { metric: "Gradient CV p95", ours: "138.78%", theirs: "136.69%", gap: "2%", note: "Marginal. Tail-end outliers." },
+  { metric: "CVD deutan step", ours: "0.110", theirs: "0.157", gap: "30%", note: "Real weakness. Green-blind see less distinction." },
+  { metric: "Primary hue disc sRGB", ours: "1.65 deg", theirs: "1.31 deg", gap: "26%", note: "Hue jumps at sRGB primaries." },
+  { metric: "Primary hue disc P3", ours: "1.37 deg", theirs: "1.08 deg", gap: "27%", note: "Same issue in Display P3." },
+  { metric: "Red-to-White G-B", ours: "0.063", theirs: "0.062", gap: "2%", note: "Effectively tied." },
+  { metric: "Ebner-Fairchild max", ours: "8.6 deg", theirs: "8.1 deg", gap: "6%", note: "Slightly worse worst-case hue surface." },
+];
+---
+
+<section class="py-16 md:py-24" id="honest-limits">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-12 md:mb-16">
+      <span class="text-xs uppercase tracking-widest text-[#f87171] font-medium">Transparency</span>
+      <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">Where We Lose</h2>
+      <p class="text-[#a1a1aa] max-w-2xl mx-auto">
+        No color space wins everywhere. Here are our genuine weaknesses, documented publicly.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- MetricSpace losses -->
+      <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 md:p-8">
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#60a5fa]"></span>
+          Where MetricSpace Loses
+        </h3>
+        <div class="space-y-4">
+          {metricLosses.map((item) => (
+            <div class="border-l-2 border-white/[0.06] pl-4">
+              <div class="text-sm font-medium text-[#fafafa] mb-1">{item.title}</div>
+              <div class="text-xs text-[#52525b] leading-relaxed">{item.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- GenSpace losses -->
+      <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 md:p-8">
+        <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#34d399]"></span>
+          Where GenSpace Loses
+          <span class="text-xs text-[#52525b] font-normal ml-auto">9 of 90 vs OKLab</span>
+        </h3>
+        <div class="space-y-3">
+          {genLosses.map((item) => (
+            <div class="flex items-start gap-3 text-xs">
+              <div class="min-w-0 flex-1">
+                <span class="text-[#a1a1aa] font-medium">{item.metric}</span>
+                <span class="text-[#52525b] ml-1">— {item.note}</span>
+              </div>
+              <span class={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                parseInt(item.gap) > 10
+                  ? "bg-[#f87171]/10 text-[#f87171]"
+                  : "bg-white/[0.04] text-[#52525b]"
+              }`}>
+                -{item.gap}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
