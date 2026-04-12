@@ -18,6 +18,7 @@ export {
   linearToSrgb, srgbToLinear,
   clampRgb, relativeLuminance,
 } from './utils/srgb.js';
-export { gamutMap, isInGamut, maxChroma } from './utils/gamut.js';
+export { gamutMap, isInGamut, maxChroma, findCusp } from './utils/gamut.js';
 export type { SpaceLike } from './utils/gamut.js';
 export { contrastRatio } from './utils/contrast.js';
+export { TokenExporter } from './export.js';

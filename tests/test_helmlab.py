@@ -734,3 +734,80 @@ class TestBaseLab:
             assert Ls[i] >= Ls[i + 1] - 0.01, (
                 f"Brightness fold: L[{i}]={Ls[i]:.3f} < L[{i+1}]={Ls[i+1]:.3f}"
             )
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# XYZ Conversions on Helmlab class
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestXYZOnHelmlab:
+    """Test from_XYZ / to_XYZ on Helmlab class."""
+
+    @pytest.fixture(params=[Helmlab()])
+    def p(self, request):
+        return request.param
+
+    def test_xyz_roundtrip(self, p):
+        """from_XYZ → to_XYZ roundtrip."""
+        XYZ = np.array([0.2, 0.2, 0.3])
+        lab = p.from_XYZ(XYZ)
+        XYZ_rt = p.to_XYZ(lab)
+        np.testing.assert_allclose(XYZ, XYZ_rt, atol=1e-10)
+
+    def test_from_xyz_matches_from_srgb(self, p):
+        """from_XYZ should match from_srgb via sRGB→XYZ."""
+        srgb = np.array([0.5, 0.3, 0.8])
+        XYZ = sRGB_to_XYZ(srgb)
+        lab_via_srgb = p.from_srgb(srgb)
+        lab_via_xyz = p.from_XYZ(XYZ)
+        np.testing.assert_allclose(lab_via_srgb, lab_via_xyz, atol=1e-12)
+
+    def test_d65_white(self, p):
+        """D65 white → Lab L should be close to 1."""
+        D65 = np.array([0.95047, 1.0, 1.08883])
+        lab = p.from_XYZ(D65)
+        assert lab[0] > 0.9, f"White L={lab[0]}, expected > 0.9"
+
+    def test_black(self, p):
+        """Black XYZ → Lab L should be close to 0."""
+        lab = p.from_XYZ(np.array([0.0, 0.0, 0.0]))
+        assert abs(lab[0]) < 0.05, f"Black L={lab[0]}, expected ~0"
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Perceptual Distance
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestPerceptualDistance:
+    """Test perceptual_distance on Helmlab class."""
+
+    @pytest.fixture(params=[Helmlab()])
+    def p(self, request):
+        return request.param
+
+    def test_self_zero(self, p):
+        """Distance to self is zero."""
+        lab = p.from_hex("#3b82f6")
+        d = p.perceptual_distance(lab, lab)
+        assert d < 1e-10
+
+    def test_symmetric(self, p):
+        """d(a,b) == d(b,a)."""
+        lab1 = p.from_hex("#ff0000")
+        lab2 = p.from_hex("#00ff00")
+        assert abs(p.perceptual_distance(lab1, lab2) - p.perceptual_distance(lab2, lab1)) < 1e-12
+
+    def test_positive(self, p):
+        """Different colors have positive distance."""
+        lab1 = p.from_hex("#ff0000")
+        lab2 = p.from_hex("#0000ff")
+        assert p.perceptual_distance(lab1, lab2) > 0
+
+    def test_greater_for_dissimilar(self, p):
+        """Very different colors have larger distance than similar ones."""
+        lab_r = p.from_hex("#ff0000")
+        lab_rish = p.from_hex("#ee1111")
+        lab_b = p.from_hex("#0000ff")
+        d_close = p.perceptual_distance(lab_r, lab_rish)
+        d_far = p.perceptual_distance(lab_r, lab_b)
+        assert d_far > d_close

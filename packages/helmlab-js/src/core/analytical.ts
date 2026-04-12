@@ -519,7 +519,8 @@ function darkLCompress(r: R, L: number, h: number): number {
   if (r.lp_dark_hcos !== 0 || r.lp_dark_hsin !== 0) {
     coeff += r.lp_dark_hcos * cos(h) + r.lp_dark_hsin * sin(h);
   }
-  const g = coeff * L * (1 - L) ** 2;
+  const oml = L < 1 ? 1 - L : 0; // clamp at L=1: identity for L≥1
+  const g = coeff * L * oml * oml;
   return L * exp(clamp(g, -30, 30));
 }
 
@@ -530,7 +531,7 @@ function darkLCompressInv(r: R, Ln: number, h: number): number {
   }
   let L = Ln;
   for (let i = 0; i < 12; i++) {
-    const oml = 1 - L;
+    const oml = L < 1 ? 1 - L : 0;
     const g = coeff * L * oml * oml;
     const eg = exp(clamp(g, -30, 30));
     const f = L * eg - Ln;

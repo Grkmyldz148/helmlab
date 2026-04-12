@@ -53,3 +53,5 @@ landing/landing-old/
 
 # Local editor/video work
 landing/video/
+.aidesigner/*
+!.aidesigner/.gitkeep

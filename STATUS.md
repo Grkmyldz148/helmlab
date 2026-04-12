@@ -6,15 +6,15 @@
 
 | Platform | Version | Params | Benchmark |
 |----------|---------|--------|-----------|
-| PyPI | `helmlab==0.11.7` | `src/helmlab/data/metric_params.json` (MetricSpace v21) | COMBVD=22.48★ |
-| npm | `helmlab@0.11.7` | `packages/helmlab-js/src/data/params.json` (MetricSpace v21) | COMBVD=22.48★ |
-| color.js PR #722 | — | fork M2 (renormed for Color.js D65) | **59-8** vs OKLab |
+| PyPI | `helmlab==0.11.8` | `src/helmlab/data/metric_params.json` (MetricSpace v21) | COMBVD=22.48★ |
+| npm | `helmlab@0.11.8` | `packages/helmlab-js/src/data/params.json` (MetricSpace v21) | COMBVD=22.48★ |
+| color.js PR #722 | — | MetricSpace v21 (NC LUT 384pt, extended to L=2.59) | **59-8** vs OKLab |
 
 ## MetricSpace v21 — PRODUCTION READY
 
 | Test Suite | Result |
 |---|---|
-| Python tests (303) | ✅ 303 passed, 2 skipped |
+| Python tests (292+) | ✅ 308 passed, 2 skipped (1 skip: pandas missing — optional dep) |
 | JS tests (196) | ✅ 196/196 passed |
 | COMBVD STRESS | **22.48** (beats all 9 competitors) |
 | MacAdam1974 STRESS | **19.51** ★ |
@@ -24,7 +24,7 @@
 - Sign-preserving power: `sign(x)*|x|^γ` in Python + JS (v21 M1 maps sRGB blue → negative LMS)
 - NC LUT extended to L=2.59 with constant clamping beyond gray-axis peak (L=1.29)
 - Python NC also uses clamped PCHIP (no PCHIP extrapolation beyond gray peak)
-- METRIC_L_MAX updated: 1.144 → 1.5 (sRGB magenta reaches L=1.44 in v21)
+- METRIC_L_MAX updated: 1.144 → 1.6 (P3 magenta L≈1.56 with fixed dark_L_compress)
 
 ## Active Checkpoints
 
@@ -49,7 +49,7 @@ XYZ → M1 → depcubic(α=0.021) → M2 → chroma_power(0.978) → PW_L → L-
 - Repo: `https://github.com/color-js/color.js/pull/722`
 - Fork: `/tmp/colorjs-fork/` (local)
 - Status: 2 approvals, 1 change requested
-- Tests: 219/219 passing
+- Tests: 219/219 passing (v21 params, updated expected values)
 
 ## Run Benchmark
 

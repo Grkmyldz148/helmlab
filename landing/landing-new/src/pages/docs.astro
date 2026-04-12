@@ -7,6 +7,7 @@ const sections = [
   { id: "genspace", label: "GenSpace" },
   { id: "metricspace", label: "MetricSpace" },
   { id: "helmlab-class", label: "Helmlab Class" },
+  { id: "token-export", label: "Token Export" },
   { id: "typescript", label: "TypeScript" },
   { id: "advanced", label: "Advanced" },
 ];
@@ -444,21 +445,21 @@ dist = metric.<span class="text-[#34d399]">distance</span>(lab1, lab2)</code></p
           </div>
 
           <h3 class="text-lg font-semibold mb-4 mt-10">adaptToMode()</h3>
-          <p class="text-[#a1a1aa] mb-4 text-sm">Adapt a color for dark or light mode while preserving its perceptual identity.</p>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Adapt a color between light and dark mode via soft L-inversion in GenSpace.</p>
 
           <div class="docs-py">
-            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Adapt a light-mode color for dark mode</span>
-dark = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, mode=<span class="text-[#fb923c]">"dark"</span>)
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Light &rarr; dark</span>
+dark = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, from_mode=<span class="text-[#fb923c]">"light"</span>, to_mode=<span class="text-[#fb923c]">"dark"</span>)
 
-<span class="text-[#52525b]"># Adapt a dark-mode color for light mode</span>
-light = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#93c5fd"</span>, mode=<span class="text-[#fb923c]">"light"</span>)</code></pre>
+<span class="text-[#52525b]"># Dark &rarr; light</span>
+light = hl.<span class="text-[#34d399]">adapt_to_mode</span>(<span class="text-[#fb923c]">"#93c5fd"</span>, from_mode=<span class="text-[#fb923c]">"dark"</span>, to_mode=<span class="text-[#fb923c]">"light"</span>)</code></pre>
           </div>
           <div class="docs-js">
-            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Adapt a light-mode color for dark mode</span>
-<span class="text-[#c084fc]">const</span> dark = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'dark'</span>);
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Light &rarr; dark</span>
+<span class="text-[#c084fc]">const</span> dark = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'light'</span>, <span class="text-[#fb923c]">'dark'</span>);
 
-<span class="text-[#52525b]">// Adapt a dark-mode color for light mode</span>
-<span class="text-[#c084fc]">const</span> light = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#93c5fd'</span>, <span class="text-[#fb923c]">'light'</span>);</code></pre>
+<span class="text-[#52525b]">// Dark &rarr; light</span>
+<span class="text-[#c084fc]">const</span> light = hl.<span class="text-[#34d399]">adaptToMode</span>(<span class="text-[#fb923c]">'#93c5fd'</span>, <span class="text-[#fb923c]">'dark'</span>, <span class="text-[#fb923c]">'light'</span>);</code></pre>
           </div>
 
           <h3 class="text-lg font-semibold mb-4 mt-10">ensureContrast()</h3>
@@ -477,6 +478,135 @@ adjusted = hl.<span class="text-[#34d399]">ensure_contrast</span>(<span class="t
 
 <span class="text-[#52525b]">// Ensure WCAG AAA (7:1) contrast</span>
 <span class="text-[#c084fc]">const</span> adjusted2 = hl.<span class="text-[#34d399]">ensureContrast</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#f97316]">7.0</span>);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">meetsContrast()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Check if a foreground/background pair meets a WCAG contrast level without modifying the colors.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">hl.<span class="text-[#34d399]">meets_contrast</span>(<span class="text-[#fb923c]">"#3b82f6"</span>, <span class="text-[#fb923c]">"#ffffff"</span>, level=<span class="text-[#fb923c]">"AA"</span>)   <span class="text-[#52525b]"># False</span>
+hl.<span class="text-[#34d399]">meets_contrast</span>(<span class="text-[#fb923c]">"#1e40af"</span>, <span class="text-[#fb923c]">"#ffffff"</span>, level=<span class="text-[#fb923c]">"AAA"</span>)  <span class="text-[#52525b]"># True</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">hl.<span class="text-[#34d399]">meetsContrast</span>(<span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#fb923c]">'AA'</span>);   <span class="text-[#52525b]">// false</span>
+hl.<span class="text-[#34d399]">meetsContrast</span>(<span class="text-[#fb923c]">'#1e40af'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#fb923c]">'AAA'</span>);  <span class="text-[#52525b]">// true</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">adaptPair()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Adapt a foreground/background pair to a target mode while guaranteeing minimum contrast ratio.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Returns (fg_hex, bg_hex) tuple with contrast &ge; 4.5</span>
+fg, bg = hl.<span class="text-[#34d399]">adapt_pair</span>(
+    <span class="text-[#fb923c]">"#3366ff"</span>, <span class="text-[#fb923c]">"#ffffff"</span>,
+    from_mode=<span class="text-[#fb923c]">"light"</span>, to_mode=<span class="text-[#fb923c]">"dark"</span>, min_ratio=<span class="text-[#f97316]">4.5</span>
+)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Returns [fgHex, bgHex] with contrast &ge; 4.5</span>
+<span class="text-[#c084fc]">const</span> [fg, bg] = hl.<span class="text-[#34d399]">adaptPair</span>(<span class="text-[#fb923c]">'#3366ff'</span>, <span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#fb923c]">'light'</span>, <span class="text-[#fb923c]">'dark'</span>, <span class="text-[#f97316]">4.5</span>);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">info()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Get detailed color information: hex, sRGB, XYZ, Lab (metric), L/C/H, and relative luminance.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">info = hl.<span class="text-[#34d399]">info</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)
+<span class="text-[#52525b]"># {"{"}hex: '#3b82f6', srgb: [0.231, 0.510, 0.965],</span>
+<span class="text-[#52525b]">#  xyz: [0.242, 0.174, 0.967], lab: [0.57, -0.05, -0.18],</span>
+<span class="text-[#52525b]">#  L: 0.57, C: 0.19, H: 254.6, luminance: 0.174{"}"}</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> info = hl.<span class="text-[#34d399]">info</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);
+<span class="text-[#52525b]">// {"{"}hex, srgb, xyz, lab, L, C, H, luminance{"}"}</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">perceptualDistance()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Full perceptual distance using MetricSpace with Minkowski exponent and compression. More accurate than <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">deltaE()</code> which uses simple Euclidean distance.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Takes Metric Lab values (from from_hex / from_XYZ)</span>
+lab1 = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#ff0000"</span>)
+lab2 = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#00ff00"</span>)
+dist = hl.<span class="text-[#34d399]">perceptual_distance</span>(lab1, lab2)
+<span class="text-[#52525b]"># &rarr; 0.1485</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Takes Metric Lab values (from fromHex)</span>
+<span class="text-[#c084fc]">const</span> lab1 = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#ff0000'</span>);
+<span class="text-[#c084fc]">const</span> lab2 = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#00ff00'</span>);
+<span class="text-[#c084fc]">const</span> dist = hl.<span class="text-[#34d399]">perceptualDistance</span>(lab1, lab2);
+<span class="text-[#52525b]">// &rarr; 0.1485</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">genFromSrgb() / genToSrgb()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Convert between sRGB [0,1] and GenSpace Lab. Use these when you need raw Lab values for generation workflows.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># sRGB &rarr; Gen Lab</span>
+lab = hl.<span class="text-[#34d399]">gen_from_srgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>])
+
+<span class="text-[#52525b]"># Gen Lab &rarr; sRGB</span>
+rgb = hl.<span class="text-[#34d399]">gen_to_srgb</span>(lab)
+
+<span class="text-[#52525b]"># Hex shortcuts</span>
+lab = hl.<span class="text-[#34d399]">gen_from_hex</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)
+hex_str = hl.<span class="text-[#34d399]">gen_to_hex</span>(lab)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// sRGB &rarr; Gen Lab</span>
+<span class="text-[#c084fc]">const</span> lab = hl.<span class="text-[#34d399]">genFromSrgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>]);
+
+<span class="text-[#52525b]">// Gen Lab &rarr; sRGB</span>
+<span class="text-[#c084fc]">const</span> rgb = hl.<span class="text-[#34d399]">genToSrgb</span>(lab);
+
+<span class="text-[#52525b]">// Hex shortcuts</span>
+<span class="text-[#c084fc]">const</span> lab2 = hl.<span class="text-[#34d399]">genFromHex</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);
+<span class="text-[#c084fc]">const</span> hex = hl.<span class="text-[#34d399]">genToHex</span>(lab2);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">toHexP3()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Convert Metric Lab to a CSS <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">color(display-p3 r g b)</code> string for wide-gamut displays.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">lab = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#ff0000"</span>)
+p3_css = hl.<span class="text-[#34d399]">to_hex_p3</span>(lab)
+<span class="text-[#52525b]"># &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span></code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> lab = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#ff0000'</span>);
+<span class="text-[#c084fc]">const</span> p3Css = hl.<span class="text-[#34d399]">toHexP3</span>(lab);
+<span class="text-[#52525b]">// &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">paletteHues()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Generate a hue ring at fixed lightness and chroma. Useful for creating categorical color schemes.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># 12 evenly-spaced hues at L=0.6, C=0.15</span>
+hues = hl.<span class="text-[#34d399]">palette_hues</span>(lightness=<span class="text-[#f97316]">0.6</span>, chroma=<span class="text-[#f97316]">0.15</span>, steps=<span class="text-[#f97316]">12</span>)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// 12 evenly-spaced hues at L=0.6, C=0.15</span>
+<span class="text-[#c084fc]">const</span> hues = hl.<span class="text-[#34d399]">paletteHues</span>(<span class="text-[#f97316]">0.6</span>, <span class="text-[#f97316]">0.15</span>, <span class="text-[#f97316]">12</span>);</code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">fromXYZ() / toXYZ()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Direct CIE XYZ conversion via the MetricSpace pipeline.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># CIE XYZ &rarr; Helmlab Lab (metric pipeline)</span>
+lab = hl.<span class="text-[#34d399]">from_XYZ</span>([<span class="text-[#f97316]">0.9505</span>, <span class="text-[#f97316]">1.0</span>, <span class="text-[#f97316]">1.089</span>])
+
+<span class="text-[#52525b]"># Helmlab Lab &rarr; CIE XYZ</span>
+xyz = hl.<span class="text-[#34d399]">to_XYZ</span>(lab)</code></pre>
+          </div>
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]">// Use MetricSpace directly for XYZ access</span>
+<span class="text-[#c084fc]">import</span> {"{"} MetricSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+<span class="text-[#c084fc]">const</span> metric = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">MetricSpace</span>();
+<span class="text-[#c084fc]">const</span> lab = metric.<span class="text-[#34d399]">fromXYZ</span>([<span class="text-[#f97316]">0.9505</span>, <span class="text-[#f97316]">1.0</span>, <span class="text-[#f97316]">1.089</span>]);
+<span class="text-[#c084fc]">const</span> xyz = metric.<span class="text-[#34d399]">toXYZ</span>(lab);</code></pre>
           </div>
         </section>
 
@@ -607,39 +737,95 @@ metric = MetricSpace(enable_nc=<span class="text-[#f97316]">False</span>)</code>
 <span class="text-[#c084fc]">const</span> metric = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">MetricSpace</span>({"{"} enableNc: <span class="text-[#f97316]">false</span> {"}"});</code></pre>
             </div>
 
-            <h3 class="text-lg font-semibold mb-4 mt-10">Token Export</h3>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- TOKEN EXPORT -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="token-export" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">Token Export</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <div class="for-designer mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              Export color palettes as design tokens for CSS, Android, iOS, Tailwind, or JSON.
+              Export your palettes directly to CSS custom properties, Tailwind configs, Swift (iOS), Android colors, or raw JSON. The <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">export()</code> method on the Helmlab class gives you a TokenExporter with all formats.
             </p>
-
-            <div class="docs-py">
-              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.export</span> <span class="text-[#c084fc]">import</span> export_tokens
-
-<span class="text-[#52525b]"># Export as CSS custom properties</span>
-css = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class="text-[#fb923c]">"css"</span>)
-<span class="text-[#52525b]"># --color-50: #eff6ff;</span>
-<span class="text-[#52525b]"># --color-100: #dbeafe;</span>
-<span class="text-[#52525b]"># ...</span>
-
-<span class="text-[#52525b]"># Export as Tailwind config</span>
-tw = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class="text-[#fb923c]">"tailwind"</span>)</code></pre>
-            </div>
-
-            <div class="docs-js">
-              <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} exportTokens {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
-
-<span class="text-[#52525b]">// Export as CSS custom properties</span>
-<span class="text-[#c084fc]">const</span> css = <span class="text-[#34d399]">exportTokens</span>(scale, <span class="text-[#fb923c]">'css'</span>);
-
-<span class="text-[#52525b]">// Export as Tailwind config</span>
-<span class="text-[#c084fc]">const</span> tw = <span class="text-[#34d399]">exportTokens</span>(scale, <span class="text-[#fb923c]">'tailwind'</span>);</code></pre>
-            </div>
           </div>
 
-          <div class="for-designer">
+          <div class="for-dev mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              Helmlab can export your palettes directly to CSS custom properties, Tailwind configs, Swift (iOS), Android XML, or raw JSON. Ask your developer to check the Python or JavaScript docs for the <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">export_tokens</code> function.
+              <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">hl.export()</code> returns a <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">TokenExporter</code> instance bound to the Helmlab's GenSpace. All conversions go through Gen Lab &rarr; sRGB/P3/OKLab internally.
             </p>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-8">Single-Color Formats</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Convert a Gen Lab value to any output format.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">ex = hl.<span class="text-[#34d399]">export</span>()
+lab = hl.<span class="text-[#34d399]">gen_from_hex</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)
+
+ex.<span class="text-[#34d399]">to_css_hex</span>(lab)         <span class="text-[#52525b]"># '#3b82f6'</span>
+ex.<span class="text-[#34d399]">to_css_rgb</span>(lab)         <span class="text-[#52525b]"># 'rgb(59, 130, 246)'</span>
+ex.<span class="text-[#34d399]">to_css_hsl</span>(lab)         <span class="text-[#52525b]"># 'hsl(217, 91%, 60%)'</span>
+ex.<span class="text-[#34d399]">to_css_oklch</span>(lab)       <span class="text-[#52525b]"># 'oklch(61.0% 0.197 254.6)'</span>
+ex.<span class="text-[#34d399]">to_css_display_p3</span>(lab)  <span class="text-[#52525b]"># 'color(display-p3 0.310 0.519 0.945)'</span>
+ex.<span class="text-[#34d399]">to_android_argb</span>(lab)    <span class="text-[#52525b]"># '0xFF3b82f6'</span>
+ex.<span class="text-[#34d399]">to_ios_p3</span>(lab)          <span class="text-[#52525b]"># {"{"}r: 0.310, g: 0.519, b: 0.945{"}"}</span>
+ex.<span class="text-[#34d399]">to_swift_literal</span>(lab)   <span class="text-[#52525b]"># 'Color(.displayP3, red: 0.310, ...)'</span></code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> ex = hl.<span class="text-[#34d399]">export</span>();
+<span class="text-[#c084fc]">const</span> lab = hl.<span class="text-[#34d399]">genFromHex</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);
+
+ex.<span class="text-[#34d399]">toCssHex</span>(lab);         <span class="text-[#52525b]">// '#3b82f6'</span>
+ex.<span class="text-[#34d399]">toCssRgb</span>(lab);         <span class="text-[#52525b]">// 'rgb(59, 130, 246)'</span>
+ex.<span class="text-[#34d399]">toCssHsl</span>(lab);         <span class="text-[#52525b]">// 'hsl(217, 91%, 60%)'</span>
+ex.<span class="text-[#34d399]">toCssOklch</span>(lab);       <span class="text-[#52525b]">// 'oklch(61.0% 0.197 254.6)'</span>
+ex.<span class="text-[#34d399]">toCssDisplayP3</span>(lab);   <span class="text-[#52525b]">// 'color(display-p3 0.310 0.519 0.945)'</span>
+ex.<span class="text-[#34d399]">toAndroidArgb</span>(lab);    <span class="text-[#52525b]">// '0xFF3b82f6'</span>
+ex.<span class="text-[#34d399]">toIosP3</span>(lab);          <span class="text-[#52525b]">// {"{"}r: 0.310, g: 0.519, b: 0.945{"}"}</span>
+ex.<span class="text-[#34d399]">toSwiftLiteral</span>(lab);   <span class="text-[#52525b]">// 'Color(.displayP3, red: 0.310, ...)'</span></code></pre>
+          </div>
+
+          <h3 class="text-lg font-semibold mb-4 mt-10">Scale Export</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Export an entire scale to CSS custom properties, Tailwind config, or JSON.</p>
+
+          <div class="docs-py">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-[#fb923c]">"#3b82f6"</span>)
+
+<span class="text-[#52525b]"># CSS custom properties</span>
+css = ex.<span class="text-[#34d399]">export_css_custom_properties</span>(scale, prefix=<span class="text-[#fb923c]">"primary"</span>)
+<span class="text-[#52525b]">#   primary-50: #e5edff;</span>
+<span class="text-[#52525b]">#   primary-100: #d1dfff;</span>
+<span class="text-[#52525b]">#   ...</span>
+
+<span class="text-[#52525b]"># Tailwind config dict</span>
+tw = ex.<span class="text-[#34d399]">export_tailwind</span>(scale, name=<span class="text-[#fb923c]">"primary"</span>)
+<span class="text-[#52525b]"># {"{"}'primary': {"{"}'50': '#e5edff', '100': '#d1dfff', ...{"}"}{"}"}</span>
+
+<span class="text-[#52525b]"># JSON string (multiple scales)</span>
+json_str = ex.<span class="text-[#34d399]">export_json</span>({"{"}<span class="text-[#fb923c]">"primary"</span>: scale, <span class="text-[#fb923c]">"accent"</span>: accent_scale{"}"})</code></pre>
+          </div>
+
+          <div class="docs-js">
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> scale = hl.<span class="text-[#34d399]">semanticScale</span>(<span class="text-[#fb923c]">'#3b82f6'</span>);
+<span class="text-[#c084fc]">const</span> scaleArr = Object.<span class="text-[#34d399]">values</span>(scale);
+
+<span class="text-[#52525b]">// CSS custom properties</span>
+<span class="text-[#c084fc]">const</span> css = ex.<span class="text-[#34d399]">exportCssCustomProperties</span>(scaleArr, <span class="text-[#fb923c]">'primary'</span>);
+<span class="text-[#52525b]">//   primary-0: #e5edff;</span>
+<span class="text-[#52525b]">//   primary-1: #d1dfff;</span>
+<span class="text-[#52525b]">//   ...</span>
+
+<span class="text-[#52525b]">// Tailwind config</span>
+<span class="text-[#c084fc]">const</span> tw = ex.<span class="text-[#34d399]">exportTailwind</span>(scaleArr, <span class="text-[#fb923c]">'primary'</span>);
+<span class="text-[#52525b]">// {"{"}primary: {"{"}0: '#e5edff', 1: '#d1dfff', ...{"}"}{"}"}</span>
+
+<span class="text-[#52525b]">// JSON string (multiple scales)</span>
+<span class="text-[#c084fc]">const</span> json = ex.<span class="text-[#34d399]">exportJson</span>({"{"} primary: scaleArr, accent: accentArr {"}"});</code></pre>
           </div>
         </section>
 
@@ -677,16 +863,12 @@ tw = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class
     });
 
     // Highlight current section in sidebar (scroll-based, not IntersectionObserver)
-    console.log('[docs] script starting...');
     var sections = Array.from(document.querySelectorAll('section[id]'));
     var sidebarLinks = document.querySelectorAll('aside nav a[href^="#"]');
     var currentActive = null;
-    console.log('[docs] sections found:', sections.length, sections.map(function(s) { return s.id; }));
-    console.log('[docs] sidebar links found:', sidebarLinks.length, Array.from(sidebarLinks).map(function(l) { return l.getAttribute('href'); }));
 
     function setActive(id) {
       if (currentActive === id) return;
-      console.log('[docs] setActive:', id, '(was:', currentActive + ')');
       currentActive = id;
       sidebarLinks.forEach(function(link) {
         link.style.color = '';
@@ -696,7 +878,6 @@ tw = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class
       });
       // Apply to ALL matching links (mobile + desktop sidebars)
       var activeLinks = document.querySelectorAll('aside nav a[href="#' + id + '"]');
-      console.log('[docs] activeLinks found:', activeLinks.length, 'for id:', id);
       activeLinks.forEach(function(activeLink) {
         activeLink.style.color = '#fafafa';
         activeLink.style.backgroundColor = 'rgba(255,255,255,0.06)';
@@ -718,16 +899,13 @@ tw = <span class="text-[#34d399]">export_tokens</span>(scale, format=<span class
           break;
         }
       }
-      console.log('[docs] scroll check, scrollY:', Math.round(window.scrollY), 'positions:', positions, 'picked:', current && current.id);
       if (current) setActive(current.id);
     }
 
     // Initial state
-    console.log('[docs] initial hash:', window.location.hash);
     if (window.location.hash) {
       setActive(window.location.hash.slice(1));
       setTimeout(function() {
-        console.log('[docs] post-hash settle scroll check');
         updateActiveOnScroll();
       }, 200);
     } else {

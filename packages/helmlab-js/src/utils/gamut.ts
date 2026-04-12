@@ -59,6 +59,35 @@ export function maxChroma(L: number, hRad: number, space: SpaceLike, gamut: Gamu
   return lo;
 }
 
+/** Find the cusp (L, C) at a given hue angle — maximum chroma over all L values. */
+export function findCusp(hRad: number, space: SpaceLike, gamut: Gamut = 'srgb', nScan = 64, tol = 1e-4): [number, number] {
+  const cosH = cos(hRad);
+  const sinH = sin(hRad);
+  let bestL = 0.5, bestC = 0;
+
+  // Coarse scan
+  for (let i = 0; i <= nScan; i++) {
+    const L = i / nScan;
+    const C = maxChroma(L, hRad, space, gamut, tol);
+    if (C > bestC) { bestC = C; bestL = L; }
+  }
+
+  // Fine refine around bestL
+  const step = 1 / nScan;
+  let lo = Math.max(0, bestL - step), hi = Math.min(1, bestL + step);
+  for (let i = 0; i < 20; i++) {
+    const m1 = lo + (hi - lo) / 3;
+    const m2 = hi - (hi - lo) / 3;
+    const c1 = maxChroma(m1, hRad, space, gamut, tol);
+    const c2 = maxChroma(m2, hRad, space, gamut, tol);
+    if (c1 < c2) lo = m1; else hi = m2;
+  }
+  bestL = (lo + hi) / 2;
+  bestC = maxChroma(bestL, hRad, space, gamut, tol);
+
+  return [bestL, bestC];
+}
+
 /** Gamut-map a single Lab by reducing chroma (preserving L and hue). */
 function gamutMapSingle(lab: Lab, space: SpaceLike, gamut: Gamut): Lab {
   if (isInGamut(lab, space, gamut)) return [...lab];

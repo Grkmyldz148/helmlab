@@ -132,8 +132,8 @@ class MetricParams:
     cp_sin2: float = 0.0
 
     # ── Adaptive dark L compression (3 params, v6+v13) ───────────
-    # L_new = L * exp(g), g = L*(1-L)² * (lp_dark + lp_dark_hcos*cos(h) + lp_dark_hsin*sin(h))
-    # Peaks near L≈1/3, targets dark region errors
+    # L_new = L * exp(g), g = L*max(0,1-L)² * (lp_dark + lp_dark_hcos*cos(h) + lp_dark_hsin*sin(h))
+    # Peaks near L≈1/3, targets dark region errors. Clamped at L=1 (identity for L≥1).
     # v13: hue-dependent coefficient — dark blues vs dark yellows need different treatment
     lp_dark: float = 0.0
     lp_dark_hcos: float = 0.0
@@ -745,14 +745,16 @@ class MetricSpace(ColorSpace):
         return coeff
 
     def _dark_L_compress(self, L: np.ndarray, h: np.ndarray | None = None, dS: float = 0.0) -> np.ndarray:
-        """L_new = L * exp(g), g = L*(1-L)² * coeff(h, S). Targets dark region.
+        """L_new = L * exp(g), g = L*max(0,1-L)² * coeff(h, S). Targets dark region.
 
+        Clamped at L=1: no correction applied for L≥1 (prevents divergence for
+        wide-gamut colors outside the training domain).
         v13: coeff is hue-dependent when lp_dark_hcos/hsin != 0.
         v16: coeff is surround-dependent when lp_dark_S/S2 != 0.
         """
         coeff = self._dark_L_coeff(h)
         coeff = coeff + self.params.lp_dark_S * dS + self.params.lp_dark_S2 * dS ** 2
-        g = coeff * L * (1.0 - L) ** 2
+        g = coeff * L * np.maximum(0.0, 1.0 - L) ** 2
         return L * np.exp(np.clip(g, -30.0, 30.0))
 
     def _dark_L_compress_inv(self, L_new: np.ndarray, h: np.ndarray | None = None, dS: float = 0.0) -> np.ndarray:
@@ -765,12 +767,12 @@ class MetricSpace(ColorSpace):
         coeff = coeff + self.params.lp_dark_S * dS + self.params.lp_dark_S2 * dS ** 2
         L = L_new.copy()
         for _ in range(12):
-            oml = 1.0 - L
+            oml = np.maximum(0.0, 1.0 - L)
             g = coeff * L * oml ** 2
             eg = np.exp(np.clip(g, -30.0, 30.0))
             f = L * eg - L_new
             # f'(L) = exp(g) * (1 + L * g'(L))
-            # g'(L) = coeff * (1-L)(1-3L)
+            # g'(L) = coeff * max(0,1-L) * (1-3L)  [0 for L≥1]
             gp = coeff * oml * (1.0 - 3.0 * L)
             fp = eg * (1.0 + L * gp)
             fp = np.where(np.abs(fp) < 1e-10, 1.0, fp)

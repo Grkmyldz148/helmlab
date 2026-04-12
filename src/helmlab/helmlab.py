@@ -68,6 +68,16 @@ class Helmlab:
         self._surround = float(np.clip(S, 0.0, 1.0))
         self._metric._surround = self._surround
 
+    # ── XYZ-level conversions (MetricSpace) ─────────────────────────
+
+    def from_XYZ(self, XYZ: np.ndarray) -> np.ndarray:
+        """CIE XYZ → Helmlab Lab [L, a, b] (metric pipeline)."""
+        return self._metric.from_XYZ(np.asarray(XYZ, dtype=np.float64))
+
+    def to_XYZ(self, lab: np.ndarray) -> np.ndarray:
+        """Helmlab Lab [L, a, b] → CIE XYZ (metric pipeline)."""
+        return self._metric.to_XYZ(np.asarray(lab, dtype=np.float64))
+
     # ── Full-pipeline conversions (MetricSpace — public API) ────────
 
     def from_hex(self, hex_str: str) -> np.ndarray:
@@ -500,6 +510,12 @@ class Helmlab:
         lab1 = self.from_hex(color1_hex)
         lab2 = self.from_hex(color2_hex)
         return float(np.sqrt(np.sum((lab1 - lab2) ** 2)))
+
+    def perceptual_distance(self, lab1: np.ndarray, lab2: np.ndarray) -> float:
+        """Full perceptual distance (Minkowski + compression) between two Lab values."""
+        XYZ1 = self._metric.to_XYZ(np.asarray(lab1, dtype=np.float64))
+        XYZ2 = self._metric.to_XYZ(np.asarray(lab2, dtype=np.float64))
+        return float(self._metric.distance(XYZ1, XYZ2))
 
     def export(self):
         """Return a TokenExporter for this Helmlab instance."""

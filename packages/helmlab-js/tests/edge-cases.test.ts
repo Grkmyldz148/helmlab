@@ -398,7 +398,7 @@ describe('Web-safe 216 colors stress test', () => {
 describe('refRange validation', () => {
   // These match the Color.js refRange values for CSS percentage mapping.
   // L range must cover D65 white, a/b range must cover Display P3 gamut.
-  const METRIC_L_MAX = 1.5;
+  const METRIC_L_MAX = 1.6; // Display P3 magenta reaches L≈1.56 with fixed dark_L_compress
   const METRIC_AB_MAX = 1.0;
   const GEN_L_MAX = 1.169;
   const GEN_AB_MAX = 0.51;

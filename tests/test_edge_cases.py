@@ -458,7 +458,7 @@ class TestRefRange:
     """
 
     # Expected refRange values (must match Color.js space definitions)
-    HELMLAB_L_MAX = 1.5
+    HELMLAB_L_MAX = 1.6  # Display P3 magenta reaches L≈1.56 with fixed dark_L_compress
     HELMLAB_AB_MAX = 1.0
     HELMGEN_L_MAX = 1.169
     HELMGEN_AB_MAX = 0.55  # v0.11.0: θ=24.5° M2 rotation expanded ab range (sRGB max |b|=0.49, P3 wider)

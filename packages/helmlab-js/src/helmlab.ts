@@ -14,9 +14,10 @@ import {
   type HelmlabParams, type CompiledParams,
   type GenParams, type CompiledGenParams,
 } from './core/params.js';
-import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, xyzToDisplayP3, clampRgb } from './utils/srgb.js';
+import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, xyzToDisplayP3, clampRgb, relativeLuminance } from './utils/srgb.js';
 import { gamutMap, isInGamut, type SpaceLike } from './utils/gamut.js';
 import { contrastRatio as wcagCR } from './utils/contrast.js';
+import { TokenExporter } from './export.js';
 
 const { sqrt, atan2, cos, sin, PI, pow, abs } = Math;
 
@@ -130,6 +131,12 @@ export class Helmlab {
     return clampRgb(xyzToDisplayP3(this.metric.toXYZ(mapped)));
   }
 
+  /** Helmlab Lab → CSS color(display-p3 r g b) string. */
+  toHexP3(lab: Lab): string {
+    const p3 = this.toDisplayP3(lab);
+    return `color(display-p3 ${p3[0].toFixed(4)} ${p3[1].toFixed(4)} ${p3[2].toFixed(4)})`;
+  }
+
   /** Check if Lab is within sRGB gamut. */
   isInSrgb(lab: Lab): boolean {
     return isInGamut(lab, this.metric, 'srgb');
@@ -152,10 +159,20 @@ export class Helmlab {
     return srgbToHex(this._genToSrgb(lab));
   }
 
+  /** sRGB [0,1] → Gen Lab [L, a, b] (generation pipeline). */
+  genFromSrgb(rgb: RGB): Lab {
+    return this.gen.fromXYZ(srgbToXyz(rgb));
+  }
+
   /** Gen Lab → sRGB [0,1] (gamut mapped, clamped). */
-  private _genToSrgb(lab: Lab): RGB {
+  genToSrgb(lab: Lab): RGB {
     const mapped = gamutMap(lab, this.gen, 'srgb');
     return clampRgb(xyzToSrgb(this.gen.toXYZ(mapped)));
+  }
+
+  /** @internal Alias kept for internal callers. */
+  private _genToSrgb(lab: Lab): RGB {
+    return this.genToSrgb(lab);
   }
 
   // ── Deprecated base* aliases → gen* ─────────────────────────────
@@ -168,6 +185,16 @@ export class Helmlab {
   /** @deprecated Use genToHex(). */
   baseToHex(lab: Lab): Hex {
     return this.genToHex(lab);
+  }
+
+  /** @deprecated Use genFromSrgb(). */
+  baseFromSrgb(rgb: RGB): Lab {
+    return this.genFromSrgb(rgb);
+  }
+
+  /** @deprecated Use genToSrgb(). */
+  baseToSrgb(lab: Lab): RGB {
+    return this.genToSrgb(lab);
   }
 
   // ── Contrast ─────────────────────────────────────────────────
@@ -359,13 +386,50 @@ export class Helmlab {
     return result;
   }
 
+  // ── Dark/Light Mode ─────────────────────────────────────────
+
+  /** Adapt color between light and dark mode via soft L-inversion (GenSpace). */
+  adaptToMode(colorHex: Hex, fromMode: 'light' | 'dark' = 'light', toMode: 'light' | 'dark' = 'dark'): Hex {
+    if (fromMode === toMode) return colorHex;
+
+    const Lmax = this.genWhiteL - 0.02;
+    const LIGHT_LO = 0.05, LIGHT_HI = Lmax;
+    const DARK_LO = 0.08, DARK_HI = Lmax - 0.05;
+
+    const lab = this.genFromHex(colorHex);
+    const L = lab[0];
+
+    const [srcLo, srcHi] = fromMode === 'light' ? [LIGHT_LO, LIGHT_HI] : [DARK_LO, DARK_HI];
+    const [dstLo, dstHi] = fromMode === 'light' ? [DARK_LO, DARK_HI] : [LIGHT_LO, LIGHT_HI];
+
+    const t = Math.min(Math.max((L - srcLo) / (srcHi - srcLo), 0), 1);
+    const Lnew = dstHi - t * (dstHi - dstLo);
+
+    return this.genToHex([Lnew, lab[1], lab[2]]);
+  }
+
+  /** Adapt fg/bg pair to target mode, ensuring contrast. */
+  adaptPair(fgHex: Hex, bgHex: Hex, fromMode: 'light' | 'dark' = 'light', toMode: 'light' | 'dark' = 'dark', minRatio = 4.5): [Hex, Hex] {
+    const newFg = this.adaptToMode(fgHex, fromMode, toMode);
+    const newBg = this.adaptToMode(bgHex, fromMode, toMode);
+    const adjusted = this.ensureContrast(newFg, newBg, minRatio);
+    return [adjusted, newBg];
+  }
+
   // ── Info ──────────────────────────────────────────────────────
 
   /** Return color info for a hex value. */
-  info(hex: Hex): { hex: Hex; lab: Lab; L: number; C: number; H: number } {
-    const lab = this.fromHex(hex);
+  info(hex: Hex): { hex: Hex; srgb: RGB; xyz: XYZ; lab: Lab; L: number; C: number; H: number; luminance: number } {
+    const srgb = hexToSrgb(hex);
+    const xyz = srgbToXyz(srgb);
+    const lab = this.metric.fromXYZ(xyz);
     const C = sqrt(lab[1] ** 2 + lab[2] ** 2);
     const H = ((atan2(lab[2], lab[1]) * 180 / PI) % 360 + 360) % 360;
-    return { hex, lab, L: lab[0], C, H };
+    return { hex, srgb, xyz, lab, L: lab[0], C, H, luminance: relativeLuminance(srgb) };
+  }
+
+  /** Return a TokenExporter for this Helmlab instance. */
+  export(): TokenExporter {
+    return new TokenExporter(this);
   }
 }
