@@ -33,7 +33,7 @@
 | GenSpace (PyPI/npm) | `research/checkpoints/genspace_v0.11.1.json` | **60-8** | M2: `0.21186668...` |
 | GenSpace (color.js PR) | `research/checkpoints/genspace_v0.11.1_colorjs_pr.json` | **59-8** | M2 renormed: `0.21193779...`, L(white)≈1.0 |
 | MetricSpace (production) | `research/checkpoints/metricspace_v21.json` | COMBVD=22.48, Mac=19.51, HF=23.26 | v21 — WITH Bradford CAT |
-| MetricSpace (archived) | `research/checkpoints/metricspace_v20b.json` | COMBVD=27.69 (w/ CAT) | v20b — no CAT optimization |
+| MetricSpace (archived) | `helmlab-experimental/checkpoints/metricspace_v20b.json` | COMBVD=27.69 (w/ CAT) | v20b — no CAT optimization |
 
 ## GenSpace Pipeline (v0.11.1)
 
