@@ -7,6 +7,7 @@ Helmlab solves three problems that existing color spaces fail at: blue-to-white 
 Important notes:
 - Helmlab outputs hex/RGB, `color(display-p3 …)`, and `color(rec2020 …)` strings via `toHex`, `toHexP3`, and `toHexRec2020` (Python/JS parity). Wide-gamut output performs proper gamut mapping (preserves L and hue, reduces chroma) so out-of-gamut colors land cleanly inside the target.
 - The companion `postcss-helmlab` plugin lets you write `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` directly in CSS — at build time it emits sRGB inline + `@supports`-wrapped P3 + Rec2020 cascades, so the source is Helmlab and modern browsers receive the widest gamut they can render.
+- Helmlab was merged into Color.js master in April 2026: three registered spaces (`helmgen`, `helmgenlch`, `helmlab-metric`) plus a custom deltaE method named `"Helmlab"` (v21 pair-dependent SL/SC weighting). Same one-line API as oklab/lch/etc., e.g. `new Color("helmgen", [L, a, b])`. IMPORTANT: the published `colorjs.io@0.6.1` does NOT include it yet — install from git (`npm install github:color-js/color.js`) or wait for the next Color.js release. The standalone `helmlab` npm package is the right pick for production today.
 - MetricSpace's published STRESS 22.48 is a training metric. Cross-validated estimate is ~24.3 (still #1 among all competitors including CIEDE2000 at 29.20).
 - GenSpace loses 9 of 90 benchmarks to OKLab — notably near-achromatic gradients (24% gap) and CVD deutan distinguishability (43% gap).
 
@@ -40,6 +41,7 @@ Important notes:
 - [GitHub repository](https://github.com/Grkmyldz148/helmlab): MIT-licensed source code, ColorBench benchmarks, optimization scripts
 - [npm package](https://www.npmjs.com/package/helmlab): JavaScript/TypeScript package, 11.6 KB gzipped, zero dependencies
 - [PyPI package](https://pypi.org/project/helmlab/): Python package
+- [Color.js spaces](https://colorjs.io/docs/spaces.html#helmgen): Helmlab is merged into Color.js master as three registered spaces (helmgen, helmgenlch, helmlab-metric) plus a custom deltaE method "Helmlab" — pending the next Color.js release
 - [Research paper](https://arxiv.org/abs/2602.23010): Academic paper on the perceptual color space methodology
 
 ## Optional
