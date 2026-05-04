@@ -7,6 +7,7 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
 [![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
+[![Color.js](https://img.shields.io/badge/Color.js-merged-f97316.svg)](https://colorjs.io/docs/spaces.html#helmgen)
 
 **[Website](https://helmlab.space)** | **[Documentation](https://helmlab.space/docs.html)** | **[Demo](https://helmlab.space/demo.html)** | **[Paper](https://arxiv.org/abs/2602.23010)**
 
