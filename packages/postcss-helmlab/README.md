@@ -1,6 +1,22 @@
 # postcss-helmlab
 
-[PostCSS] plugin for [Helmlab] color spaces. Transforms `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` CSS functions into `rgb()`/`rgba()` fallbacks at build time.
+[PostCSS] plugin for [Helmlab] color spaces. Transforms `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` CSS functions into `rgb()`/`rgba()` fallbacks **plus** `color(display-p3 …)` and `color(rec2020 …)` wide-gamut overrides — wrapped in `@supports` queries so the cascade survives modern CSS minifiers (Lightning CSS, cssnano).
+
+```js
+// postcss.config.mjs
+import helmlab from 'postcss-helmlab';
+export default { plugins: [helmlab({ outputMode: 'all' })] };
+```
+
+| Mode      | Output                                                            |
+|-----------|-------------------------------------------------------------------|
+| `srgb`    | `rgb()` / `rgba()` only                                           |
+| `p3`      | `color(display-p3 …)` only                                        |
+| `rec2020` | `color(rec2020 …)` only                                           |
+| `both`    | sRGB inline **+** `@supports (color: color(display-p3 …))` block  |
+| `all`     | sRGB inline **+** P3 `@supports` **+** Rec2020 `@supports` blocks |
+
+`both` is the default.
 
 [PostCSS]: https://postcss.org/
 [Helmlab]: https://github.com/Grkmyldz148/helmlab

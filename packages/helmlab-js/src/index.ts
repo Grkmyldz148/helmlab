@@ -15,7 +15,9 @@ export { compileParams, getDefaultParams, compileGenParams, getDefaultGenParams 
 export {
   hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb,
   xyzToDisplayP3, displayP3ToXyz,
+  xyzToRec2020, rec2020ToXyz,
   linearToSrgb, srgbToLinear,
+  linearToRec2020, rec2020ToLinear,
   clampRgb, relativeLuminance,
 } from './utils/srgb.js';
 export { gamutMap, isInGamut, maxChroma, findCusp } from './utils/gamut.js';

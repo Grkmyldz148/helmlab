@@ -21,6 +21,8 @@ from helmlab.utils.srgb_convert import (
     XYZ_to_sRGB,
     XYZ_to_DisplayP3,
     linear_to_displayp3,
+    XYZ_to_Rec2020,
+    linear_to_rec2020,
     clamp_srgb,
     relative_luminance,
     contrast_ratio as _wcag_cr,
@@ -115,6 +117,19 @@ class Helmlab:
         p3 = self.to_displayp3(lab)
         return f"color(display-p3 {p3[0]:.4f} {p3[1]:.4f} {p3[2]:.4f})"
 
+    def to_rec2020(self, lab: np.ndarray) -> np.ndarray:
+        """Helmlab Lab [L, a, b] → Rec2020 / BT.2020 [0,1] (gamut mapped, gamma-encoded)."""
+        lab = np.asarray(lab, dtype=np.float64)
+        mapped = gamut_map(lab, self._metric, gamut="rec2020")
+        XYZ = self._metric.to_XYZ(mapped)
+        linear = XYZ_to_Rec2020(XYZ)
+        return clamp_srgb(linear_to_rec2020(linear))
+
+    def to_hex_rec2020(self, lab: np.ndarray) -> str:
+        """Helmlab Lab → CSS color(rec2020 r g b) string."""
+        rec = self.to_rec2020(lab)
+        return f"color(rec2020 {rec[0]:.4f} {rec[1]:.4f} {rec[2]:.4f})"
+
     def is_in_srgb(self, lab: np.ndarray) -> bool:
         """Check if Lab coordinates are within sRGB gamut (metric space)."""
         return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "srgb"))
@@ -122,6 +137,10 @@ class Helmlab:
     def is_in_p3(self, lab: np.ndarray) -> bool:
         """Check if Lab coordinates are within Display P3 gamut (metric space)."""
         return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "display-p3"))
+
+    def is_in_rec2020(self, lab: np.ndarray) -> bool:
+        """Check if Lab coordinates are within Rec2020 / BT.2020 gamut (metric space)."""
+        return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "rec2020"))
 
     # ── GenSpace conversions (for generation) ──────────────────────
 

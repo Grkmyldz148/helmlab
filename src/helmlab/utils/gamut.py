@@ -1,6 +1,6 @@
 """Gamut mapping — chroma-reduction and adaptive (Ottosson-style) clipping.
 
-Supports sRGB and Display P3 gamuts.
+Supports sRGB, Display P3, and Rec2020 / BT.2020 gamuts.
 
 Methods:
     "chroma"   — reduce chroma at fixed L and hue (default, backward compat)
@@ -12,12 +12,14 @@ import numpy as np
 from helmlab.utils.srgb_convert import (
     M_XYZ_TO_SRGB,
     M_XYZ_TO_DISPLAYP3,
+    M_XYZ_TO_REC2020,
 )
 
 # Gamut → linear-RGB matrix mapping
 _GAMUT_MATRICES = {
     "srgb": M_XYZ_TO_SRGB,
     "display-p3": M_XYZ_TO_DISPLAYP3,
+    "rec2020": M_XYZ_TO_REC2020,
 }
 
 
@@ -34,7 +36,7 @@ def is_in_gamut(lab: np.ndarray, space, gamut: str = "srgb", tol: float = 1e-4) 
     ----------
     lab : ndarray, shape (..., 3)
     space : ColorSpace instance (must have .to_XYZ)
-    gamut : "srgb" or "display-p3"
+    gamut : "srgb", "display-p3", or "rec2020"
     tol : tolerance for boundary inclusion
 
     Returns
@@ -55,7 +57,7 @@ def max_chroma(L: float, H_rad: float, space, gamut: str = "srgb", tol: float = 
     L : lightness value
     H_rad : hue angle in radians
     space : ColorSpace with to_XYZ method
-    gamut : "srgb" or "display-p3"
+    gamut : "srgb", "display-p3", or "rec2020"
     tol : convergence tolerance
 
     Returns
@@ -100,7 +102,7 @@ def find_cusp(H_rad: float, space, gamut: str = "srgb",
     ----------
     H_rad : hue angle in radians
     space : ColorSpace with to_XYZ method
-    gamut : "srgb" or "display-p3"
+    gamut : "srgb", "display-p3", or "rec2020"
     n_scan : number of L values in coarse scan
     tol : convergence tolerance for L
 
@@ -244,7 +246,7 @@ def gamut_map(lab: np.ndarray, space, gamut: str = "srgb", method: str = "chroma
     ----------
     lab : ndarray, shape (3,) or (N, 3)
     space : ColorSpace with to_XYZ method
-    gamut : "srgb" or "display-p3"
+    gamut : "srgb", "display-p3", or "rec2020"
     method : "chroma" or "adaptive"
         "chroma" — reduce chroma while preserving L and hue (default)
         "adaptive" — Ottosson-style adaptive clipping that shifts both L and C
@@ -307,7 +309,7 @@ def gamut_map_batch(labs: np.ndarray, space, gamut: str = "srgb",
     ----------
     labs : ndarray, shape (N, 3)
     space : ColorSpace with to_XYZ method
-    gamut : "srgb" or "display-p3"
+    gamut : "srgb", "display-p3", or "rec2020"
     method : "chroma" or "adaptive"
     alpha : blend parameter for adaptive method
 

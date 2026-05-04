@@ -1,4 +1,4 @@
-/** sRGB/Display P3 ↔ XYZ conversions, hex, gamma transfer. */
+/** sRGB/Display P3/Rec2020 ↔ XYZ conversions, hex, gamma transfer. */
 
 import type { XYZ, RGB, Hex } from '../types.js';
 
@@ -32,6 +32,20 @@ export const M_DISPLAYP3_TO_XYZ = new Float64Array([
   0.0000000000, 0.0451133819, 1.0439443689,
 ]);
 
+/** XYZ → linear Rec2020 / BT.2020 (row-major). */
+export const M_XYZ_TO_REC2020 = new Float64Array([
+   1.7166511880, -0.3556707838, -0.2533662814,
+  -0.6666843518,  1.6164812366,  0.0157685458,
+   0.0176398574, -0.0427706133,  0.9421031212,
+]);
+
+/** Linear Rec2020 / BT.2020 → XYZ (row-major). */
+export const M_REC2020_TO_XYZ = new Float64Array([
+  0.6369580483, 0.1446169036, 0.1688809752,
+  0.2627002120, 0.6779980715, 0.0593017165,
+  0.0000000000, 0.0280726930, 1.0609850577,
+]);
+
 // ── Gamma transfer ──────────────────────────────────────────────
 
 /** Linear [0,1] → sRGB gamma-encoded [0,1]. */
@@ -46,6 +60,25 @@ export function srgbToLinear(c: number): number {
   return c <= 0.04045
     ? c / 12.92
     : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+// BT.2020 OETF constants (12-bit precision per ITU-R BT.2020-2 / CSS Color 4).
+const BT2020_ALPHA = 1.09929682680944;
+const BT2020_BETA = 0.018053968510807;
+const BT2020_THRESH_ENC = 4.5 * BT2020_BETA; // ≈ 0.0812428
+
+/** Linear [0,1] → Rec2020 / BT.2020 gamma-encoded [0,1]. */
+export function linearToRec2020(c: number): number {
+  return c < BT2020_BETA
+    ? 4.5 * c
+    : BT2020_ALPHA * Math.pow(Math.max(c, 0), 0.45) - (BT2020_ALPHA - 1);
+}
+
+/** Rec2020 / BT.2020 gamma-encoded [0,1] → linear [0,1]. */
+export function rec2020ToLinear(c: number): number {
+  return c < BT2020_THRESH_ENC
+    ? c / 4.5
+    : Math.pow((c + (BT2020_ALPHA - 1)) / BT2020_ALPHA, 1 / 0.45);
 }
 
 // ── XYZ ↔ sRGB ──────────────────────────────────────────────────
@@ -85,6 +118,20 @@ export function displayP3ToXyz(rgb: RGB): XYZ {
   const lg = srgbToLinear(rgb[1]);
   const lb = srgbToLinear(rgb[2]);
   return m3v(M_DISPLAYP3_TO_XYZ, lr, lg, lb) as XYZ;
+}
+
+/** CIE XYZ → Rec2020 / BT.2020 gamma-encoded [0,1]. */
+export function xyzToRec2020(xyz: XYZ): RGB {
+  const [lr, lg, lb] = m3v(M_XYZ_TO_REC2020, xyz[0], xyz[1], xyz[2]);
+  return [linearToRec2020(lr), linearToRec2020(lg), linearToRec2020(lb)];
+}
+
+/** Rec2020 / BT.2020 gamma-encoded → CIE XYZ. */
+export function rec2020ToXyz(rgb: RGB): XYZ {
+  const lr = rec2020ToLinear(rgb[0]);
+  const lg = rec2020ToLinear(rgb[1]);
+  const lb = rec2020ToLinear(rgb[2]);
+  return m3v(M_REC2020_TO_XYZ, lr, lg, lb) as XYZ;
 }
 
 // ── Hex ↔ sRGB ──────────────────────────────────────────────────

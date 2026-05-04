@@ -14,7 +14,7 @@ import {
   type HelmlabParams, type CompiledParams,
   type GenParams, type CompiledGenParams,
 } from './core/params.js';
-import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, xyzToDisplayP3, clampRgb, relativeLuminance } from './utils/srgb.js';
+import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, xyzToDisplayP3, xyzToRec2020, clampRgb, relativeLuminance } from './utils/srgb.js';
 import { gamutMap, isInGamut, type SpaceLike } from './utils/gamut.js';
 import { contrastRatio as wcagCR } from './utils/contrast.js';
 import { TokenExporter } from './export.js';
@@ -137,6 +137,18 @@ export class Helmlab {
     return `color(display-p3 ${p3[0].toFixed(4)} ${p3[1].toFixed(4)} ${p3[2].toFixed(4)})`;
   }
 
+  /** Helmlab Lab → Rec2020 / BT.2020 [0,1] (gamut mapped). */
+  toRec2020(lab: Lab): RGB {
+    const mapped = gamutMap(lab, this.metric, 'rec2020');
+    return clampRgb(xyzToRec2020(this.metric.toXYZ(mapped)));
+  }
+
+  /** Helmlab Lab → CSS color(rec2020 r g b) string. */
+  toHexRec2020(lab: Lab): string {
+    const r = this.toRec2020(lab);
+    return `color(rec2020 ${r[0].toFixed(4)} ${r[1].toFixed(4)} ${r[2].toFixed(4)})`;
+  }
+
   /** Check if Lab is within sRGB gamut. */
   isInSrgb(lab: Lab): boolean {
     return isInGamut(lab, this.metric, 'srgb');
@@ -145,6 +157,11 @@ export class Helmlab {
   /** Check if Lab is within Display P3 gamut. */
   isInP3(lab: Lab): boolean {
     return isInGamut(lab, this.metric, 'display-p3');
+  }
+
+  /** Check if Lab is within Rec2020 / BT.2020 gamut. */
+  isInRec2020(lab: Lab): boolean {
+    return isInGamut(lab, this.metric, 'rec2020');
   }
 
   // ── GenSpace conversions (for generation) ──────────────────────

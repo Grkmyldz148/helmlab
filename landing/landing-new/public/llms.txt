@@ -5,7 +5,8 @@
 Helmlab solves three problems that existing color spaces fail at: blue-to-white gradients shifting toward lavender (OKLab), uneven lightness scales causing "dark holes" in palettes at 700-800, and inaccurate perceptual distance prediction. The library is the first to achieve state-of-the-art in both visual generation quality and perceptual color difference simultaneously.
 
 Important notes:
-- Helmlab is a JavaScript/Python library that outputs standard hex/RGB values. It is NOT a CSS color function — use `oklch()` for native CSS interpolation.
+- Helmlab outputs hex/RGB, `color(display-p3 …)`, and `color(rec2020 …)` strings via `toHex`, `toHexP3`, and `toHexRec2020` (Python/JS parity). Wide-gamut output performs proper gamut mapping (preserves L and hue, reduces chroma) so out-of-gamut colors land cleanly inside the target.
+- The companion `postcss-helmlab` plugin lets you write `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` directly in CSS — at build time it emits sRGB inline + `@supports`-wrapped P3 + Rec2020 cascades, so the source is Helmlab and modern browsers receive the widest gamut they can render.
 - MetricSpace's published STRESS 22.48 is a training metric. Cross-validated estimate is ~24.3 (still #1 among all competitors including CIEDE2000 at 29.20).
 - GenSpace loses 9 of 90 benchmarks to OKLab — notably near-achromatic gradients (24% gap) and CVD deutan distinguishability (43% gap).
 

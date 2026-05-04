@@ -146,6 +146,57 @@ def displayp3_to_linear(p3: np.ndarray) -> np.ndarray:
     return srgb_to_linear(p3)
 
 
+# ── Rec2020 / BT.2020 matrices (D65 white) ─────────────────────────────
+# Derived from BT.2020 chromaticities (r=0.708,0.292 g=0.170,0.797 b=0.131,0.046)
+
+M_XYZ_TO_REC2020 = np.array([
+    [ 1.7166511880, -0.3556707838, -0.2533662814],
+    [-0.6666843518,  1.6164812366,  0.0157685458],
+    [ 0.0176398574, -0.0427706133,  0.9421031212],
+])
+
+M_REC2020_TO_XYZ = np.array([
+    [0.6369580483, 0.1446169036, 0.1688809752],
+    [0.2627002120, 0.6779980715, 0.0593017165],
+    [0.0000000000, 0.0280726930, 1.0609850577],
+])
+
+# BT.2020 OETF constants (12-bit precision per ITU-R BT.2020-2 / CSS Color 4)
+_BT2020_ALPHA = 1.09929682680944
+_BT2020_BETA = 0.018053968510807
+_BT2020_THRESH_ENC = 4.5 * _BT2020_BETA  # ≈ 0.0812428
+
+
+def XYZ_to_Rec2020(XYZ: np.ndarray) -> np.ndarray:
+    """CIE XYZ (D65) → Rec2020 / BT.2020 linear [unclamped]."""
+    return np.asarray(XYZ, dtype=np.float64) @ M_XYZ_TO_REC2020.T
+
+
+def Rec2020_to_XYZ(rec: np.ndarray) -> np.ndarray:
+    """Rec2020 / BT.2020 linear → CIE XYZ (D65)."""
+    return np.asarray(rec, dtype=np.float64) @ M_REC2020_TO_XYZ.T
+
+
+def linear_to_rec2020(linear: np.ndarray) -> np.ndarray:
+    """Linear [0,1] → Rec2020 / BT.2020 gamma-encoded [0,1]."""
+    linear = np.asarray(linear, dtype=np.float64)
+    return np.where(
+        linear < _BT2020_BETA,
+        4.5 * linear,
+        _BT2020_ALPHA * np.power(np.maximum(linear, 0.0), 0.45) - (_BT2020_ALPHA - 1.0),
+    )
+
+
+def rec2020_to_linear(rec: np.ndarray) -> np.ndarray:
+    """Rec2020 / BT.2020 gamma-encoded [0,1] → linear [0,1]."""
+    rec = np.asarray(rec, dtype=np.float64)
+    return np.where(
+        rec < _BT2020_THRESH_ENC,
+        rec / 4.5,
+        np.power((rec + (_BT2020_ALPHA - 1.0)) / _BT2020_ALPHA, 1.0 / 0.45),
+    )
+
+
 def contrast_ratio(srgb_fg: np.ndarray, srgb_bg: np.ndarray) -> np.ndarray:
     """WCAG contrast ratio (1:1 to 21:1).
 

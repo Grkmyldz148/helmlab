@@ -565,18 +565,36 @@ hex_str = hl.<span class="text-[#34d399]">gen_to_hex</span>(lab)</code></pre>
 <span class="text-[#c084fc]">const</span> hex = hl.<span class="text-[#34d399]">genToHex</span>(lab2);</code></pre>
           </div>
 
-          <h3 class="text-lg font-semibold mb-4 mt-10">toHexP3()</h3>
-          <p class="text-[#a1a1aa] mb-4 text-sm">Convert Metric Lab to a CSS <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">color(display-p3 r g b)</code> string for wide-gamut displays.</p>
+          <h3 class="text-lg font-semibold mb-4 mt-10">toHexP3() / toHexRec2020()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">Convert Metric Lab to wide-gamut CSS strings. Both methods perform proper gamut mapping (preserving lightness and hue, reducing chroma) so colors outside the target gamut land cleanly inside it.</p>
 
           <div class="docs-py">
             <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm">lab = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#ff0000"</span>)
+
 p3_css = hl.<span class="text-[#34d399]">to_hex_p3</span>(lab)
-<span class="text-[#52525b]"># &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span></code></pre>
+<span class="text-[#52525b]"># &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span>
+
+rec_css = hl.<span class="text-[#34d399]">to_hex_rec2020</span>(lab)
+<span class="text-[#52525b]"># &rarr; 'color(rec2020 0.7920 0.2310 0.0738)'</span>
+
+<span class="text-[#52525b]"># Gamut tests</span>
+hl.<span class="text-[#34d399]">is_in_srgb</span>(lab)     <span class="text-[#52525b]"># True/False</span>
+hl.<span class="text-[#34d399]">is_in_p3</span>(lab)
+hl.<span class="text-[#34d399]">is_in_rec2020</span>(lab)</code></pre>
           </div>
           <div class="docs-js">
             <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">const</span> lab = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#ff0000'</span>);
+
 <span class="text-[#c084fc]">const</span> p3Css = hl.<span class="text-[#34d399]">toHexP3</span>(lab);
-<span class="text-[#52525b]">// &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span></code></pre>
+<span class="text-[#52525b]">// &rarr; 'color(display-p3 0.9176 0.2003 0.1386)'</span>
+
+<span class="text-[#c084fc]">const</span> recCss = hl.<span class="text-[#34d399]">toHexRec2020</span>(lab);
+<span class="text-[#52525b]">// &rarr; 'color(rec2020 0.7920 0.2310 0.0738)'</span>
+
+<span class="text-[#52525b]">// Gamut tests</span>
+hl.<span class="text-[#34d399]">isInSrgb</span>(lab);     <span class="text-[#52525b]">// true/false</span>
+hl.<span class="text-[#34d399]">isInP3</span>(lab);
+hl.<span class="text-[#34d399]">isInRec2020</span>(lab);</code></pre>
           </div>
 
           <h3 class="text-lg font-semibold mb-4 mt-10">paletteHues()</h3>

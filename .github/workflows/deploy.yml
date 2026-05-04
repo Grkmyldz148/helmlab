@@ -106,6 +106,54 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+  # ─── 3b. Publish postcss-helmlab (only when version changes) ──
+  publish-postcss-helmlab:
+    needs: [publish-npm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if postcss-helmlab version changed
+        id: version-check
+        run: |
+          OLD=$(git show HEAD~1:packages/postcss-helmlab/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])" 2>/dev/null || echo "0.0.0")
+          NEW=$(python3 -c "import json; print(json.load(open('packages/postcss-helmlab/package.json'))['version'])")
+          echo "old=$OLD" >> "$GITHUB_OUTPUT"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$OLD" != "$NEW" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.version-check.outputs.changed == 'true'
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Rewrite local helmlab dependency to published version
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          # Replace `"helmlab": "file:../helmlab-js"` with the just-published version
+          # so the published postcss-helmlab tarball pulls helmlab from the registry.
+          HL_VERSION=$(python3 -c "import json; print(json.load(open('packages/helmlab-js/package.json'))['version'])")
+          python3 -c "
+          import json
+          p = 'packages/postcss-helmlab/package.json'
+          d = json.load(open(p))
+          d['dependencies']['helmlab'] = '^' + '$HL_VERSION'
+          json.dump(d, open(p, 'w'), indent=2)
+          "
+
+      - name: Publish postcss-helmlab
+        if: steps.version-check.outputs.changed == 'true'
+        run: cd packages/postcss-helmlab && npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   # ─── 4. Publish PyPI (only when version changes) ───────
   publish-pypi:
     needs: [test-python]

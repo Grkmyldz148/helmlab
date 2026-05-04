@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, relativeLuminance } from '../src/index.js';
+import {
+  hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, relativeLuminance,
+  xyzToRec2020, rec2020ToXyz, linearToRec2020, rec2020ToLinear,
+} from '../src/index.js';
 import ref from './reference/reference-values.json';
 
 describe('sRGB utilities', () => {
@@ -42,5 +45,35 @@ describe('sRGB utilities', () => {
 
   it('relative luminance of black is 0', () => {
     expect(relativeLuminance([0, 0, 0])).toBeCloseTo(0, 6);
+  });
+
+  it('rec2020 OETF round-trips on representative values', () => {
+    for (const v of [0, 0.005, 0.018, 0.05, 0.2, 0.5, 0.9, 1]) {
+      expect(rec2020ToLinear(linearToRec2020(v))).toBeCloseTo(v, 10);
+    }
+  });
+
+  it('rec2020 OETF endpoints are anchored at 0 and 1', () => {
+    expect(linearToRec2020(0)).toBeCloseTo(0, 12);
+    expect(linearToRec2020(1)).toBeCloseTo(1, 12);
+    expect(rec2020ToLinear(0)).toBeCloseTo(0, 12);
+    expect(rec2020ToLinear(1)).toBeCloseTo(1, 12);
+  });
+
+  it('rec2020 ↔ XYZ round-trips', () => {
+    for (const rgb of [[0.5, 0.5, 0.5], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0.2, 0.7, 0.4]]) {
+      const xyz = rec2020ToXyz(rgb as [number, number, number]);
+      const back = xyzToRec2020(xyz);
+      expect(back[0]).toBeCloseTo(rgb[0], 8);
+      expect(back[1]).toBeCloseTo(rgb[1], 8);
+      expect(back[2]).toBeCloseTo(rgb[2], 8);
+    }
+  });
+
+  it('Rec2020 white → XYZ matches D65 reference', () => {
+    const xyz = rec2020ToXyz([1, 1, 1]);
+    expect(xyz[0]).toBeCloseTo(0.95047, 3);
+    expect(xyz[1]).toBeCloseTo(1.00000, 3);
+    expect(xyz[2]).toBeCloseTo(1.08883, 3);
   });
 });

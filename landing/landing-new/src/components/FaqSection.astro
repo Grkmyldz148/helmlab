@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: "Can I use it in CSS?",
-    a: "No native CSS support. Helmlab is a JS/Python library that outputs standard hex/RGB values. Use oklch() for CSS-native interpolation. Use Helmlab when generating colors in JS/Python code, design tokens, build-time palette generation, or server-side rendering.",
+    a: "Yes — install postcss-helmlab and write helmlab(L a b), helmlch(L C h), helmgen(...), or helmgenlch(...) directly in your stylesheets. The plugin emits sRGB inline plus @supports-wrapped color(display-p3 ...) and color(rec2020 ...) overrides at build time, so older browsers fall back gracefully and modern browsers receive the widest gamut they can render. This site dogfoods it.",
   },
   {
     q: "What about browser support?",

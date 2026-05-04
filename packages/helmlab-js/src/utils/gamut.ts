@@ -1,7 +1,7 @@
 /** Gamut mapping — binary search chroma reduction preserving L and hue. */
 
 import type { Lab, XYZ } from '../types.js';
-import { M_XYZ_TO_SRGB, M_XYZ_TO_DISPLAYP3 } from './srgb.js';
+import { M_XYZ_TO_SRGB, M_XYZ_TO_DISPLAYP3, M_XYZ_TO_REC2020 } from './srgb.js';
 
 const { cos, sin, sqrt, atan2, min } = Math;
 
@@ -10,10 +10,12 @@ export interface SpaceLike {
   toXYZ(lab: Lab): XYZ;
 }
 
-type Gamut = 'srgb' | 'display-p3';
+export type Gamut = 'srgb' | 'display-p3' | 'rec2020';
 
 function getMatrix(gamut: Gamut): Float64Array {
-  return gamut === 'srgb' ? M_XYZ_TO_SRGB : M_XYZ_TO_DISPLAYP3;
+  if (gamut === 'srgb') return M_XYZ_TO_SRGB;
+  if (gamut === 'display-p3') return M_XYZ_TO_DISPLAYP3;
+  return M_XYZ_TO_REC2020;
 }
 
 /** Check if XYZ is in the given RGB gamut (linear check, no gamma). */
