@@ -44,6 +44,12 @@ jobs:
       - name: Build helmlab-js local dependency
         run: cd packages/helmlab-js && npm ci && npm run build
 
+      - name: Install postcss-helmlab dependencies
+        # Required because landing-new links postcss-helmlab via `file:` and
+        # postcss is a peerDep — the symlinked package needs its own node_modules
+        # for Node's `import "postcss"` to resolve from inside its index.js.
+        run: cd packages/postcss-helmlab && npm install --no-audit --no-fund
+
       - name: Install landing dependencies
         run: cd landing/landing-new && npm install
 
