@@ -58,11 +58,17 @@ the chromatic plane improves hue-angle alignment without affecting
 the distance metric, which is invariant under isometries.
 On \combvd\ (3{,}813 color pairs), MetricSpace~v21 achieves a
 \stress\ of \textbf{22.48}, a 23.0\% reduction from CIEDE2000
-(29.20). It also leads on the held-out MacAdam~1974 dataset (19.51
-vs 22.13) and on a 3{,}552-judgement Human-Feedback set
-(23.26 vs 62.54). A held-out 20\% test split shows a $+1.77$
-train$\to$test STRESS gap, yielding a cross-validated point estimate
-of $\sim$24.3 that still beats every tested competitor.
+(29.20). On the held-out MacAdam~1974 dataset it scores 19.51
+(CIEDE2000: 22.13). On a self-collected 3{,}552-judgement
+screen-condition set from 71+ observers it scores 23.26 vs
+62.54 for CIEDE2000, though we discuss the selection-bias caveat
+on this dataset in \Cref{sec:eval}. We also report academic
+He~\etal\ 2022 (82 pairs, 3D-printed): MetricSpace 35.9 vs
+CIEDE2000 32.6 --- a regression we explicitly own.
+A held-out 20\% \combvd\ test split shows a $+1.77$
+train$\to$test \stress\ gap, yielding a cross-validated point
+estimate of $\sim$24.3 that still beats every tested competitor on
+\combvd.
 GenSpace~v0.11.1 trades distance accuracy for generation quality:
 on a 90-metric, 3{,}038-pair gradient/palette benchmark across
 sRGB/P3/Rec.2020, it wins 66 of 90 vs OKLab. The transform is
@@ -109,17 +115,22 @@ The contributions are:
 \begin{enumerate}
   \item \textbf{MetricSpace v21}: a 72-parameter analytical color
     space with \stress\ \textbf{22.48} on \combvd, 23.0\% lower than
-    CIEDE2000. The same space leads on the held-out MacAdam~1974 set
-    (19.51 vs 22.13) and on a Human-Feedback judgement set (23.26
-    vs 62.54).
+    CIEDE2000 (29.20). The same model leads on the held-out
+    MacAdam~1974 set (19.51 vs 22.13). On academic He~\etal\ 2022
+    (82 pairs, 3D-printed) MetricSpace trails CIEDE2000 (35.9 vs
+    32.6); we report this as an honest limitation and discuss likely
+    causes in \Cref{sec:limitations}.
   \item A held-out 20\% test split (763 pairs the optimizer never
     saw) gives a $+1.77$ train$\to$test STRESS gap; even the
     cross-validated estimate ($\sim$24.3) beats every tested
     competitor. We report this gap explicitly rather than only the
     full-data fit.
   \item A neutral correction that guarantees $C < 10^{-6}$ for
-    achromatic colors, decoupling measurement-optimal training from
-    generation-grade neutrality.
+    achromatic colors when enabled. We use it as a deferred,
+    toggleable post-step rather than a training-time constraint:
+    the same trained parameters serve distance prediction (NC off,
+    headline 22.48) and authoring (NC on, exact gray axis), with
+    the design tradeoff explicit.
   \item A rigid rotation in the $ab$ plane that reduces hue error
     (RMS~18.1\textdegree) without changing the distance metric
     (the metric is invariant under rotation).
@@ -498,11 +509,13 @@ in \Cref{sec:eval}.
 
 \paragraph{Cross-validation data.}
 He~\etal\ 2022 (82~pairs, 10\textdegree\ observer) enters the loss as
-a regularizer ($\lambda_\mathrm{He}\!=\!0.05$) and is therefore not
-fully independent; its \stress\ is reported for transparency.
-MacAdam~1974 (128~pairs, 10\textdegree) is held out entirely and
-never seen during optimization. v21 outperforms CIEDE2000 on
-MacAdam (19.51 vs 22.13) — an honestly-held-out result.
+a small regulariser ($\lambda_\mathrm{He}\!=\!0.05$) and is
+therefore not fully independent; its \stress\ is reported for
+transparency. MacAdam~1974 (128~pairs, 10\textdegree) is held out
+entirely and never seen during optimization. v21 outperforms
+CIEDE2000 on MacAdam (19.51 vs 22.13) and trails on He~2022
+(35.9 vs 32.6); the He~2022 regression is discussed in
+\Cref{sec:eval-stress}.
 
 \paragraph{Convergence.}
 The optimizer typically converges within 3{,}000--5{,}000 function
@@ -526,12 +539,32 @@ optimizer memorisation. Even at the held-out estimate ($\sim 24.3$),
 psychophysical datasets for MetricSpace v21 and eight baselines.
 On \combvd, MetricSpace achieves 22.48, compared to 29.20 for
 CIEDE2000 ($-$23.0\%). On the held-out MacAdam~1974 set it scores
-19.51 (CIEDE2000: 22.13, $-$11.8\%). On a third Human-Feedback
-judgement set (3{,}552 pairs collected on monitor under controlled
-viewing conditions during development) it scores 23.26 (CIEDE2000:
-62.54, $-$62.8\%); we include this last dataset because it is the
-only large-scale screen-condition validation set we have access to,
-and modern UI applications operate under those conditions.
+19.51 (CIEDE2000: 22.13, $-$11.8\%).
+
+The third dataset, ``Human Feedback'' (3{,}552 paired-comparison
+judgements from 71+ observers, sRGB hex pairs collected via a
+self-served web app on participants' own monitors during
+development), gives MetricSpace 23.26 vs CIEDE2000 62.54.
+Two important caveats apply to this set: (a) it is
+\emph{self-collected} on uncalibrated displays under uncontrolled
+viewing conditions; (b) the observer pool is recruited from the
+authors' personal network. The 23.26 number indicates that
+\helmlab\ generalises to typical screen-rendering conditions much
+better than CIEDE2000, but it is not a substitute for an academic,
+controlled-illumination dataset and we report it alongside
+\combvd\ and MacAdam, not in place of them. The dataset is
+released with the paper for replication.
+
+The academic He~\etal\ 2022 dataset (82 pairs, 3D-printed
+spherical samples, large differences) is one MetricSpace does
+\emph{not} win: \stress\ 35.9 vs CIEDE2000's 32.6. We trace
+this to (i) the small sample size making the \stress\ statistic
+noisy and (ii) the differences in this dataset being at the
+high-$\Delta E$ tail where v21's compression-and-post-power
+shape was not directly tuned (\combvd\ DV values are mostly in
+the medium range). We report this regression rather than
+suppress it.
+
 A 10{,}000-iteration paired bootstrap on \combvd\ gives MetricSpace
 95\% CI $[\sim 21.5, 23.4]$ and CIEDE2000 95\% CI $[\sim 27.7, 30.7]$;
 the intervals do not overlap ($p < 10^{-4}$).
@@ -545,7 +578,14 @@ the intervals do not overlap ($p < 10^{-4}$).
 
 \begin{table}[t]
   \centering
-  \caption{\stress\ across three datasets. Lower is better. All baselines use Euclidean distance in their native Cartesian coordinates.}
+  \caption{\stress\ across three datasets. Lower is better. HumFB =
+  3{,}552 self-collected screen-condition judgements from 71+
+  observers, see caveat in \Cref{sec:eval-stress}. Avg is the
+  unweighted three-dataset mean. He~\etal\ 2022 (82 pairs,
+  3D-printed) is omitted here because v21 trails CIEDE2000 there
+  (35.9 vs 32.6); see \Cref{sec:eval-stress}. All baselines use
+  Euclidean distance in their native Cartesian coordinates with
+  per-pair Bradford CAT to D65 where appropriate.}
   \label{tab:stress}
   \begin{tabular}{lrrrr}
     \toprule
@@ -604,21 +644,24 @@ the metric layer.
 
 \subsection{Cross-Validation}
 
-\Cref{fig:crossval} visualises cross-dataset performance. v21
-outperforms CIEDE2000 on \emph{both} held-out validation sets:
+\Cref{fig:crossval} visualises cross-dataset performance on
+\emph{academic} held-out sets:
 \begin{itemize}
-  \item He~\etal\ 2022 (82~pairs, regularizer): MetricSpace 23.26
-    vs CIEDE2000 62.54. The He set is mostly large differences,
-    where CIEDE2000's S-curve is poorly calibrated.
-  \item MacAdam~1974 (128~pairs, fully held-out): MetricSpace 19.51
-    vs CIEDE2000 22.13. v21 leads CAM16-UCS (33.15) and every other
-    tested space here as well.
+  \item He~\etal\ 2022 (82~pairs, 3D-printed): MetricSpace 35.9
+    vs CIEDE2000 32.6. v21 trails on this set; the loss is
+    discussed above.
+  \item MacAdam~1974 (128~pairs, fully held-out, never seen by
+    optimiser): MetricSpace 19.51 vs CIEDE2000 22.13. v21 also
+    leads OKLab (32.72), Jzazbz (25.50), and DIN99 (23.28); only
+    CIE94 (19.78) and CAM16-UCS (33.15) are within reasonable
+    range, and v21 still leads both. This is a change from v20b,
+    which had trailed CAM16-UCS on MacAdam.
 \end{itemize}
-This is a change from v20b, which had trailed CAM16-UCS on
-MacAdam. The 3-dataset balanced loss (\Cref{eq:loss}) appears to
-have widened the optimum into a region that generalises better
-to small held-out sets without the v20b-specific blue-band
-penalty.
+The 3-dataset sub-balanced loss (\Cref{eq:loss}) widened the
+optimum into a region that generalises better to small held-out
+sets without the v20b-specific blue-band penalty, and it pulled
+the model toward the BFD-class large datasets at the cost of
+small-sample sets like He~2022.
 
 \begin{figure}[t]
   \centering
@@ -641,16 +684,30 @@ worse \stress\ (26--31). There was no smooth transition between the
 two.
 
 The neutral correction (\Cref{sec:space}, Stage~10) addresses this
-problem. It subtracts the achromatic error \emph{after} all
-enrichment stages, so the optimizer can find its measurement-optimal
-parameters without constraint. The achromatic axis is then corrected
-separately. The \stress\ increase from the neutral correction is
-small (sub-tenth in our v21 ablation): the underlying achromatic
-curve is smooth, so PCHIP interpolation introduces negligible
-error, and the optimiser had already converged on a basin where
-$\bar{a}_\mathrm{err}, \bar{b}_\mathrm{err}$ are well below 0.1.
-Achromatic max chroma drops from $\sim 0.34$ (measurement-only
-baseline) to $< 10^{-6}$.
+problem with a deliberate two-mode toggle. The correction subtracts
+the achromatic error \emph{after} all enrichment stages, which
+allows the optimiser to find its measurement-optimal parameters
+without any achromatic constraint. The trained checkpoint is then
+used in two ways:
+\begin{itemize}
+  \item \textbf{Distance-prediction mode (NC off).} The headline
+    \stress\ of 22.48 is reported with the neutral correction
+    \emph{disabled}: the LUT subtraction is non-uniform along the
+    chromatic plane and pulls some non-grey pairs into a slightly
+    different distance basin, costing $\sim$$+6.2$ \stress\ on
+    \combvd. We therefore evaluate the distance metric against the
+    trained-basin coordinates directly.
+  \item \textbf{Generation/authoring mode (NC on).} For every UI
+    workflow that touches an achromatic value (gray ramps, palette
+    interpolation, dark/light token derivation, contrast checking
+    on neutral foregrounds), the neutral correction is enabled and
+    the maximum chroma for grays drops from $\sim 0.34$ to
+    $< 10^{-6}$.
+\end{itemize}
+The point is structural rather than numeric: by deferring the
+achromatic constraint to a post-correction, the same trained
+parameters serve both purposes without forcing a compromise basin
+that satisfies neither.
 
 \Cref{fig:neutral} shows neutral ramp uniformity and achromatic chroma
 leakage. MetricSpace's neutral correction eliminates chroma leakage
@@ -688,8 +745,9 @@ v21.
     Jacobian cond (median) & 7.7 \\
     \midrule
     Train$\to$test gap (split, seed 42) & +1.77 \\
-    He \stress & 23.26 \\
-    MacAdam \stress (fully held out) & 19.51 \\
+    He~\etal\ 2022 \stress (82 pairs)   & 35.9 \\
+    MacAdam \stress (128, held out)     & 19.51 \\
+    Human Feedback \stress (3{,}552, screen) & 23.26 \\
     \bottomrule
   \end{tabular}
 \end{table}

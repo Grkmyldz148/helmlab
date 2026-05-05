@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from helmlab.spaces.analytical import AnalyticalSpace, AnalyticalParams
+import json as _json
+from helmlab.spaces.metric import MetricSpace, MetricParams
 from helmlab.spaces.registry import get_space
 from helmlab.metrics.stress import stress
 from helmlab.data.combvd import load_combvd
@@ -27,6 +28,38 @@ from helmlab.data.munsell import load_munsell
 from helmlab.utils.srgb_convert import sRGB_to_XYZ, XYZ_to_sRGB
 from helmlab.utils.conversions import XYZ_to_Lab
 from helmlab.metrics.delta_e import delta_e_2000, delta_e_76, delta_e_94, delta_e_cmc
+
+CKPT_V21 = Path(__file__).resolve().parents[2] / "research" / "checkpoints" / "metricspace_v21.json"
+CKPT_GEN = Path(__file__).resolve().parents[2] / "research" / "checkpoints" / "genspace_v0.11.1.json"
+
+# ── Bradford CAT to D65 (matches colorbench/core/metric_eval.py) ───────────
+_BRADFORD = np.array([
+    [ 0.8951,  0.2664, -0.1614],
+    [-0.7502,  1.7135,  0.0367],
+    [ 0.0389, -0.0685,  1.0296],
+], dtype=np.float64)
+_BRADFORD_INV = np.linalg.inv(_BRADFORD)
+_D65 = np.array([0.95047, 1.0, 1.08883], dtype=np.float64)
+
+
+def _cat_to_d65_pair(xyz, white):
+    if np.allclose(white, _D65, atol=1e-4):
+        return xyz
+    cone_src = _BRADFORD @ white
+    cone_dst = _BRADFORD @ _D65
+    scale = cone_dst / cone_src
+    M = _BRADFORD_INV @ (np.diag(scale) @ _BRADFORD)
+    return xyz @ M.T
+
+
+def adapt_combvd_to_d65(combvd):
+    """Apply per-pair Bradford CAT to D65 (the v21-trained reference)."""
+    X1 = combvd["XYZ_1"]
+    X2 = combvd["XYZ_2"]
+    W = combvd["XYZ_white"]
+    X1_d65 = np.array([_cat_to_d65_pair(X1[i], W[i]) for i in range(len(X1))])
+    X2_d65 = np.array([_cat_to_d65_pair(X2[i], W[i]) for i in range(len(X2))])
+    return X1_d65, X2_d65
 
 OUT = Path(__file__).resolve().parent / "figures"
 OUT.mkdir(exist_ok=True)
@@ -47,9 +80,16 @@ CAM16_COLOR = "#D97706"
 GRAY_COLOR = "#6B7280"
 
 
-def get_helmlab():
-    """Load Helmlab space with v20b-NC + rotation."""
-    return AnalyticalSpace(neutral_correction=True, ab_rotate_deg=-28.2)
+def get_helmlab(neutral_correction=False, ab_rotate_deg=-28.2):
+    """Load MetricSpace v21.
+
+    Distance prediction uses NC=False (the trained distance basin).
+    Generation/authoring uses NC=True (exact achromatic axis).
+    Rotation is isometric for the distance metric, so its choice does
+    not affect STRESS but does affect hue alignment of primaries.
+    """
+    p = MetricParams.from_dict(_json.load(open(CKPT_V21)))
+    return MetricSpace(p, neutral_correction=neutral_correction, ab_rotate_deg=ab_rotate_deg)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -58,18 +98,25 @@ def get_helmlab():
 def fig1_stress():
     print("  Fig 1: STRESS comparison...")
     combvd = load_combvd()
-    X1, X2, DV = combvd["XYZ_1"], combvd["XYZ_2"], combvd["DV"]
+    DV = combvd["DV"]
 
+    # MetricSpace v21 was trained on D65-adapted pairs; for a fair comparison
+    # we apply per-pair Bradford CAT to D65 for ALL Lab-based metrics that
+    # don't model multi-illuminant whites internally (OKLab, CAM16, IPT).
+    # CIE94/CIE Lab/CIEDE2000 use the per-pair white directly.
+    X1_d65, X2_d65 = adapt_combvd_to_d65(combvd)
+    X1_raw = combvd["XYZ_1"]
+    X2_raw = combvd["XYZ_2"]
     space = get_helmlab()
     methods = [
-        ("Helmlab (ours)", stress(DV, space.distance(X1, X2)), HELMLAB_COLOR),
-        ("CIEDE2000", stress(DV, delta_e_2000(X1, X2)), CIEDE2000_COLOR),
-        ("CIE94", stress(DV, delta_e_94(X1, X2)), GRAY_COLOR),
-        ("CMC", stress(DV, delta_e_cmc(X1, X2)), GRAY_COLOR),
-        ("CAM16-UCS", stress(DV, get_space("cam16ucs").distance(X1, X2)), CAM16_COLOR),
-        ("IPT", stress(DV, get_space("ipt").distance(X1, X2)), GRAY_COLOR),
-        ("CIE Lab", stress(DV, delta_e_76(X1, X2)), CIELAB_COLOR),
-        ("Oklab", stress(DV, get_space("oklab").distance(X1, X2)), OKLAB_COLOR),
+        ("MetricSpace v21",  stress(DV, space.distance(X1_d65, X2_d65)), HELMLAB_COLOR),
+        ("CIEDE2000",        stress(DV, delta_e_2000(X1_raw, X2_raw)), CIEDE2000_COLOR),
+        ("CIE94",            stress(DV, delta_e_94(X1_raw, X2_raw)), GRAY_COLOR),
+        ("CMC",              stress(DV, delta_e_cmc(X1_raw, X2_raw)), GRAY_COLOR),
+        ("CAM16-UCS",        stress(DV, get_space("cam16ucs").distance(X1_d65, X2_d65)), CAM16_COLOR),
+        ("IPT",              stress(DV, get_space("ipt").distance(X1_d65, X2_d65)), GRAY_COLOR),
+        ("CIE Lab (76)",     stress(DV, delta_e_76(X1_raw, X2_raw)), CIELAB_COLOR),
+        ("Oklab",            stress(DV, get_space("oklab").distance(X1_d65, X2_d65)), OKLAB_COLOR),
     ]
     methods.sort(key=lambda x: x[1])
 
@@ -129,7 +176,10 @@ def fig3_neutral():
     print("  Fig 3: Neutral ramp...")
     N = 21
     srgb_vals = np.linspace(0.0, 1.0, N)
-    space_h = get_helmlab()
+    # For neutral / achromatic figures, use the *generation-mode*
+    # MetricSpace (NC enabled). The figure is about generation
+    # properties, not distance; with NC the achromatic axis is exact.
+    space_h = get_helmlab(neutral_correction=True)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4))
 
