@@ -132,7 +132,7 @@ The contributions are:
     headline 22.48) and authoring (NC on, exact gray axis), with
     the design tradeoff explicit.
   \item A rigid rotation in the $ab$ plane that reduces hue error
-    (RMS~18.1\textdegree) without changing the distance metric
+    (RMS~26.4\textdegree) without changing the distance metric
     (the metric is invariant under rotation).
   \item Embedded Helmholtz--Kohlrausch correction where lightness
     depends on chroma, with parameters learned from data.
@@ -735,14 +735,14 @@ v21.
     \toprule
     Property & Value \\
     \midrule
-    Achromatic max $C$ & $<10^{-6}$ \\
-    Hue RMS (6 primaries) & 18.1\textdegree \\
-    Hue max error & 23.9\textdegree \\
-    Round-trip $\|\cdot\|_\infty$ (sRGB)   & $\sim$1$\times$10$^{-13}$ \\
-    Round-trip $\|\cdot\|_\infty$ (P3)     & $\sim$2$\times$10$^{-13}$ \\
-    Munsell CV & 20.0\% \\
-    Jacobian det (min, 64$^3$ sRGB) & 0.10 \\
-    Jacobian cond (median) & 7.7 \\
+    Achromatic max $C$ (NC on)            & $<10^{-6}$ \\
+    Hue RMS (6 sRGB primaries)            & 26.4\textdegree \\
+    Hue max error                         & 53.4\textdegree \\
+    Round-trip $\|\cdot\|_\infty$ (sRGB)   & $\sim$7$\times$10$^{-15}$ \\
+    Round-trip $\|\cdot\|_\infty$ (XYZ random) & $\sim$1$\times$10$^{-15}$ \\
+    Munsell CV (3{,}590 iso-hue pairs)    & 32.0\% \\
+    Jacobian det (min, 64$^3$ sRGB)        & 0.10 \\
+    Jacobian cond (median)                 & 7.7 \\
     \midrule
     Train$\to$test gap (split, seed 42) & +1.77 \\
     He~\etal\ 2022 \stress (82 pairs)   & 35.9 \\
@@ -752,14 +752,19 @@ v21.
   \end{tabular}
 \end{table}
 
-The achromatic guarantee means gray gradients and lightness
-ramps interpolate without color artifacts, which is necessary
-for design-token generation and palette export. The hue RMS of
-18.1\textdegree\ means sRGB primaries land within about
-24\textdegree\ of their expected positions. This is acceptable
-for palette generation but not perfect. The rigid rotation (\Cref{sec:space},
-Stage~11) provides this hue improvement without affecting the
-distance metric because the metric is invariant under rotation.
+The achromatic guarantee (NC enabled) means gray gradients and
+lightness ramps interpolate without color artifacts, which is
+necessary for design-token generation and palette export.
+The hue RMS of 26.4\textdegree\ in v21 is worse than v20b's 18.1\textdegree:
+v21's distance-optimal basin pulled the chromatic plane out of
+geometric alignment with HSL primaries. The rigid rotation
+(\Cref{sec:space}, Stage~11) is an isometry of the metric and so
+its choice is free with respect to STRESS; we keep
+$\varphi=-28.2$\textdegree\ for backwards compatibility with v20b
+deployments. Applications that need accurate primary hue
+specification should compose MetricSpace with a per-application
+hue post-rotation, or use GenSpace (\Cref{sec:genspace}) where
+the geometry is preserved by construction.
 The Jacobian was evaluated on a
 $64\!\times\!64\!\times\!64$ sRGB grid via finite differences;
 the minimum determinant (0.10) is positive throughout, so the
@@ -1105,10 +1110,15 @@ There are several limitations worth noting:
     the headline 22.48 figure is a training metric and should not
     be treated as the population-level expected value.
 
-  \item \textbf{Hue alignment.} RMS hue error of 18.1\textdegree\ is
-    a compromise. Some hue regions (cyan) have errors up to
-    23.9\textdegree. Further harmonic terms could improve this at the
-    risk of overfitting.
+  \item \textbf{Hue alignment.} RMS hue error of 26.4\textdegree\
+    is a substantial compromise; the worst primary (cyan) is
+    53.4\textdegree\ off the HSL reference. v21's training pushed
+    parameters into the distance-optimal basin at the cost of
+    geometric uniformity --- a trade we accept because the
+    distance metric is the headline product, but applications
+    that need accurate hue specification should compose
+    MetricSpace with an explicit hue-rotation post-step or use
+    GenSpace (where the geometry is preserved by construction).
 
   \item \textbf{Surround dependency.} The surround parameter $S$ is
     architecturally present but in v21 the 11 surround-suffix
@@ -1159,14 +1169,18 @@ spaces sharing an 11-stage analytical structure. \textbf{MetricSpace
 v21} is a 72-parameter end-to-end-trained color-difference metric
 that achieves \stress\ \textbf{22.48} on \combvd\ (23.0\% lower than
 CIEDE2000) and additionally leads on the held-out MacAdam~1974 set
-(19.51 vs 22.13) and on a Human-Feedback judgement set (23.26 vs
-62.54). On a held-out 20\% test split, the gap is +1.77 \stress\
-($\sim$24.3 cross-validated point estimate); even at this estimate,
-\helmlab\ remains the best-performing space tested. The achromatic
-axis is guaranteed to have $C < 10^{-6}$ via the post-pipeline
-neutral correction, and the rigid rotation brings hue error down to
-18.1\textdegree\ RMS without affecting the distance metric (the
-metric is provably invariant under any rigid $(a,b)$ rotation).
+(19.51 vs 22.13) and on a self-collected screen-condition
+Human-Feedback set (23.26 vs 62.54, with caveats); v21 trails
+CIEDE2000 on the small academic He~\etal\ 2022 set (35.9 vs 32.6),
+which we report. On a held-out 20\% \combvd\ test split, the gap is
++1.77 \stress\ ($\sim$24.3 cross-validated point estimate); even at
+this estimate, MetricSpace remains the best \combvd\ performer
+tested. The achromatic axis is guaranteed to have $C < 10^{-6}$
+when the post-pipeline neutral correction is enabled (a deferred
+toggle that lets the same checkpoint serve both distance prediction
+and authoring without compromise). The rigid rotation
+$\varphi\!=\!-28.2$\textdegree\ is an isometry of the distance
+metric and is preserved for downstream compatibility.
 \textbf{GenSpace v0.11.1} is a generation-optimized companion using
 a depressed-cubic transfer, chroma-power compression, and L-gated
 hue enrichment; on a 90-metric ColorBench gradient/palette suite
