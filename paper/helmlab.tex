@@ -469,11 +469,11 @@ All 72 trained parameters are jointly optimized by minimizing a
 terms:
 \begin{equation}
 \begin{split}
-  \mathcal{L} = \tfrac{1}{2}\,\mathrm{STRESS}_\mathrm{full}
-   &+ \tfrac{1}{2}\,\overline{\mathrm{STRESS}}_\mathrm{sub}
-    + \lambda_\mathrm{He}\,\mathrm{STRESS}_\mathrm{He} \\
-   &+ \lambda_\mathrm{lc}\,\mathrm{STRESS}_\mathrm{low\text{-}C}
-    + \lambda_\mathrm{ws}\,\max_d \mathrm{STRESS}_d
+  \mathcal{L} =\;& \tfrac{1}{2}\,\mathrm{STRESS}_\mathrm{full}
+    + \tfrac{1}{2}\,\overline{\mathrm{STRESS}}_\mathrm{sub} \\
+   &+ \lambda_\mathrm{He}\,\mathrm{STRESS}_\mathrm{He}
+    + \lambda_\mathrm{lc}\,\mathrm{STRESS}_\mathrm{low\text{-}C} \\
+   &+ \lambda_\mathrm{ws}\,\max_d \mathrm{STRESS}_d
     + \lambda_\mathrm{m}\,\mathrm{CV}_\mathrm{Munsell}
 \end{split}
   \label{eq:loss}
@@ -593,7 +593,7 @@ the intervals do not overlap ($p < 10^{-4}$).
   \label{fig:stress}
 \end{figure}
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
   \caption{\stress\ across three datasets. Lower is better. HumFB =
   3{,}552 self-collected screen-condition judgements from 71+
@@ -618,7 +618,7 @@ the intervals do not overlap ($p < 10^{-4}$).
     CAM16-UCS (Euclid.)      & 56.19 & 33.15 & 65.89 & 51.74 \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 \begin{figure}[t]
   \centering
@@ -748,23 +748,25 @@ v21.
   \centering
   \caption{Generation quality metrics for MetricSpace v21.}
   \label{tab:gen}
-  \begin{tabular}{lr}
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lr@{}}
     \toprule
     Property & Value \\
     \midrule
     Achromatic max $C$ (NC on)            & $<10^{-6}$ \\
     Hue RMS (6 sRGB primaries)            & 26.4\textdegree \\
     Hue max error                         & 53.4\textdegree \\
-    Round-trip $\|\cdot\|_\infty$ (sRGB)   & $\sim$7$\times$10$^{-15}$ \\
-    Round-trip $\|\cdot\|_\infty$ (XYZ random) & $\sim$1$\times$10$^{-15}$ \\
+    Round-trip (sRGB)                      & $\sim$7$\times$10$^{-15}$ \\
+    Round-trip (random XYZ)                & $\sim$1$\times$10$^{-15}$ \\
     Munsell CV (3{,}590 iso-hue pairs)    & 32.0\% \\
     Jacobian det (min, 64$^3$ sRGB)        & 0.10 \\
     Jacobian cond (median)                 & 7.7 \\
     \midrule
-    Train$\to$test gap (split, seed 42) & +1.77 \\
-    He~\etal\ 2022 \stress (82 pairs)   & 35.9 \\
-    MacAdam \stress (128, held out)     & 19.51 \\
-    Human Feedback \stress (3{,}552, screen) & 23.26 \\
+    Train$\to$test gap (split, seed 42)   & $+1.77$ \\
+    He~\etal\ 2022 \stress (82 pairs)     & 35.9 \\
+    MacAdam \stress (128, held out)       & 19.51 \\
+    Human Feedback \stress (screen)        & 23.26 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -814,20 +816,22 @@ separately for the most impactful stages.
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{Frozen ablation on v21: effect of disabling components without re-optimisation.}
   \label{tab:ablation}
-  \begin{tabular}{lrr}
+  \begin{tabular}{@{}lrr@{}}
     \toprule
     Configuration & COMBVD \stress & $\Delta$ \\
     \midrule
     Full MetricSpace v21         & 22.48 & --- \\
     Euclidean distance only      & $\sim$27.6 & $+5.1$ \\
-    No H-K embedding ($w_\mathrm{HK}=0$) & $\sim$26.5 & $+4.0$ \\
+    No H-K embedding             & $\sim$26.5 & $+4.0$ \\
     No hue correction (Stage 4)  & $\sim$37.9 & $+15.4$ \\
-    No dark-L compression (Stage 6 part) & $\sim$22.7 & $+0.2$ \\
+    No dark-L compression        & $\sim$22.7 & $+0.2$ \\
     \midrule
-    Rotation $\varphi=-28.2$\textdegree    & 22.48 & 0.00 \\
-    No rotation (set $\varphi=0$)         & 22.48 & 0.00 \\
+    Rotation $\varphi=-28.2$\textdegree   & 22.48 & 0.00 \\
+    No rotation ($\varphi=0$)             & 22.48 & 0.00 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -865,11 +869,13 @@ already exploits the noise structure.
 
 \begin{table}[t]
   \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
   \caption{\stress\ on individual \combvd\ sub-datasets (v21 production checkpoint).}
   \label{tab:subdataset}
-  \begin{tabular}{lrrr}
+  \begin{tabular}{@{}lrrr@{}}
     \toprule
-    Sub-dataset & $N$ & MetricSpace v21 & CIEDE2000 \\
+    Sub-dataset & $N$ & v21 & CIEDE2000 \\
     \midrule
     BFD-P(C)    & 200     & 29.08          & 29.08          \\
     BFD-P(D65)  & 2{,}028 & \textbf{21.54} & 24.09          \\
@@ -923,9 +929,12 @@ at generation quality and ship both side-by-side.
 \paragraph{Pipeline.}
 GenSpace v0.11.1 follows a stripped-down version of the MetricSpace
 shape:
-\[
-\mathrm{XYZ} \to \mathbf{M}_1 \to \mathrm{depcubic}(\alpha\!=\!0.021) \to \mathbf{M}_2 \to C^{0.978} \to \mathrm{PW}_L^{19} \to \mathrm{enr}_h(L) \to \mathrm{Lab}
-\]
+\begin{equation*}
+\begin{aligned}
+\mathrm{XYZ} \;\to\;& \mathbf{M}_1 \;\to\; \mathrm{depcubic}(\alpha\!=\!0.021) \;\to\; \mathbf{M}_2 \\
+\;\to\;& C^{0.978} \;\to\; \mathrm{PW}_L^{19} \;\to\; \mathrm{enr}_h(L) \;\to\; \mathrm{Lab}
+\end{aligned}
+\end{equation*}
 There is no Helmholtz--Kohlrausch coupling, no hue-Fourier rotation,
 no neutral-correction LUT, and no rigid post-rotation; the
 achromatic axis is held at $a=b=0$ \emph{structurally} via a smooth
