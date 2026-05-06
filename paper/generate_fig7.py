@@ -6,12 +6,14 @@ GenSpace wins / ties / OKLab wins, ordered by total category size.
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Data from helmlab.tex Table tab:genspace-vs-oklab
+# Data from ColorBench v0.11.1 colorjs_pr (CJS canonical) — measured 2026-05-06
 # (category, gen_wins, oklab_wins, ties)
+# Total: 65W / 9L / 16T across 90 metrics.
 DATA = [
-    ("Gamut geometry",       25, 0, 2),
-    ("Gradient quality",      7, 3, 1),
+    ("Gamut geometry",       24, 0, 3),
     ("Application",           9, 0, 3),
+    ("Gradient quality",      7, 3, 1),
+    ("Independent",           6, 1, 0),
     ("Perceptual",            5, 0, 0),
     ("Structural",            4, 2, 2),
     ("Hue",                   2, 0, 0),
@@ -79,9 +81,8 @@ ax.legend(loc="lower right", fontsize=9, frameon=False, ncol=3,
 # tally is 66W/9L/15T across 90 metrics (Table tab:genspace-vs-oklab).
 fig.suptitle(
     "GenSpace v0.11.1 vs OKLab on ColorBench  ·  "
-    "66 wins / 9 losses / 15 ties across 90 metrics  "
-    "(per-category breakdown of 83 internal metrics shown)",
-    fontsize=9, fontweight="bold", y=0.99,
+    "65 wins / 9 losses / 16 ties across 90 metrics",
+    fontsize=10, fontweight="bold", y=0.99,
 )
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
@@ -92,5 +93,4 @@ plt.savefig(out_pdf, bbox_inches="tight")
 plt.savefig(out_png, bbox_inches="tight", dpi=200)
 print(f"Wrote {out_pdf}")
 print(f"Wrote {out_png}")
-print(f"Per-category totals: GenSpace {int(gen.sum())}W / OKLab {int(ok.sum())}L / {int(tie.sum())} ties")
-print("Headline (incl. 7 independent metrics): 66W / 9L / 15T across 90 metrics.")
+print(f"Totals: GenSpace {int(gen.sum())}W / OKLab {int(ok.sum())}L / {int(tie.sum())} ties (90 metrics)")

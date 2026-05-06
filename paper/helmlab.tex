@@ -53,7 +53,7 @@ CIE~XYZ to a perceptually-organized Lab representation through
 learned matrices, per-channel power compression, Fourier hue
 correction, and embedded Helmholtz--Kohlrausch lightness adjustment.
 A post-pipeline neutral correction guarantees that achromatic colors
-map to $a\!=\!b\!=\!0$ (chroma $<10^{-6}$), and a rigid rotation of
+map to $a\!=\!b\!=\!0$ (chroma $<10^{-5}$ for the 21-step gray ramp; worst-case $\approx 3\!\times\!10^{-5}$ for grays at $L\!<\!0.05$, dominated by PCHIP fit residual), and a rigid rotation of
 the chromatic plane improves hue-angle alignment without affecting
 the distance metric, which is invariant under isometries.
 On \combvd\ (3{,}813 color pairs), MetricSpace~v21 achieves a
@@ -71,7 +71,7 @@ estimate of $\sim$24.3 that still beats every tested competitor on
 \combvd.
 GenSpace~v0.11.1 trades distance accuracy for generation quality:
 on a 90-metric, 3{,}038-pair gradient/palette benchmark across
-sRGB/P3/Rec.2020, it wins 66 of 90 vs OKLab. The transform is
+sRGB/P3/Rec.2020, it wins 65 of 90 vs OKLab. The transform is
 invertible with round-trip errors below $10^{-13}$. Production
 implementations are shipped on PyPI, npm, color.js (PR~\#722, merged),
 and as a PostCSS plugin.
@@ -142,7 +142,7 @@ The contributions are:
     cross-validated estimate ($\sim$24.3) beats every tested
     competitor. We report this gap explicitly rather than only the
     full-data fit.
-  \item A neutral correction that guarantees $C < 10^{-6}$ for
+  \item A neutral correction that drives $C < 10^{-5}$ for
     achromatic colors when enabled. We use it as a deferred,
     toggleable post-step rather than a training-time constraint:
     the same trained parameters serve distance prediction (NC off,
@@ -156,7 +156,7 @@ The contributions are:
   \item \textbf{GenSpace v0.11.1}: a generation-optimized companion
     using a depressed-cubic transfer ($y^3+\alpha y = x$, $\alpha=0.021$),
     chroma-power compression ($C^{0.978}$), and L-gated hue enrichment
-    that wins 66 of 90 metrics versus OKLab on a 3{,}038-pair
+    that wins 65 of 90 metrics versus OKLab on a 3{,}038-pair
     gradient/palette benchmark across sRGB, Display~P3, and Rec.2020.
   \item Production deployment with cross-language parity:
     Python (PyPI), JavaScript (npm), CSS Color Module L4
@@ -344,7 +344,7 @@ At runtime:
 \end{equation}
 Because the correction is applied \emph{after} all nonlinear stages,
 it accounts for every distortion in the pipeline. The resulting
-maximum chroma for grays is $< 10^{-6}$, limited only by PCHIP
+maximum chroma for grays is $< 10^{-5}$ across the 21-step ramp, with a worst-case residual of $\approx 3\!\times\!10^{-5}$ at very dark grays ($L\!<\!0.05$), limited only by PCHIP
 interpolation error on the 384-point LUT (the underlying achromatic
 curve is smooth, so interpolation error is negligible).
 The clamped extrapolation beyond $L_\mathrm{peak}$ is what allows
@@ -692,7 +692,7 @@ small-sample sets like He~2022.
 A color space optimized for distance prediction does not necessarily
 produce usable coordinates for color generation. During development,
 the measurement-optimal configuration mapped neutral grays to chroma
-$\bar{C} \approx 0.34$. The optimizer had deformed the achromatic
+$\bar{C} \approx 0.29$. The optimizer had deformed the achromatic
 axis to reduce \stress, which made gray gradients unusable because
 they showed visible color artifacts. Adding a penalty to constrain
 grays to $C = 0$ did not help: the optimizer either stayed in the
@@ -718,8 +718,8 @@ used in two ways:
     workflow that touches an achromatic value (gray ramps, palette
     interpolation, dark/light token derivation, contrast checking
     on neutral foregrounds), the neutral correction is enabled and
-    the maximum chroma for grays drops from $\sim 0.34$ to
-    $< 10^{-6}$.
+    the maximum chroma for grays drops from $\sim 0.29$ to
+    $< 10^{-5}$ on the 21-step ramp.
 \end{itemize}
 The point is structural rather than numeric: by deferring the
 achromatic constraint to a post-correction, the same trained
@@ -728,7 +728,7 @@ that satisfies neither.
 
 \Cref{fig:neutral} shows neutral ramp uniformity and achromatic chroma
 leakage. MetricSpace's neutral correction eliminates chroma leakage
-entirely ($C < 10^{-6}$); GenSpace (\Cref{sec:genspace}) achieves the
+entirely ($C < 10^{-5}$ on the standard gray ramp); GenSpace (\Cref{sec:genspace}) achieves the
 same property structurally rather than by post-correction. CAM16-UCS
 and Oklab exhibit chroma leakage on the order of $10^{-7}$ for D65
 grays; CAM16-UCS's leakage rises sharply for non-D65 illuminants in
@@ -740,7 +740,7 @@ v21.
   \centering
   \includegraphics[width=\columnwidth]{fig3_neutral.pdf}
   \caption{Left: neutral ramp step uniformity. Right: achromatic chroma
-  leakage. \helmlab's NC guarantees $C < 10^{-6}$ for all grays.}
+  leakage. \helmlab's NC drives $C < 10^{-5}$ for grays on the 21-step ramp.}
   \label{fig:neutral}
 \end{figure}
 
@@ -754,11 +754,11 @@ v21.
     \toprule
     Property & Value \\
     \midrule
-    Achromatic max $C$ (NC on)            & $<10^{-6}$ \\
+    Achromatic max $C$ (NC on)            & $<10^{-5}$ \\
     Hue RMS (6 sRGB primaries)            & 26.4\textdegree \\
     Hue max error                         & 53.4\textdegree \\
     Round-trip (sRGB)                      & $\sim$7$\times$10$^{-15}$ \\
-    Round-trip (random XYZ)                & $\sim$1$\times$10$^{-15}$ \\
+    Round-trip (random XYZ)                & $\sim$1$\times$10$^{-13}$ \\
     Munsell CV (3{,}590 iso-hue pairs)    & 32.0\% \\
     Jacobian det (min, 64$^3$ sRGB)        & 0.10 \\
     Jacobian cond (median)                 & 7.7 \\
@@ -981,7 +981,7 @@ removes the purple shift. The gate width is the largest that does
 not introduce hue drift in non-blue gradients.
 
 \paragraph{Result.}
-GenSpace v0.11.1 wins 66 of 90 metrics versus OKLab across a
+GenSpace v0.11.1 wins 65 of 90 metrics versus OKLab across a
 ColorBench suite of 83 internal metrics and 7 independent metrics,
 on $3{,}038$ gradient pairs sampled from sRGB, Display P3, and
 Rec.\,2020 (\Cref{tab:genspace-vs-oklab}). The achromatic axis is
@@ -1000,15 +1000,16 @@ Rec.\,2020.
 
 \begin{table}[t]
   \centering
-  \caption{GenSpace v0.11.1 vs OKLab --- head-to-head on ColorBench (83 internal + 7 independent gradient/palette metrics). Visual breakdown in \Cref{fig:genspace-vs-oklab}.}
+  \caption{GenSpace v0.11.1 (CJS canonical) vs OKLab --- head-to-head on ColorBench. $^\dagger$Independent = Hung-Berns, Ebner-Fairchild, Pointer-gamut metrics (held out from optimizer). Visual breakdown in \Cref{fig:genspace-vs-oklab}.}
   \label{tab:genspace-vs-oklab}
   \begin{tabular}{lrrr}
     \toprule
     Category & GenSpace & OKLab & Ties \\
     \midrule
-    Gamut geometry              & \textbf{25} & 0 &  2 \\
-    Gradient quality            &  \textbf{7} & 3 &  1 \\
+    Gamut geometry              & \textbf{24} & 0 &  3 \\
     Application                 &  \textbf{9} & 0 &  3 \\
+    Gradient quality            &  \textbf{7} & 3 &  1 \\
+    Independent$^\dagger$       &  \textbf{6} & 1 &  0 \\
     Perceptual                  &  \textbf{5} & 0 &  0 \\
     Structural                  &  \textbf{4} & 2 &  2 \\
     Hue                         &  \textbf{2} & 0 &  0 \\
@@ -1019,7 +1020,7 @@ Rec.\,2020.
     Accessibility               &  1 & 1 &  0 \\
     Numerical stability         &  0 & 1 &  2 \\
     \midrule
-    \textbf{Total}              & \textbf{66} & 9 & 15 \\
+    \textbf{Total}              & \textbf{65} & 9 & 16 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -1222,7 +1223,7 @@ CIEDE2000 on the small academic He~\etal\ 2022 set (35.9 vs 32.6),
 which we report. On a held-out 20\% \combvd\ test split, the gap is
 +1.77 \stress\ ($\sim$24.3 cross-validated point estimate); even at
 this estimate, MetricSpace remains the best \combvd\ performer
-tested. The achromatic axis is guaranteed to have $C < 10^{-6}$
+tested. The achromatic axis is held to $C < 10^{-5}$ on the standard 21-step ramp
 when the post-pipeline neutral correction is enabled (a deferred
 toggle that lets the same checkpoint serve both distance prediction
 and authoring without compromise). The rigid rotation
@@ -1231,7 +1232,7 @@ metric and is preserved for downstream compatibility.
 \textbf{GenSpace v0.11.1} is a generation-optimized companion using
 a depressed-cubic transfer, chroma-power compression, and L-gated
 hue enrichment; on a 90-metric ColorBench gradient/palette suite
-it wins 66 vs OKLab. The two spaces together cover the
+it wins 65 vs OKLab. The two spaces together cover the
 measurement$\leftrightarrow$generation tradeoff that no single
 existing space resolves.
 

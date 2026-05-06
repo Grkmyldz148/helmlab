@@ -279,9 +279,9 @@ export const genspaceResults = [
   {
     name: "P3 cliff max",
     category: "Gamut",
-    oklab: 0.16,
-    genspace: 0.1,
-    winner: "genspace",
+    oklab: 0.2,
+    genspace: 0.2,
+    winner: "tie",
     unit: "%",
     lowerIsBetter: true,
   },
@@ -807,9 +807,10 @@ export interface CategorySummary {
 }
 
 export const categorySummary = [
-  { category: "Gamut", genspace: 25, oklab: 0, ties: 2, total: 27 },
-  { category: "Gradient", genspace: 7, oklab: 3, ties: 1, total: 11 },
+  { category: "Gamut", genspace: 24, oklab: 0, ties: 3, total: 27 },
   { category: "Application", genspace: 9, oklab: 0, ties: 3, total: 12 },
+  { category: "Gradient", genspace: 7, oklab: 3, ties: 1, total: 11 },
+  { category: "Independent", genspace: 6, oklab: 1, ties: 0, total: 7 },
   { category: "Perceptual", genspace: 5, oklab: 0, ties: 0, total: 5 },
   { category: "Structural", genspace: 4, oklab: 2, ties: 2, total: 8 },
   { category: "Hue", genspace: 2, oklab: 0, ties: 0, total: 2 },
@@ -821,12 +822,12 @@ export const categorySummary = [
   { category: "Numerical", genspace: 0, oklab: 1, ties: 2, total: 3 },
 ] as const satisfies readonly CategorySummary[];
 
-/** Headline totals including 7 independent metrics */
+/** Headline totals across 90 ColorBench metrics (CJS canonical, v0.11.1 colorjs_pr) */
 export const headlineScore = {
   totalMetrics: 90,
   internalMetrics: 83,
   independentMetrics: 7,
-  genspaceWins: 66,
+  genspaceWins: 65,
   oklabWins: 9,
-  ties: 15,
+  ties: 16,
 } as const;

@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 23.30 on COMBVD — 20% better than CIEDE2000), and **GenSpace** for gradient/palette generation (**60-8 vs OKLab** on ColorBench's 83 metrics, 360/360/360 gamut cusps, zero monotonicity violations).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 22.48 on COMBVD with Bradford CAT — 23% better than CIEDE2000's 29.20), and **GenSpace** for gradient/palette generation (**65-9-16 vs OKLab** on ColorBench's 90 metrics including 6-1 on independent datasets, 360/360/360 gamut cusps, zero monotonicity violations).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -13,8 +13,8 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 
 ## Key Features
 
-- **State-of-the-art color difference** — MetricSpace: STRESS 23.30 vs CIEDE2000's 29.18 on COMBVD (3,813 pairs)
-- **Superior gradient generation** — GenSpace: **60 wins** vs OKLab's 8 across 83 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
+- **State-of-the-art color difference** — MetricSpace: STRESS 22.48 vs CIEDE2000's 29.20 on COMBVD (3,813 pairs, with Bradford CAT pre-processing)
+- **Superior gradient generation** — GenSpace: **65 wins** vs OKLab's 9 across 90 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
 - **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
 - **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
 - **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
@@ -143,17 +143,24 @@ Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`,
 - Adaptive gamut clipping with cusp-finding (Ottosson-style L0 calculation)
 - Piecewise-linear L correction with 19 breakpoints (analytically invertible)
 
-**ColorBench evaluation (83 metrics, 3,038 gradient pairs, 3 gamuts):**
+**ColorBench evaluation (90 metrics, 3,038 gradient pairs, 3 gamuts):**
 
 | Category | GenSpace wins | OKLab wins | Tie |
-|----------|-------------|------------|-----|
-| Gamut geometry | **25** | 0 | 2 |
-| Application | **10** | 0 | 2 |
-| Gradient quality | **5** | 3 | 2 |
+|----------|---------------|------------|-----|
+| Gamut geometry | **24** | 0 | 3 |
+| Application | **9** | 0 | 3 |
+| Gradient quality | **7** | 3 | 1 |
+| Independent (Hung-Berns, Ebner-Fairchild, Pointer) | **6** | 1 | 0 |
 | Perceptual accuracy | **5** | 0 | 0 |
 | Structural | **4** | 2 | 2 |
-| Other (hue, achromatic, banding, special, accessibility, advanced, numerical) | **10** | 3 | 8 |
-| **Total** | **60** | **8** | **15** |
+| Hue | **2** | 0 | 0 |
+| Achromatic | **2** | 0 | 0 |
+| Advanced | **2** | 0 | 4 |
+| Special | **2** | 1 | 0 |
+| Banding | **1** | 0 | 1 |
+| Accessibility | 1 | 1 | 0 |
+| Numerical stability | 0 | 1 | 2 |
+| **Total** | **65** | **9** | **16** |
 
 **Known trade-offs:** Slightly reduced round-trip precision in sRGB (~5.6×10⁻⁸ vs OKLab's ~1.6×10⁻¹⁵, due to enrichment Halley iteration — invisible in 8-bit pipelines), minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
 
@@ -193,13 +200,14 @@ Scale: 0 = perfect, 100 = no correlation. Full methodology: [arXiv:2602.23010](h
 
 ### Gradient Quality (GenSpace)
 
-Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (83 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
+Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (90 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
 
 | Category | GenSpace wins | OKLab wins | Tie |
-|----------|-------------|------------|-----|
-| Gamut geometry | **25** | 0 | 2 |
-| Application | **10** | 0 | 2 |
-| Gradient quality | **5** | 3 | 2 |
+|----------|---------------|------------|-----|
+| Gamut geometry | **24** | 0 | 3 |
+| Application | **9** | 0 | 3 |
+| Gradient quality | **7** | 3 | 1 |
+| Independent (Hung-Berns, Ebner-Fairchild, Pointer) | **6** | 1 | 0 |
 | Perceptual accuracy | **5** | 0 | 0 |
 | Structural | **4** | 2 | 2 |
 | Hue | **2** | 0 | 0 |
@@ -207,9 +215,9 @@ Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Gr
 | Advanced | **2** | 0 | 4 |
 | Banding | **1** | 0 | 1 |
 | Special | **2** | 1 | 0 |
-| Accessibility | **1** | 1 | 0 |
+| Accessibility | 1 | 1 | 0 |
 | Numerical | 0 | 1 | 2 |
-| **Total** | **60** | **8** | **15** |
+| **Total** | **65** | **9** | **16** |
 
 ### Gradient Uniformity
 

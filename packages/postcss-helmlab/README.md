@@ -25,8 +25,8 @@ export default { plugins: [helmlab({ outputMode: 'all' })] };
 
 Helmlab is a data-driven color space family trained on 64,000+ human color perception observations. It provides two spaces:
 
-- **MetricSpace** — 20% lower STRESS than CIEDE2000 on perceptual distance measurement
-- **GenSpace** — wins 21-10 vs OKLab on 50 ColorBench metrics for color generation
+- **MetricSpace** — 23% lower STRESS than CIEDE2000 on perceptual distance measurement (22.48 vs 29.20 on COMBVD)
+- **GenSpace** — wins 65-9-16 vs OKLab across 90 ColorBench metrics for color generation (incl. 6-1 on independent datasets)
 
 This plugin lets you use Helmlab color spaces in CSS today, without waiting for browser support.
 
