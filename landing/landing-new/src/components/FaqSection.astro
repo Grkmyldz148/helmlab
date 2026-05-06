@@ -11,7 +11,7 @@ const faqs = [
   },
   {
     q: "How was it optimized? Is there overfitting?",
-    a: "CMA-ES optimization on COMBVD (3813 pairs). Proper holdout test: +1.8 STRESS gap between train and held-out 20% split. Published STRESS 22.48 is a training metric; cross-validated estimate ~24.3. Still beats all competitors (CIEDE2000: 29.20). MacAdam 1974 (never trained on) = 19.51, also #1. Full analysis in BENCHMARK.md.",
+    a: "CMA-ES optimization on COMBVD (3813 pairs). Proper holdout test: +1.8 STRESS gap between train and held-out 20% split. Published STRESS 22.48 is a training metric; cross-validated estimate ~24.3. Still beats CIEDE2000 (29.20) and every other Lab-only baseline. On the small held-out MacAdam 1974 set (128 pairs, never trained on) MetricSpace = 19.51 vs CAM16-UCS 18.71 — CAM16 leads by 0.80 STRESS due to its appearance-model formulation matching MacAdam's controlled-viewing conditions. Across the 3-dataset average MetricSpace remains #1 by a 14+ STRESS margin (21.75 vs CIECAM02-UCS 35.98). Full analysis in BENCHMARK.md.",
   },
   {
     q: "How does this relate to Color.js?",
