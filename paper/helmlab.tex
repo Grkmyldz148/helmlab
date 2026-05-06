@@ -1009,13 +1009,13 @@ Rec.\,2020.
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/fig7_genspace.pdf}
-  \caption{GenSpace v0.11.1 (CJS canonical) vs OKLab --- per-category breakdown across all 90 ColorBench metrics. Headline tally is 65W / 9L / 16T (\Cref{tab:genspace-vs-oklab}). Categories ordered by total metric count.}
+  \caption{GenSpace v0.11.1 vs OKLab --- per-category breakdown across all 90 ColorBench metrics. Headline tally is 65W / 9L / 16T (\Cref{tab:genspace-vs-oklab}). Categories ordered by total metric count.}
   \label{fig:genspace-vs-oklab}
 \end{figure}
 
 \begin{table}[t]
   \centering
-  \caption{GenSpace v0.11.1 (CJS canonical) vs OKLab --- head-to-head on ColorBench. $^\dagger$Independent = Hung-Berns, Ebner-Fairchild, Pointer-gamut metrics (held out from optimizer). Visual breakdown in \Cref{fig:genspace-vs-oklab}.}
+  \caption{GenSpace v0.11.1 vs OKLab --- head-to-head on ColorBench. $^\dagger$Independent = Hung-Berns, Ebner-Fairchild, Pointer-gamut metrics (held out from optimizer). Visual breakdown in \Cref{fig:genspace-vs-oklab}.}
   \label{tab:genspace-vs-oklab}
   \begin{tabular}{lrrr}
     \toprule
@@ -1495,15 +1495,13 @@ in \texttt{research/checkpoints/metricspace\_v21.json}.
   \end{tabular}
 \end{table}
 
-Full parameter values are in
-\texttt{research/checkpoints/genspace\_v0.11.1\_colorjs\_pr.json}
-(the CJS canonical sürüm shipped with helmlab v0.13.0+ on PyPI/npm,
-i.e.\ the M2 L-row analytically renormalised so that white(D65)
-maps to L=1 exactly; the legacy API sürüm is preserved as
-\texttt{genspace\_v0.11.1.json} for reference). The structurally-
-achromatic property holds because the depcubic transfer is
-signed-symmetric and the smooth neutral-blend in Stage~2 collapses
-sub-microscopic channel spread to the channel mean before
-$\mathbf{M}_2$ projection.
+Full parameter values ship bundled with the helmlab package
+(\texttt{helmlab.GenSpace().params}) and are written out as
+\path{src/helmlab/data/gen_params.json} in the source distribution.
+White(D65) maps to $L = 1$ exactly, the achromatic axis is held at
+$|a|, |b| < 10^{-4}$, and the structurally-achromatic property
+holds because the depcubic transfer is signed-symmetric and the
+smooth neutral-blend in Stage~2 collapses sub-microscopic channel
+spread to the channel mean before $\mathbf{M}_2$ projection.
 
 \end{document}
