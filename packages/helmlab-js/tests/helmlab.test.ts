@@ -491,3 +491,63 @@ describe('TokenExporter', () => {
     expect(exp2).toBeInstanceOf(TokenExporter);
   });
 });
+
+// ── distanceFromLab parity (cross-language with Python v0.12.1) ────
+describe('distanceFromLab (Python parity alias)', () => {
+  const Helmlab2 = (() => {
+    // re-import lazily to avoid undefined hl in this scope
+    return null;
+  });
+
+  it('Helmlab.distanceFromLab matches perceptualDistance', () => {
+    const hl = new Helmlab();
+    const lab1 = hl.fromHex('#ff0000');
+    const lab2 = hl.fromHex('#00ff00');
+    const d_alias = hl.distanceFromLab(lab1, lab2);
+    const d_p = hl.perceptualDistance(lab1, lab2);
+    expect(d_alias).toBeCloseTo(d_p, 12);
+  });
+
+  it('AnalyticalSpace.distanceFromLab matches distance', () => {
+    const hl = new Helmlab();
+    const lab1 = hl.fromHex('#3b82f6');
+    const lab2 = hl.fromHex('#fb923c');
+    // metric is private but distanceFromLab on Helmlab uses metric.distanceFromLab
+    const d_alias = hl.distanceFromLab(lab1, lab2);
+    const d_p = hl.perceptualDistance(lab1, lab2);
+    expect(d_alias).toBe(d_p);
+  });
+
+  it('distanceFromLab(a, a) == 0', () => {
+    const hl = new Helmlab();
+    const lab = hl.fromHex('#3b82f6');
+    expect(hl.distanceFromLab(lab, lab)).toBeLessThan(1e-12);
+  });
+});
+
+// ── deltaE vs perceptualDistance — naming clarity guard ────────
+describe('deltaE vs perceptualDistance (distinct metrics)', () => {
+  it('deltaE returns Euclidean Lab (uncompressed)', () => {
+    const hl = new Helmlab();
+    const lab_w = hl.fromHex('#ffffff');
+    const lab_b = hl.fromHex('#000000');
+    const expected = Math.sqrt(
+      (lab_w[0] - lab_b[0]) ** 2 +
+      (lab_w[1] - lab_b[1]) ** 2 +
+      (lab_w[2] - lab_b[2]) ** 2
+    );
+    const actual = hl.deltaE('#ffffff', '#000000');
+    expect(actual).toBeCloseTo(expected, 12);
+  });
+
+  it('deltaE > perceptualDistance for very dissimilar pairs (compression saturates)', () => {
+    const hl = new Helmlab();
+    const lab_w = hl.fromHex('#ffffff');
+    const lab_b = hl.fromHex('#000000');
+    const euclidean = hl.deltaE('#ffffff', '#000000');
+    const perceptual = hl.perceptualDistance(lab_w, lab_b);
+    expect(euclidean).toBeGreaterThan(0.5);
+    expect(perceptual).toBeLessThan(0.5);
+    expect(euclidean).toBeGreaterThan(perceptual);
+  });
+});

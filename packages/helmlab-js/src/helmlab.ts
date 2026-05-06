@@ -292,16 +292,38 @@ export class Helmlab {
 
   // ── Distance ─────────────────────────────────────────────────
 
-  /** Euclidean distance in Helmlab Lab space between two hex colors. */
+  /**
+   * Euclidean Lab distance between two hex colors (uncompressed, ΔE76-style).
+   *
+   * Returns `sqrt(dL² + da² + db²)` in Helmlab metric Lab. Range ≈ 0–1.6
+   * across sRGB primaries (`#000000` ↔ `#ffffff` ≈ 1.12, `#ff0000` ↔ `#00ff00`
+   * ≈ 1.62). For the compressed perceptual metric (COMBVD-fit), use
+   * {@link perceptualDistance}.
+   */
   deltaE(color1: Hex, color2: Hex): number {
     const lab1 = this.fromHex(color1);
     const lab2 = this.fromHex(color2);
     return sqrt((lab1[0] - lab2[0]) ** 2 + (lab1[1] - lab2[1]) ** 2 + (lab1[2] - lab2[2]) ** 2);
   }
 
-  /** Full perceptual distance (Minkowski + compression) between two Lab values. */
+  /**
+   * Compressed perceptual distance (Minkowski + compression) between two Lab values.
+   *
+   * Optimized against COMBVD-class human-judgment data (STRESS ≈ 22.5 vs
+   * CIEDE2000's ~29.2). Saturates near ~0.15 for very dissimilar pairs —
+   * relative order preserved, absolute magnitudes plateau. For uncompressed
+   * Euclidean use {@link deltaE}.
+   */
   perceptualDistance(lab1: Lab, lab2: Lab): number {
     return this.metric.distance(lab1, lab2);
+  }
+
+  /**
+   * Alias of {@link perceptualDistance} — for cross-language API parity with
+   * Python's `Helmlab.perceptual_distance()` and `MetricSpace.distance_from_lab()`.
+   */
+  distanceFromLab(lab1: Lab, lab2: Lab): number {
+    return this.metric.distanceFromLab(lab1, lab2);
   }
 
   // ── Palette Generation (GenSpace) ──────────────────────────────

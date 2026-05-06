@@ -371,6 +371,18 @@ export class AnalyticalSpace {
 
   // ── Distance ───────────────────────────────────────────────────
 
+  /**
+   * Compressed perceptual distance (Minkowski + compression) between two
+   * Lab values from this space's `fromXYZ()`.
+   *
+   * Note: in the Python sibling library, `MetricSpace.distance()` expects
+   * **CIE XYZ** and runs `from_XYZ()` internally. Here in JS we already take
+   * **Lab** directly — equivalent to Python's `MetricSpace.distance_from_lab()`.
+   * Use `distanceFromLab()` (alias of this method) when symmetry with Python
+   * naming is desired.
+   *
+   * STRESS ≈ 22.5 on COMBVD; saturates near 0.15 for very dissimilar pairs.
+   */
   distance(lab1: Lab, lab2: Lab): number {
     const r = this.p.raw;
     let dL2 = (lab1[0] - lab2[0]) ** 2;
@@ -413,6 +425,15 @@ export class AnalyticalSpace {
     }
 
     return DE;
+  }
+
+  /**
+   * Alias for {@link distance} — added for cross-language API parity with
+   * Python's `MetricSpace.distance_from_lab()`. Both accept Lab inputs and
+   * apply the full Minkowski + compression metric.
+   */
+  distanceFromLab(lab1: Lab, lab2: Lab): number {
+    return this.distance(lab1, lab2);
   }
 }
 
