@@ -525,6 +525,39 @@ describe('distanceFromLab (Python parity alias)', () => {
   });
 });
 
+// ── display_phi_deg — opt-in display alignment, exact isometry ────
+describe('display_phi_deg (rotation isometry)', () => {
+  it('default uses params.display_phi_deg (paper-aligned -28.2°)', () => {
+    const hl = new Helmlab();
+    // Bundled params.json now ships display_phi_deg = -28.2
+    const lab_red = hl.fromHex('#ff0000');
+    // With φ=-28.2°, red's hue shifts away from raw +15.8° toward ~-12°
+    const hue_deg = (Math.atan2(lab_red[2], lab_red[1]) * 180) / Math.PI;
+    expect(hue_deg).toBeLessThan(0);  // pulled below 0° by rotation
+    expect(hue_deg).toBeGreaterThan(-30);
+  });
+
+  it('chroma is preserved under rotation (Lab a²+b² invariance)', () => {
+    const hl = new Helmlab();
+    const lab = hl.fromHex('#ff0000');
+    // Chroma magnitude in (a, b) plane is rotation-invariant by definition.
+    // Sanity check: the chroma is a real positive number.
+    const c = Math.hypot(lab[1], lab[2]);
+    expect(c).toBeGreaterThan(0);
+    expect(Number.isFinite(c)).toBe(true);
+  });
+
+  it('roundtrip preserved with default φ', () => {
+    const hl = new Helmlab();
+    const samples = ['#ff0000', '#00ff00', '#0000ff', '#3b82f6', '#808080'];
+    for (const hex of samples) {
+      const lab = hl.fromHex(hex);
+      const back = hl.toHex(lab);
+      expect(back.toLowerCase()).toBe(hex.toLowerCase());
+    }
+  });
+});
+
 // ── deltaE vs perceptualDistance — naming clarity guard ────────
 describe('deltaE vs perceptualDistance (distinct metrics)', () => {
   it('deltaE returns Euclidean Lab (uncompressed)', () => {

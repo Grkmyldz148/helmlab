@@ -937,3 +937,101 @@ class TestBaseDeprecation:
             old = p.base_from_hex("#3b82f6")
         new = p.gen_from_hex("#3b82f6")
         np.testing.assert_allclose(old, new, atol=1e-12)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# display_phi_deg — opt-in display alignment, exact isometry
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestDisplayPhi:
+    """Tests for the display_phi_deg parameter on MetricSpace.
+
+    Pins the contract: rotation is EXACTLY isometric for any distance metric
+    that depends only on (dL, Δa²+Δb², L̄, C̄). STRESS, round-trip, and
+    distance values are bit-identical regardless of φ.
+    """
+
+    @pytest.fixture
+    def base_params(self):
+        from helmlab.spaces.metric import MetricSpace
+        return MetricSpace().params
+
+    def test_default_display_phi_is_zero(self, base_params):
+        """Backward compat: no φ field → 0.0."""
+        from helmlab.spaces.metric import MetricParams
+        # Simulate loading a pre-v0.12.2 checkpoint (no display_phi_deg key).
+        d = base_params.to_dict()
+        d.pop("display_phi_deg", None)
+        p2 = MetricParams.from_dict(d)
+        assert p2.display_phi_deg == 0.0
+
+    def test_constructor_arg_overrides_param(self, base_params):
+        """Explicit ab_rotate_deg argument overrides params.display_phi_deg."""
+        from helmlab.spaces.metric import MetricSpace, MetricParams
+        d = base_params.to_dict()
+        d["display_phi_deg"] = -28.2
+        ms_default = MetricSpace(MetricParams.from_dict(d))
+        ms_override = MetricSpace(MetricParams.from_dict(d), ab_rotate_deg=0.0)
+
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ
+        xyz = sRGB_to_XYZ(np.array([1.0, 0.0, 0.0]))
+        lab_default = ms_default.from_XYZ(xyz)
+        lab_override = ms_override.from_XYZ(xyz)
+        # They should differ (different rotation applied)
+        assert not np.allclose(lab_default[1:], lab_override[1:])
+
+    def test_distance_invariant_under_phi(self, base_params):
+        """Core isometry claim: distance is identical for any φ."""
+        from helmlab.spaces.metric import MetricSpace, MetricParams
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ
+        np.random.seed(0)
+        rgb1 = np.random.rand(50, 3)
+        rgb2 = np.random.rand(50, 3)
+        xyz1 = np.array([sRGB_to_XYZ(r) for r in rgb1])
+        xyz2 = np.array([sRGB_to_XYZ(r) for r in rgb2])
+
+        d_zero = MetricSpace(base_params).distance(xyz1, xyz2)
+
+        for phi in [-28.2, -11.75, 15.0, 90.0]:
+            d = dict(base_params.to_dict())
+            d["display_phi_deg"] = phi
+            d_rot = MetricSpace(MetricParams.from_dict(d)).distance(xyz1, xyz2)
+            np.testing.assert_allclose(d_rot, d_zero, atol=1e-12, rtol=1e-12,
+                err_msg=f"distance changed under φ={phi}°")
+
+    def test_roundtrip_preserved_under_phi(self, base_params):
+        """from_XYZ → to_XYZ round-trip remains machine-precision under any φ."""
+        from helmlab.spaces.metric import MetricSpace, MetricParams
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ
+        np.random.seed(1)
+        rgb = np.random.rand(100, 3)
+        xyz = np.array([sRGB_to_XYZ(r) for r in rgb])
+
+        for phi in [-28.2, -11.75, 0.0, 15.0]:
+            d = dict(base_params.to_dict())
+            d["display_phi_deg"] = phi
+            ms = MetricSpace(MetricParams.from_dict(d))
+            xyz_back = ms.to_XYZ(ms.from_XYZ(xyz))
+            err = np.max(np.abs(xyz - xyz_back))
+            assert err < 1e-10, f"roundtrip broke at φ={phi}°: max err {err:.2e}"
+
+    def test_phi_actually_rotates(self, base_params):
+        """Sanity: nonzero φ moves Lab a/b coordinates."""
+        from helmlab.spaces.metric import MetricSpace, MetricParams
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ
+        xyz = sRGB_to_XYZ(np.array([1.0, 0.0, 0.0]))  # red
+
+        d_zero = dict(base_params.to_dict()); d_zero["display_phi_deg"] = 0.0
+        d_rot = dict(base_params.to_dict()); d_rot["display_phi_deg"] = -30.0
+
+        lab_zero = MetricSpace(MetricParams.from_dict(d_zero)).from_XYZ(xyz)
+        lab_rot = MetricSpace(MetricParams.from_dict(d_rot)).from_XYZ(xyz)
+
+        # L should be exactly equal (only a,b rotate)
+        assert abs(lab_zero[0] - lab_rot[0]) < 1e-12
+        # a,b should differ
+        assert abs(lab_zero[1] - lab_rot[1]) > 0.01 or abs(lab_zero[2] - lab_rot[2]) > 0.01
+        # Magnitude in (a,b) plane preserved (chroma)
+        c_zero = np.hypot(lab_zero[1], lab_zero[2])
+        c_rot = np.hypot(lab_rot[1], lab_rot[2])
+        np.testing.assert_allclose(c_zero, c_rot, atol=1e-12)

@@ -67,6 +67,20 @@ export interface HelmlabParams {
   // Hue-dep L correction (2 params)
   Lh_cos1: number;
   Lh_sin1: number;
+
+  /**
+   * Display alignment: rigid (a, b) plane rotation in degrees, applied as a
+   * post-step in fromXYZ (and inverse-rotated as a first step in toXYZ).
+   *
+   * This is a pure isometry — distance, round-trip, and any metric depending
+   * on (dL, Δa²+Δb², L̄, C̄) are EXACTLY invariant. Use it to align the
+   * (a, b) plane with conventional Lab axes (R≈0°, Y≈60°, …) for display
+   * convenience.
+   *
+   * Default: -28.2° (matches v21 paper measurement; v20b heritage).
+   * Optional in params; if absent, AnalyticalSpace falls back to -28.2.
+   */
+  display_phi_deg?: number;
 }
 
 /** Parsed and cached params ready for compute. */

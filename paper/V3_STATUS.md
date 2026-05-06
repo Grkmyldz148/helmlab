@@ -65,12 +65,17 @@
 
 ## Known issues to review before submission
 
-1. **Hue RMS 26.4° is honest but ugly.** v21 traded hue alignment
-   for STRESS. Consider:
-   - Add a non-isometric hue-alignment post-step in MetricSpace
-     for design tools (similar to v20b's φ but tuned for v21)?
-   - Or keep current text framing it as "use GenSpace for geometry"?
-   The paper currently uses option B.
+1. ~~**Hue RMS 26.4° is honest but ugly.**~~ — RESOLVED in v0.12.2.
+   - `display_phi_deg` exposed as a public parameter in `MetricParams`
+     (Python) and `HelmlabParams` (JS). Default = -28.2° (paper-aligned,
+     v20b heritage).
+   - Constructor override: `MetricSpace(params, ab_rotate_deg=...)` /
+     `new Helmlab({abRotateDeg: ...})`.
+   - Minimax-optimal for v21 measured at φ ≈ -11.75° (max 53.4°→36.9°,
+     RMS 26.4° unchanged — basin spread is rotation-invariant).
+   - Paper §6 updated with "User-tunable display alignment" subsection.
+   - 5 new Python tests (TestDisplayPhi) + 3 JS tests added; STRESS
+     bit-identical across all φ verified empirically.
 
 2. **He 2022 regression (35.9 vs 32.6) is a real loss.** The text
    attributes it to (i) small N=82 and (ii) high-ΔE tail mismatch,

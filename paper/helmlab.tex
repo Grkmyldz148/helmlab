@@ -760,11 +760,25 @@ v21's distance-optimal basin pulled the chromatic plane out of
 geometric alignment with HSL primaries. The rigid rotation
 (\Cref{sec:space}, Stage~11) is an isometry of the metric and so
 its choice is free with respect to STRESS; we keep
-$\varphi=-28.2$\textdegree\ for backwards compatibility with v20b
-deployments. Applications that need accurate primary hue
-specification should compose MetricSpace with a per-application
-hue post-rotation, or use GenSpace (\Cref{sec:genspace}) where
-the geometry is preserved by construction.
+$\varphi=-28.2$\textdegree\ as the default for backwards compatibility
+with v20b deployments.
+
+\paragraph{User-tunable display alignment.}
+Since v0.12.2 the rotation is exposed as a public parameter
+(\texttt{display\_phi\_deg} in the JSON checkpoint, or the
+\texttt{ab\_rotate\_deg} / \texttt{abRotateDeg} constructor argument
+in Python and JavaScript respectively). The default of $-28.2$\textdegree\
+matches the values reported in this paper. A re-measured minimax-optimal
+angle for v21 is $\varphi^\ast \approx -11.75$\textdegree, which reduces
+the maximum primary hue error from $53.4$\textdegree\ to $36.9$\textdegree\
+(RMS unchanged at $26.4$\textdegree, since rotation cannot redistribute
+the spread of v21's basin). We do not change the default to $\varphi^\ast$
+because (i) the RMS gain is negligible, (ii) the v20b heritage value is
+already deployed in client code, and (iii) applications that need accurate
+primary alignment should use GenSpace (\Cref{sec:genspace}), where geometry
+is preserved by construction. The rotation is exposed as a configuration
+knob so MetricSpace can be tuned to local Lab-axis conventions without
+retraining.
 The Jacobian was evaluated on a
 $64\!\times\!64\!\times\!64$ sRGB grid via finite differences;
 the minimum determinant (0.10) is positive throughout, so the

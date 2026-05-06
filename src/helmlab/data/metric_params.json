@@ -109,5 +109,6 @@
   "lc_S_lin": 0.0,
   "lc_S_quad": 0.0,
   "hl_S_lin": 0.0,
-  "L_S_offset": 0.0
+  "L_S_offset": 0.0,
+  "display_phi_deg": -28.2
 }

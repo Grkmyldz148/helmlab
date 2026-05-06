@@ -30,7 +30,14 @@ export class AnalyticalSpace {
   constructor(params: CompiledParams, opts: AnalyticalOptions = {}) {
     this.p = params;
     this.nc = opts.neutralCorrection ?? true;
-    const rad = ((opts.abRotateDeg ?? -28.2) * PI) / 180;
+    // Resolution order for display alignment angle:
+    //   1. explicit constructor opts.abRotateDeg (highest priority)
+    //   2. params.raw.display_phi_deg (loaded from JSON)
+    //   3. -28.2 (v20b heritage / paper default)
+    const phiDeg = opts.abRotateDeg
+      ?? params.raw.display_phi_deg
+      ?? -28.2;
+    const rad = (phiDeg * PI) / 180;
     this.rotCos = cos(rad);
     this.rotSin = sin(rad);
     this.hasRot = abs(rad) > 1e-12;

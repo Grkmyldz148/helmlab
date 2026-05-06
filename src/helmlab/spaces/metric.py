@@ -229,6 +229,21 @@ class MetricParams:
     hl_S_lin: float = 0.0      # hue-lightness interaction varies with S
     L_S_offset: float = 0.0    # global L shift: L += L_S_offset * (S - 0.5)
 
+    # ── Display alignment (v0.12.2) ──────────────────────────────────
+    # Rigid (a, b) plane rotation applied as a final post-step in from_XYZ
+    # (and inverse-rotated as a first step in to_XYZ). Pure isometry → STRESS,
+    # round-trip and all distance-related metrics are EXACTLY invariant
+    # (analytical proof: Δa²+Δb² and ā²+b̄² are rotation-preserved).
+    #
+    # Purpose: align the (a, b) plane with conventional Lab axes (R≈0°, Y≈60°,
+    # G≈120°, ...) for users who read coordinates directly. This is purely a
+    # display convenience; users who need full geometric hue stability should
+    # use GenSpace.
+    #
+    # For v21 the minimax-optimal angle is ≈ -11.75° (max hue error 53.4°→36.9°);
+    # default is 0° to preserve raw measured behavior. Users opt-in explicitly.
+    display_phi_deg: float = 0.0
+
     def to_dict(self) -> dict:
         return {
             "M1": self.M1.tolist(),
@@ -307,6 +322,7 @@ class MetricParams:
             "lc_S_quad": self.lc_S_quad,
             "hl_S_lin": self.hl_S_lin,
             "L_S_offset": self.L_S_offset,
+            "display_phi_deg": self.display_phi_deg,
         }
 
     @classmethod
@@ -388,6 +404,8 @@ class MetricParams:
             lc_S_quad=d.get("lc_S_quad", 0.0),
             hl_S_lin=d.get("hl_S_lin", 0.0),
             L_S_offset=d.get("L_S_offset", 0.0),
+            # v0.12.2 display alignment (default 0 → backward compat)
+            display_phi_deg=d.get("display_phi_deg", 0.0),
         )
 
     def save(self, path: str | Path) -> None:
@@ -445,7 +463,28 @@ class MetricSpace(ColorSpace):
     name = "Metric"
 
     def __init__(self, params: MetricParams | None = None, surround: float = 0.5,
-                 neutral_correction: bool = False, ab_rotate_deg: float = 0.0):
+                 neutral_correction: bool = False, ab_rotate_deg: float | None = None):
+        """Construct a MetricSpace.
+
+        Parameters
+        ----------
+        params : MetricParams, optional
+            Trained parameter set; defaults to bundled v21 if not provided.
+        surround : float, default 0.5
+            Surround (viewing condition) parameter, 0=dark, 0.5=normal, 1=bright.
+        neutral_correction : bool, default False
+            If True, post-correct gray-axis residual chroma to <1e-6 via NC LUT.
+        ab_rotate_deg : float, optional
+            Rigid (a, b) plane rotation applied as a final post-step in from_XYZ
+            (and inverse-rotated as the first step in to_XYZ). This is a pure
+            isometry — STRESS, round-trip, and any distance metric depending on
+            (dL, Δa²+Δb², L̄, C̄) are exactly invariant.
+
+            Use it to align the (a, b) plane with conventional Lab axes (R≈0°,
+            Y≈60°, …) for display convenience. If omitted, the value is read
+            from ``params.display_phi_deg`` (default 0.0). Pass an explicit
+            argument to override the param.
+        """
         if params is not None:
             self.params = params
         elif _PARAMS_PATH.exists():
@@ -455,7 +494,9 @@ class MetricSpace(ColorSpace):
 
         self._surround = surround
         self._neutral_correction = neutral_correction
-        self._ab_rotate_rad = float(np.deg2rad(ab_rotate_deg))
+        # Display alignment: explicit constructor arg overrides params.display_phi_deg.
+        rot_deg = ab_rotate_deg if ab_rotate_deg is not None else getattr(self.params, "display_phi_deg", 0.0)
+        self._ab_rotate_rad = float(np.deg2rad(rot_deg))
         self._ab_rot_cos = float(np.cos(self._ab_rotate_rad))
         self._ab_rot_sin = float(np.sin(self._ab_rotate_rad))
 
