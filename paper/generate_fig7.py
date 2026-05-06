@@ -78,7 +78,7 @@ ax.legend(loc="lower right", fontsize=9, frameon=False, ncol=3,
 # Title-like header summarizing the totals.
 # Per-category breakdown sums to 60W/8L/15T across 83 internal metrics;
 # including 7 independent gradient/palette metrics the overall ColorBench
-# tally is 66W/9L/15T across 90 metrics (Table tab:genspace-vs-oklab).
+# tally is 65W/9L/16T across 90 metrics (Table tab:genspace-vs-oklab).
 fig.suptitle(
     "GenSpace v0.11.1 vs OKLab on ColorBench  ·  "
     "65 wins / 9 losses / 16 ties across 90 metrics",
