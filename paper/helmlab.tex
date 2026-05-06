@@ -608,14 +608,15 @@ the intervals do not overlap ($p < 10^{-4}$).
     \toprule
     Method & \combvd & MacAdam & HumFB & Avg \\
     \midrule
-    \textbf{MetricSpace v21} & \textbf{22.48} & \textbf{19.51} & \textbf{23.26} & \textbf{21.75} \\
+    \textbf{MetricSpace v21} & \textbf{22.48} & 19.51 & \textbf{23.26} & \textbf{21.75} \\
     CIE94                    & 33.37 & 19.78 & 59.75 & 37.63 \\
     CIEDE2000                & 29.20 & 22.13 & 62.54 & 37.96 \\
     DIN99                    & 35.76 & 23.28 & 56.46 & 38.50 \\
-    $J_z a_z b_z$ (Euclid.)  & 40.63 & 25.50 & 52.93 & 39.69 \\
+    $J_z a_z b_z$            & 41.92 & 24.14 & 61.74 & 42.60 \\
     CIE Lab ($\Delta E^*_{76}$) & 42.86 & 24.53 & 62.32 & 43.24 \\
     Oklab ($\Delta E_\mathrm{OK}$) & 47.35 & 32.72 & 57.27 & 45.78 \\
-    CAM16-UCS (Euclid.)      & 56.19 & 33.15 & 65.89 & 51.74 \\
+    CAM16-UCS                & 33.47 & \textbf{18.71} & 58.02 & 36.73 \\
+    CIECAM02-UCS             & 30.90 & 19.21 & 57.83 & 35.98 \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -647,17 +648,24 @@ pair-dependent weighting ($S_L$, $S_C$), a Minkowski exponent, and
 monotonic compression, so the comparison is not on equal terms in
 that direction. Oklab's high \stress\ is expected because it was
 optimized for hue uniformity~\cite{ottosson2020}, not
-color-difference prediction. CAM16-UCS's \stress\ on this set
-(56.19) is higher than the value we historically reported for
-v20b's evaluation; the difference is implementation-detail (we
-have switched to a stricter D65 reference and Bradford
-chromatic adaptation in the \combvd\ pre-processing for
-this revision, which affects every space, not just ours).
+color-difference prediction. CAM16-UCS and CIECAM02-UCS perform
+substantially better than other baselines on \combvd\ (33.47 and
+30.90 respectively); both retain a residual achromatic chroma
+($\bar{C}\!\approx\!2$ at D65 white) that limits their use as
+authoring spaces but does not affect distance prediction.
 With Euclidean distance only, MetricSpace v21's \emph{space}
 component (without $S_L$, $S_C$, $p$, compression, or post-power)
 gets \stress\ $\approx 27.6$, already improving on CIEDE2000
 (29.20) by 5.5\%. The remaining $\sim$5 \stress\ points come from
 the metric layer.
+
+All baseline numbers in \Cref{tab:stress} are produced by
+\texttt{colorbench} (v0.13.0, May~2026) with the
+\texttt{metric}-mode evaluation path. CAM16-UCS, CIECAM02-UCS, and
+$J_z a_z b_z$ delegate to the \texttt{colour-science} reference
+implementations~\cite{colour-science} so values are bit-identical
+to the published worked examples and reproducible with a single
+\texttt{pip install} of the standard scientific Python stack.
 
 \subsection{Cross-Validation}
 
@@ -669,10 +677,17 @@ the metric layer.
     discussed above.
   \item MacAdam~1974 (128~pairs, fully held-out, never seen by
     optimiser): MetricSpace 19.51 vs CIEDE2000 22.13. v21 also
-    leads OKLab (32.72), Jzazbz (25.50), and DIN99 (23.28); only
-    CIE94 (19.78) and CAM16-UCS (33.15) are within reasonable
-    range, and v21 still leads both. This is a change from v20b,
-    which had trailed CAM16-UCS on MacAdam.
+    leads OKLab (32.72), $J_z a_z b_z$ (24.14), CIE Lab (24.53),
+    and DIN99 (23.28). On this set CAM16-UCS is the strongest
+    appearance-model baseline: it scores 18.71, leading v21 by
+    0.80 \stress\ ---  CAM16's appearance-model formulation
+    matches MacAdam's experimental conditions (D65 illuminant,
+    constant Y, controlled-viewing) better than COMBVD's industrial
+    samples. CIECAM02-UCS (19.21) and CIE94 (19.78) sit between
+    these. v21 leads the rest of the field by 3+ \stress\ points
+    on MacAdam while ceding the top spot to CAM16; over the
+    three-dataset average (\Cref{tab:stress}, Avg) it remains
+    \stress~21.75, vs CIECAM02-UCS 35.98 and CAM16-UCS 36.73.
 \end{itemize}
 The 3-dataset sub-balanced loss (\Cref{eq:loss}) widened the
 optimum into a region that generalises better to small held-out
@@ -1365,6 +1380,14 @@ G.~Y{\i}ld{\i}z, \textit{postcss-helmlab: PostCSS plugin for
 \helmlab\ CSS color functions}, software package version 0.1.x, 2026.
 \url{https://www.npmjs.com/package/postcss-helmlab};
 source: \url{https://github.com/Grkmyldz148/helmlab/tree/main/packages/postcss-helmlab}.
+
+\bibitem{colour-science}
+T.~Mansencal et~al., \textit{Colour: Science software for the colour
+processing community}, version 0.4.x, 2026. Project page:
+\url{https://www.colour-science.org/}; source repository:
+\url{https://github.com/colour-science/colour}; reference implementations of CAM16-UCS,
+CIECAM02-UCS, $J_z a_z b_z$, DIN99 and IPT delta-E used as canonical
+baselines in this paper.
 
 \bibitem{ottosson-cusp}
 B.~Ottosson, ``OkLCh gamut clipping,'' technical note, May~2021.
