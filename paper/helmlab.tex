@@ -97,14 +97,31 @@ Oklab~\cite{ottosson2020} is simple and part of CSS Color Level~4,
 but was optimized for hue uniformity rather than color-difference
 prediction, and gets \stress\ 47.35 (Euclidean) on \combvd.
 CAM16-UCS~\cite{li2017} is derived from a color appearance model
-but is computationally expensive and exhibits substantial achromatic
-chroma leakage ($\bar{C}>1$ for D65 grays in our re-evaluation).
+but is computationally expensive and, when used as a Cartesian
+distance space without its full appearance pipeline, exhibits
+substantial achromatic chroma leakage ($\bar{C}>1$ for D65 grays
+under our evaluation conditions).
 IPT~\cite{ebner1998} was optimized for hue linearity at the expense
 of lightness accuracy. $J_z a_z b_z$~\cite{safdar2017} targets HDR
 via the PQ curve but is complex and not CSS-native. None of these
 spaces jointly optimize the color-space transform and distance
 metric end-to-end against psychophysical data, and they all
 sacrifice at least one of the three UI requirements.
+
+\paragraph{Note on baseline evaluation conditions.}
+All baselines (CIEDE2000, OKLab, IPT, $J_z a_z b_z$, CAM16-UCS,
+DIN99) are scored in this paper under a uniform pre-processing
+pipeline: COMBVD XYZ pairs are first chromatically adapted from
+their stated illuminants to D65 via Bradford CAT, then each space's
+forward transform is applied to the adapted XYZ. CAM16-UCS is
+evaluated with its standard $L_\mathrm{A}$, $Y_\mathrm{b}$, and
+surround conditions (average, $S=0.69$); we do not run a per-pair
+appearance match. This setup matches \texttt{ColorBench}'s
+ICtCp-style adaptation handling and ensures every space sees the
+same data; the resulting numbers may differ from those reported in
+the original publications, which used different CAT methods and
+sub-dataset selections. We discuss the corresponding shift between
+v20b and v21 reporting in \Cref{sec:baselines}.
 
 We treat the entire XYZ-to-distance pipeline as a single system
 with 72~jointly-optimized parameters (\textbf{MetricSpace}) and
@@ -427,7 +444,7 @@ template:
     $4\!\times$ heavier than lightness differences in raw distance.
   \item $p = 1.97$: Minkowski exponent close to 2 (Euclidean), but
     the post-compress power $q = 0.479$ then concavifies large
-    distances — equivalent to a soft saturation that prevents
+    distances --- equivalent to a soft saturation that prevents
     extreme pairs from dominating the loss.
   \item $c = 52.5$: aggressive monotone compression that, combined
     with $q < 1$, fits the long-tail behaviour of \combvd\
@@ -622,7 +639,7 @@ rather than optimiser memorisation. Even the held-out point
 estimate of $\sim$24.3 beats every other tested space and
 metric on \combvd.
 
-\paragraph{Why the comparison favours MetricSpace.}
+\paragraph{Why the comparison favours MetricSpace.}\label{sec:baselines}
 The baselines in \Cref{tab:stress} use Euclidean distance in each
 space's native Cartesian coordinates, without parametric weighting
 or compression. The MetricSpace distance metric includes
@@ -965,9 +982,16 @@ errors are $\sim$5.6$\times 10^{-8}$ in sRGB (limited by the
 enrichment Newton inversion) and at machine epsilon in P3 and
 Rec.\,2020.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig7_genspace.pdf}
+  \caption{GenSpace v0.11.1 vs OKLab --- per-category breakdown of the 83 internal ColorBench metrics. Headline tally including the 7 independent gradient/palette metrics is 66W / 9L / 15T (\Cref{tab:genspace-vs-oklab}). Categories ordered by total metric count.}
+  \label{fig:genspace-vs-oklab}
+\end{figure}
+
 \begin{table}[t]
   \centering
-  \caption{GenSpace v0.11.1 vs OKLab — head-to-head on ColorBench (83 internal + 7 independent gradient/palette metrics).}
+  \caption{GenSpace v0.11.1 vs OKLab --- head-to-head on ColorBench (83 internal + 7 independent gradient/palette metrics). Visual breakdown in \Cref{fig:genspace-vs-oklab}.}
   \label{tab:genspace-vs-oklab}
   \begin{tabular}{lrrr}
     \toprule
@@ -1224,8 +1248,22 @@ documentation at \url{https://grkmyldz148.github.io/helmlab/}.
 % ══════════════════════════════════════════════════════════════════
 \section*{Acknowledgments}
 
-Thanks to the 71~anonymous observers who participated in the
-bidirectional evaluation study during development.
+We thank the 71 observers --- listed by first name or chosen handle in
+the released dataset (\texttt{datasets/human\_feedback.json},
+\href{https://github.com/Grkmyldz148/helmlab}{github.com/Grkmyldz148/helmlab}) ---
+who contributed 3{,}552 paired-comparison judgments during development.
+
+We also gratefully acknowledge the open-source review of the underlying
+PR \#722 on \texttt{color-js/color.js}: in particular @facelessuser
+(near-black achromatic instability, M2 normalisation regressions, the
+clean 64-bit matrix derivation methodology), @lloydk (the WebGPU chart
+library that surfaced the h\,$\approx$\,264\textdegree\ blue fold and
+related cubic-cusp artefacts), @Userminusone (the Metal-shader hue/
+lightness probe, scale-invariance critique of NR, the boundary-warp
+straightening alternative), and @svgeesus (the original paper proposal,
+the ``0\% should be achromatic'' authoring convention, and the ICC
+Displays working-group framing). The two-month review thread was, in
+effect, a parallel research process; this paper is its written record.
 
 
 % ══════════════════════════════════════════════════════════════════
@@ -1233,79 +1271,97 @@ bidirectional evaluation study during development.
 \begin{thebibliography}{99}
 
 \bibitem{cie1976}
-CIE, ``Colorimetry,'' CIE Publication 15, 1976.
+CIE, ``Colorimetry,'' CIE Publication 15, Vienna, 1976. Latest
+revision: CIE 015:2018, ISBN 978-3-902842-13-8.
+\url{https://cie.co.at/publications/colorimetry-4th-edition}
 
 \bibitem{luo2001}
 M.~R. Luo, G.~Cui, and B.~Rigg, ``The development of the CIE 2000
 colour-difference formula: CIEDE2000,'' \textit{Color Res.\ Appl.},
 vol.~26, no.~5, pp.~340--350, 2001.
+\href{https://doi.org/10.1002/col.1049}{doi:10.1002/col.1049}.
 
 \bibitem{ottosson2020}
 B.~Ottosson, ``A perceptual color space for image processing,''
-\url{https://bottosson.github.io/posts/oklab/}, 2020.
+blog post, December~2020.
+\url{https://bottosson.github.io/posts/oklab/}.
+Adopted in CSS Color Module 4 (W3C Candidate Recommendation, 2024).
 
 \bibitem{li2017}
 C.~Li, Z.~Li, Z.~Wang, \textit{et al.}, ``Comprehensive color
-solutions: CAM16, CAT16, and S-decoupling,'' \textit{Color Res.\
+solutions: CAM16, CAT16, and CAM16-UCS,'' \textit{Color Res.\
 Appl.}, vol.~42, no.~6, pp.~703--718, 2017.
+\href{https://doi.org/10.1002/col.22131}{doi:10.1002/col.22131}.
 
 \bibitem{ebner1998}
 F.~Ebner and M.~D. Fairchild, ``Development and testing of a color
 space (IPT) with improved hue uniformity,'' in \textit{Proc.\ IS\&T
-CIC6}, 1998.
+6th Color Imaging Conference (CIC)}, Scottsdale, AZ, 1998,
+pp.~8--13.
 
 \bibitem{safdar2017}
 M.~Safdar, G.~Cui, Y.~J. Kim, and M.~R. Luo, ``Perceptually uniform
 color space for image signals including high dynamic range and wide
-gamut,'' \textit{Opt.\ Express}, vol.~25, no.~13, 2017.
+gamut,'' \textit{Opt.\ Express}, vol.~25, no.~13, pp.~15131--15151,
+2017.
+\href{https://doi.org/10.1364/OE.25.015131}{doi:10.1364/OE.25.015131}.
 
 \bibitem{luo2006}
 M.~R. Luo, G.~Cui, and C.~Li, ``Uniform colour spaces based on
 CIECAM02 colour appearance model,'' \textit{Color Res.\ Appl.},
-vol.~31, pp.~320--330, 2006.
+vol.~31, no.~4, pp.~320--330, 2006.
+\href{https://doi.org/10.1002/col.20227}{doi:10.1002/col.20227}.
 
 \bibitem{he2022}
 R.~He, G.~Cui, T.~Zhu, and M.~R. Luo, ``Colour difference
-evaluation using large colour differences,'' in \textit{Proc.\ CIE},
-2022.
+evaluation using large colour differences,'' in \textit{Proc.\
+30th CIE Session}, Ljubljana, 2022.
 
 \bibitem{macadam1974}
 D.~L. MacAdam, ``Uniform color scales,'' \textit{J.\ Opt.\ Soc.\
-Am.}, vol.~64, pp.~1691--1702, 1974.
+Am.}, vol.~64, no.~12, pp.~1691--1702, 1974.
+\href{https://doi.org/10.1364/JOSA.64.001691}{doi:10.1364/JOSA.64.001691}.
 
 \bibitem{byrd1995}
 R.~H. Byrd, P.~Lu, J.~Nocedal, and C.~Zhu, ``A limited memory
 algorithm for bound constrained optimization,'' \textit{SIAM J.\ Sci.\
-Comput.}, vol.~16, pp.~1190--1208, 1995.
+Comput.}, vol.~16, no.~5, pp.~1190--1208, 1995.
+\href{https://doi.org/10.1137/0916069}{doi:10.1137/0916069}.
 
 \bibitem{gao2023}
 Y.~Gao, M.~R. Luo, M.~R. Pointer, and C.~Li, ``Evaluation of
 color difference prediction with CIECAM16 using CIE 2- and 10-degree
-observers,'' \textit{J.\ Imaging Sci.\ Technol.}, 2023.
+observers,'' \textit{J.\ Imaging Sci.\ Technol.}, vol.~67, no.~2,
+art.~no.~020401, 2023.
 
 \bibitem{colorjs}
-L.~Verou, C.~Lilley, et al., ``Color.js --- a library for color
-conversions, manipulation, and difference computation,''
-\url{https://colorjs.io/}, 2026. \helmlab\ integration: PR \#722,
-\url{https://github.com/color-js/color.js/pull/722} (merged
-2026-05-04).
+L.~Verou and C.~Lilley, \textit{Color.js: A library for color
+conversions, manipulation, and difference computation}, version 0.5.x,
+2026. Project page: \url{https://colorjs.io/}; source repository:
+\url{https://github.com/color-js/color.js}; \helmlab\ integration
+merged in PR~\#722,
+\url{https://github.com/color-js/color.js/pull/722}, 2026-05-04.
 
 \bibitem{helmlab-pkg}
-G.~Y{\i}ld{\i}z, ``\texttt{helmlab} --- production color-space package
-(Python on PyPI, JavaScript on npm),''
-\url{https://pypi.org/project/helmlab/},
-\url{https://www.npmjs.com/package/helmlab}, 2026.
+G.~Y{\i}ld{\i}z, \textit{helmlab: Data-driven analytical color space
+for perceptual color difference}, software package version 0.12.2,
+2026.
+PyPI: \url{https://pypi.org/project/helmlab/};
+npm: \url{https://www.npmjs.com/package/helmlab};
+source: \url{https://github.com/Grkmyldz148/helmlab}.
 
 \bibitem{postcss-helmlab}
-G.~Y{\i}ld{\i}z, ``\texttt{postcss-helmlab} --- PostCSS plugin for
-\helmlab\ CSS color functions,''
-\url{https://www.npmjs.com/package/postcss-helmlab}, 2026.
+G.~Y{\i}ld{\i}z, \textit{postcss-helmlab: PostCSS plugin for
+\helmlab\ CSS color functions}, software package version 0.1.x, 2026.
+\url{https://www.npmjs.com/package/postcss-helmlab};
+source: \url{https://github.com/Grkmyldz148/helmlab/tree/main/packages/postcss-helmlab}.
 
 \bibitem{ottosson-cusp}
-B.~Ottosson, ``How software gets color wrong (and what we can do
-about it): Oklab cusp behaviour and the cubic-fold artefact,''
-discussion thread, \url{https://github.com/color-js/color.js/issues/81}
-and CSS WG drafts, 2022--2024.
+B.~Ottosson, ``OkLCh gamut clipping,'' technical note, May~2021.
+\url{https://bottosson.github.io/posts/gamutclipping/};
+also see \url{https://bottosson.github.io/posts/colorpicker/}
+(November~2021) and the public discussion thread at
+\url{https://github.com/color-js/color.js/issues/81} (2022--2024).
 
 \end{thebibliography}
 
