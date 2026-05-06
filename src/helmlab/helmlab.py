@@ -168,20 +168,34 @@ class Helmlab:
 
     # ── Deprecated base_* aliases → gen_* ──────────────────────────
 
+    @staticmethod
+    def _warn_base_deprecated(old: str, new: str) -> None:
+        import warnings
+        warnings.warn(
+            f"Helmlab.{old}() is deprecated and will be removed in v0.13. "
+            f"Use Helmlab.{new}() instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+
     def base_from_hex(self, hex_str: str) -> np.ndarray:
-        """Deprecated: use gen_from_hex(). Hex → Gen Lab."""
+        """Deprecated: use :meth:`gen_from_hex`. Hex → Gen Lab."""
+        self._warn_base_deprecated("base_from_hex", "gen_from_hex")
         return self.gen_from_hex(hex_str)
 
     def base_to_hex(self, lab: np.ndarray) -> str:
-        """Deprecated: use gen_to_hex(). Gen Lab → hex."""
+        """Deprecated: use :meth:`gen_to_hex`. Gen Lab → hex."""
+        self._warn_base_deprecated("base_to_hex", "gen_to_hex")
         return self.gen_to_hex(lab)
 
     def base_from_srgb(self, srgb: np.ndarray) -> np.ndarray:
-        """Deprecated: use gen_from_srgb(). sRGB → Gen Lab."""
+        """Deprecated: use :meth:`gen_from_srgb`. sRGB → Gen Lab."""
+        self._warn_base_deprecated("base_from_srgb", "gen_from_srgb")
         return self.gen_from_srgb(srgb)
 
     def base_to_srgb(self, lab: np.ndarray) -> np.ndarray:
-        """Deprecated: use gen_to_srgb(). Gen Lab → sRGB."""
+        """Deprecated: use :meth:`gen_to_srgb`. Gen Lab → sRGB."""
+        self._warn_base_deprecated("base_to_srgb", "gen_to_srgb")
         return self.gen_to_srgb(lab)
 
     # ── Contrast ─────────────────────────────────────────────────────
@@ -525,13 +539,49 @@ class Helmlab:
     # ── Info ─────────────────────────────────────────────────────────
 
     def delta_e(self, color1_hex: str, color2_hex: str) -> float:
-        """Helmlab distance (Euclidean in Lab) between two hex colors."""
+        """Euclidean Lab distance between two hex colors (uncompressed).
+
+        Returns ``sqrt(dL² + da² + db²)`` in Helmlab's metric Lab space.
+        Range ≈ 0 to 1.6 across sRGB primaries (e.g. ``#000000`` ↔ ``#ffffff``
+        ≈ 1.12, ``#ff0000`` ↔ ``#00ff00`` ≈ 1.62).
+
+        This follows the OKLab convention where ``delta_e`` denotes Euclidean
+        distance in a perceptually-uniform Lab. It is the analogue of CIE76 ΔE
+        on CIE Lab — *not* the more elaborate CIEDE2000-style perceptual fit.
+
+        For the compressed perceptual metric (Minkowski + compression) used in
+        COMBVD-class benchmarks, use :meth:`perceptual_distance` instead.
+
+        See Also
+        --------
+        perceptual_distance : Compressed perceptual distance (Lab inputs).
+        helmlab.MetricSpace.distance : Same compressed metric (XYZ inputs).
+        helmlab.MetricSpace.distance_from_lab : Compressed metric (Lab inputs, batched).
+        """
         lab1 = self.from_hex(color1_hex)
         lab2 = self.from_hex(color2_hex)
         return float(np.sqrt(np.sum((lab1 - lab2) ** 2)))
 
     def perceptual_distance(self, lab1: np.ndarray, lab2: np.ndarray) -> float:
-        """Full perceptual distance (Minkowski + compression) between two Lab values."""
+        """Compressed perceptual distance (Minkowski + compression) between two Lab values.
+
+        This is the metric optimized against COMBVD/MacAdam/Hung-Feldman
+        human-judgment data; on COMBVD it scores STRESS ≈ 22.5 vs CIEDE2000's
+        ~29.2. The compression is monotonic and saturates near ~0.15 for very
+        different colors — comparing edits beyond that range will look similar.
+        For an uncompressed analogue use :meth:`delta_e` (Euclidean Lab).
+
+        Parameters
+        ----------
+        lab1, lab2 : np.ndarray
+            Lab values from :meth:`from_hex` / :meth:`from_srgb` /
+            :meth:`from_XYZ`. May be scalar (3,) or batched (..., 3).
+
+        See Also
+        --------
+        delta_e : Uncompressed Euclidean Lab on hex inputs.
+        helmlab.MetricSpace.distance_from_lab : Same metric, batched, no XYZ round-trip.
+        """
         XYZ1 = self._metric.to_XYZ(np.asarray(lab1, dtype=np.float64))
         XYZ2 = self._metric.to_XYZ(np.asarray(lab2, dtype=np.float64))
         return float(self._metric.distance(XYZ1, XYZ2))

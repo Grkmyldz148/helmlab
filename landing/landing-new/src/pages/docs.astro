@@ -164,7 +164,7 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
 <span class="text-[#52525b]"># Smooth gradient from red to blue (16 steps)</span>
 gradient = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">"#ef4444"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>, steps=<span class="text-[#f97316]">16</span>)
 
-<span class="text-[#52525b]"># Perceptual color distance</span>
+<span class="text-[#52525b]"># Color distance (Euclidean Lab — fast, uncompressed)</span>
 dist = hl.<span class="text-[#34d399]">delta_e</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
 
 <span class="text-[#52525b]"># Ensure WCAG AA contrast (adjusts color if needed)</span>
@@ -186,7 +186,7 @@ scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-
 <span class="text-[#52525b]">// Smooth gradient from red to blue (16 steps)</span>
 <span class="text-[#c084fc]">const</span> gradient = hl.<span class="text-[#34d399]">gradient</span>(<span class="text-[#fb923c]">'#ef4444'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>, <span class="text-[#f97316]">16</span>);
 
-<span class="text-[#52525b]">// Perceptual color distance</span>
+<span class="text-[#52525b]">// Color distance (Euclidean Lab — fast, uncompressed)</span>
 <span class="text-[#c084fc]">const</span> dist = hl.<span class="text-[#34d399]">deltaE</span>(<span class="text-[#fb923c]">'#ff0000'</span>, <span class="text-[#fb923c]">'#00ff00'</span>);
 
 <span class="text-[#52525b]">// Ensure WCAG AA contrast (adjusts color if needed)</span>
@@ -332,14 +332,30 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
 
           <h3 class="text-lg font-semibold mb-4 mt-8">Color Difference</h3>
 
+          <p class="text-[#a1a1aa] mb-4 text-sm">
+            Two distance metrics are exposed:
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">delta_e()</code>
+            returns Euclidean Lab (uncompressed, fast, ΔE76-style on hex inputs);
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">perceptual_distance()</code>
+            applies the full Minkowski + compression metric optimized against COMBVD
+            (STRESS ≈ 22.5, ~24% better than CIEDE2000). Use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">delta_e()</code>
+            for quick UI comparisons; use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">perceptual_distance()</code>
+            for benchmarking or perception-critical workflows.
+          </p>
+
           <div class="docs-py">
             <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab</span> <span class="text-[#c084fc]">import</span> Helmlab
 
 hl = Helmlab()
 
-<span class="text-[#52525b]"># Perceptual distance between two colors</span>
+<span class="text-[#52525b]"># Euclidean Lab distance (uncompressed, hex inputs)</span>
 dist = hl.<span class="text-[#34d399]">delta_e</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
-<span class="text-[#52525b]"># &rarr; 0.423 (lower = more similar)</span>
+<span class="text-[#52525b]"># &rarr; 1.62 — black/white &rarr; 1.12; range 0–1.6+</span>
+
+<span class="text-[#52525b]"># Compressed perceptual distance (Lab inputs, COMBVD-fit)</span>
+lab1, lab2 = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#ff0000"</span>), hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#00ff00"</span>)
+dist = hl.<span class="text-[#34d399]">perceptual_distance</span>(lab1, lab2)
+<span class="text-[#52525b]"># &rarr; ~0.149 (saturates near 0.15 for very dissimilar pairs)</span>
 
 <span class="text-[#52525b]"># Contrast ratio (WCAG-compatible)</span>
 ratio = hl.<span class="text-[#34d399]">contrast_ratio</span>(<span class="text-[#fb923c]">"#ffffff"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>)
@@ -351,9 +367,14 @@ ratio = hl.<span class="text-[#34d399]">contrast_ratio</span>(<span class="text-
 
 <span class="text-[#c084fc]">const</span> hl = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">Helmlab</span>();
 
-<span class="text-[#52525b]">// Perceptual distance between two colors</span>
+<span class="text-[#52525b]">// Euclidean Lab distance (uncompressed, hex inputs)</span>
 <span class="text-[#c084fc]">const</span> dist = hl.<span class="text-[#34d399]">deltaE</span>(<span class="text-[#fb923c]">'#ff0000'</span>, <span class="text-[#fb923c]">'#00ff00'</span>);
-<span class="text-[#52525b]">// &rarr; 0.423 (lower = more similar)</span>
+<span class="text-[#52525b]">// &rarr; 1.62 — black/white &rarr; 1.12; range 0–1.6+</span>
+
+<span class="text-[#52525b]">// Compressed perceptual distance (Lab inputs, COMBVD-fit)</span>
+<span class="text-[#c084fc]">const</span> lab1 = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#ff0000'</span>);
+<span class="text-[#c084fc]">const</span> lab2 = hl.<span class="text-[#34d399]">fromHex</span>(<span class="text-[#fb923c]">'#00ff00'</span>);
+<span class="text-[#c084fc]">const</span> distP = hl.<span class="text-[#34d399]">perceptualDistance</span>(lab1, lab2);
 
 <span class="text-[#52525b]">// Contrast ratio (WCAG-compatible)</span>
 <span class="text-[#c084fc]">const</span> ratio = hl.<span class="text-[#34d399]">contrastRatio</span>(<span class="text-[#fb923c]">'#ffffff'</span>, <span class="text-[#fb923c]">'#3b82f6'</span>);
@@ -525,8 +546,21 @@ fg, bg = hl.<span class="text-[#34d399]">adapt_pair</span>(
 <span class="text-[#52525b]">// {"{"}hex, srgb, xyz, lab, L, C, H, luminance{"}"}</span></code></pre>
           </div>
 
-          <h3 class="text-lg font-semibold mb-4 mt-10">perceptualDistance()</h3>
-          <p class="text-[#a1a1aa] mb-4 text-sm">Full perceptual distance using MetricSpace with Minkowski exponent and compression. More accurate than <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">deltaE()</code> which uses simple Euclidean distance.</p>
+          <h3 class="text-lg font-semibold mb-4 mt-10">perceptualDistance() / distance_from_lab()</h3>
+          <p class="text-[#a1a1aa] mb-4 text-sm">
+            Compressed perceptual distance using MetricSpace with Minkowski exponent
+            and monotonic compression — STRESS ≈ 22.5 on COMBVD vs CIEDE2000's ~29.2.
+            More accurate than <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">deltaE()</code>
+            which is simple Euclidean. Note: compression saturates near ~0.15 for
+            very dissimilar pairs — relative ordering is preserved but absolute
+            magnitudes plateau.
+          </p>
+          <p class="text-[#a1a1aa] mb-4 text-sm">
+            ⚠ <strong>Input contract:</strong> <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">MetricSpace.distance(XYZ_1, XYZ_2)</code>
+            expects <strong>CIE XYZ</strong>, not Lab. Passing Lab silently saturates near 0.15.
+            For Lab inputs use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">MetricSpace.distance_from_lab(lab_1, lab_2)</code>
+            (added v0.12.1) or the convenience wrapper <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">Helmlab.perceptual_distance(lab1, lab2)</code>.
+          </p>
 
           <div class="docs-py">
             <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#52525b]"># Takes Metric Lab values (from from_hex / from_XYZ)</span>

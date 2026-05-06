@@ -523,16 +523,67 @@ class MetricSpace(ColorSpace):
     # ── Distance metric override (v7) ──────────────────────────────
 
     def distance(self, XYZ_1: np.ndarray, XYZ_2: np.ndarray) -> np.ndarray:
-        """Weighted Minkowski distance with optional monotonic compression.
+        """Weighted Minkowski perceptual distance with optional monotonic compression.
 
-        DE_raw = (dL² + wC*(da²+db²))^(p/2)
-        v14b: DE_compressed^q  (q=dist_post_power, q>1 reduces S-curve bias)
-        v14: DE * (1 + α*c*DE) / (1 + c*DE)  (α=dist_linear)
-        v12: DE_raw / (1 + dist_compress * DE_raw)
-        Legacy (v9/v10): DE * exp(dist_nl * DE)
+        ⚠ INPUTS MUST BE CIE XYZ (D65), NOT Lab.
+        This method internally calls ``self.from_XYZ()`` on both inputs. Passing
+        Lab coordinates produces silently-corrupt results (typically saturating
+        near 0.15 because compression collapses the bogus values). To pass Lab
+        directly, use :meth:`distance_from_lab` instead.
+
+        Parameters
+        ----------
+        XYZ_1, XYZ_2 : np.ndarray
+            CIE XYZ tristimulus values, shape (..., 3). D65 white point assumed.
+
+        Returns
+        -------
+        np.ndarray
+            Per-pair perceptual distances, shape (...).
+
+        Notes
+        -----
+        Compression formulas:
+
+        * ``DE_raw = (dL² + wC·(da²+db²))^(p/2)``
+        * v14b: ``DE_compressed^q`` (q=dist_post_power, q>1 reduces S-curve bias)
+        * v14: ``DE · (1 + α·c·DE) / (1 + c·DE)`` (α=dist_linear)
+        * v12: ``DE_raw / (1 + dist_compress · DE_raw)``
+        * Legacy (v9/v10): ``DE · exp(dist_nl · DE)``
+
+        See Also
+        --------
+        distance_from_lab : Same metric but accepts Lab inputs directly.
+        helmlab.Helmlab.delta_e : Euclidean Lab distance (uncompressed) on hex inputs.
+        helmlab.Helmlab.perceptual_distance : Convenience wrapper from Lab inputs.
         """
         c1 = self.from_XYZ(XYZ_1)
         c2 = self.from_XYZ(XYZ_2)
+        return self._distance_pair(c1, c2)
+
+    def distance_from_lab(self, lab_1: np.ndarray, lab_2: np.ndarray) -> np.ndarray:
+        """Same as :meth:`distance` but accepts Lab inputs directly (no XYZ→Lab conversion).
+
+        Use this when you already have Lab coordinates from :meth:`from_XYZ`
+        and don't want the round-trip via XYZ.
+
+        Parameters
+        ----------
+        lab_1, lab_2 : np.ndarray
+            Lab coordinates (output of from_XYZ), shape (..., 3).
+
+        Returns
+        -------
+        np.ndarray
+            Per-pair perceptual distances, shape (...).
+        """
+        return self._distance_pair(np.asarray(lab_1, dtype=np.float64),
+                                    np.asarray(lab_2, dtype=np.float64))
+
+    def _distance_pair(self, c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
+        """Core distance computation given Lab coordinates. Used by distance()
+        and distance_from_lab(). Implements the full Minkowski + compression
+        pipeline configured by the params."""
         no_correction = (
             not self._has_dist_nl and
             not self._has_dist_compress

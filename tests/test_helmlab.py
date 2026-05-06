@@ -811,3 +811,129 @@ class TestPerceptualDistance:
         d_close = p.perceptual_distance(lab_r, lab_rish)
         d_far = p.perceptual_distance(lab_r, lab_b)
         assert d_far > d_close
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# delta_e (Euclidean Lab) — naming clarity & consistency
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestDeltaEEuclidean:
+    """Tests for Helmlab.delta_e (Euclidean Lab, ΔE76-style on hex inputs).
+
+    These pin the documented behavior: delta_e returns Euclidean Lab and is
+    distinct from perceptual_distance (which uses Minkowski + compression).
+    Regression tests guarding against accidental rename or formula change.
+    """
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_self_zero(self, p):
+        assert p.delta_e("#3b82f6", "#3b82f6") == 0.0
+
+    def test_black_white_matches_lab_norm(self, p):
+        """Should equal sqrt((Lw - Lb)² + (aw - ab)² + (bw - bb)²)."""
+        lab_w = p.from_hex("#ffffff")
+        lab_b = p.from_hex("#000000")
+        expected = float(np.sqrt(np.sum((lab_w - lab_b) ** 2)))
+        actual = p.delta_e("#ffffff", "#000000")
+        assert abs(actual - expected) < 1e-12
+
+    def test_distinct_from_perceptual_distance(self, p):
+        """Two methods report two different metrics. Regression guard."""
+        lab_w = p.from_hex("#ffffff")
+        lab_b = p.from_hex("#000000")
+        euclidean = p.delta_e("#ffffff", "#000000")
+        perceptual = p.perceptual_distance(lab_w, lab_b)
+        # Euclidean Lab black-white ≈ 1.12; perceptual is compressed near 0.15
+        assert euclidean > 0.5
+        assert perceptual < 0.5
+        assert euclidean > perceptual  # uncompressed always >= compressed for big edits
+
+    def test_returns_float(self, p):
+        d = p.delta_e("#ff0000", "#00ff00")
+        assert isinstance(d, float)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# MetricSpace.distance vs distance_from_lab — input contract guard
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestDistanceInputContract:
+    """Tests that distance() expects XYZ and distance_from_lab() expects Lab.
+
+    Background: distance() internally calls self.from_XYZ(), so passing Lab
+    accidentally produces silent garbage that compresses near 0.15. The new
+    distance_from_lab() helper sidesteps this. These tests pin the contract.
+    """
+
+    @pytest.fixture
+    def ms(self):
+        from helmlab.spaces.metric import MetricSpace
+        return MetricSpace()
+
+    def test_distance_from_lab_matches_distance_when_inputs_match(self, ms):
+        """distance(XYZ_a, XYZ_b) == distance_from_lab(from_XYZ(XYZ_a), from_XYZ(XYZ_b))."""
+        xyz_a = np.array([0.4, 0.2, 0.05])
+        xyz_b = np.array([0.95047, 1.0, 1.08883])
+        d_xyz = ms.distance(xyz_a, xyz_b)
+        d_lab = ms.distance_from_lab(ms.from_XYZ(xyz_a), ms.from_XYZ(xyz_b))
+        np.testing.assert_allclose(d_xyz, d_lab, atol=1e-12)
+
+    def test_distance_from_lab_self_zero(self, ms):
+        lab = ms.from_XYZ(np.array([0.5, 0.5, 0.5]))
+        d = ms.distance_from_lab(lab, lab)
+        assert float(d) < 1e-12
+
+    def test_distance_from_lab_batched(self, ms):
+        """Batched input shape (N, 3) returns shape (N,)."""
+        np.random.seed(0)
+        rgb = np.random.rand(10, 3)
+        from helmlab.utils.srgb_convert import sRGB_to_XYZ
+        xyz_a = sRGB_to_XYZ(rgb)
+        xyz_b = sRGB_to_XYZ(np.roll(rgb, 1, axis=0))
+        lab_a = ms.from_XYZ(xyz_a)
+        lab_b = ms.from_XYZ(xyz_b)
+        d = ms.distance_from_lab(lab_a, lab_b)
+        assert d.shape == (10,)
+        assert np.all(d >= 0)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Deprecated base_* methods emit DeprecationWarning
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestBaseDeprecation:
+    """Tests that base_* methods emit DeprecationWarning (silent before v0.12.1)."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_base_from_hex_warns(self, p):
+        with pytest.warns(DeprecationWarning, match="gen_from_hex"):
+            p.base_from_hex("#ff0000")
+
+    def test_base_to_hex_warns(self, p):
+        lab = p.gen_from_hex("#ff0000")
+        with pytest.warns(DeprecationWarning, match="gen_to_hex"):
+            p.base_to_hex(lab)
+
+    def test_base_from_srgb_warns(self, p):
+        with pytest.warns(DeprecationWarning, match="gen_from_srgb"):
+            p.base_from_srgb(np.array([1.0, 0.0, 0.0]))
+
+    def test_base_to_srgb_warns(self, p):
+        lab = p.gen_from_hex("#ff0000")
+        with pytest.warns(DeprecationWarning, match="gen_to_srgb"):
+            p.base_to_srgb(lab)
+
+    def test_base_from_hex_returns_same_as_gen(self, p):
+        """Behavior is unchanged — only warning was added."""
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            old = p.base_from_hex("#3b82f6")
+        new = p.gen_from_hex("#3b82f6")
+        np.testing.assert_allclose(old, new, atol=1e-12)
