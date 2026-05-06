@@ -21,7 +21,7 @@
   - Hue RMS 18.1° → **26.4°** (honest regression vs v20b)
   - Munsell CV 20% → **32%** (honest regression vs v20b)
 - New §7 GenSpace section with depcubic / chroma_power / L-gated
-  enrichment rationale, 66/9 vs OKLab on ColorBench.
+  enrichment rationale, 65/9 vs OKLab on ColorBench (CJS canonical, v0.13.0).
 - §6.1 honest train/test reporting (+1.77 STRESS gap, ~24.3 CV
   point estimate).
 - §6.6 Blue-Band reframed as v20b artefact absorbed by v21's
@@ -89,7 +89,7 @@
    mention this consistently or remove the implicit re-evaluation
    note.
 
-4. **GenSpace section** discusses 66/9 vs OKLab but does not yet
+4. ~~**GenSpace section** discusses 65/9 vs OKLab but does not yet~~ — RESOLVED in v0.13.0 with fig7_genspace.pdf and table re-rendering. (was 66/9; switched to CJS canonical)
    show a comparable figure. Consider adding `fig7_genspace.pdf`
    summarising the category breakdown.
 

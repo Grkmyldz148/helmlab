@@ -30,9 +30,9 @@
 
 | Space | File | Score | Notes |
 |-------|------|-------|-------|
-| GenSpace (PyPI/npm) | `research/checkpoints/genspace_v0.11.1.json` | **60-8** | M2: `0.21186668...` |
-| GenSpace (color.js PR) | `research/checkpoints/genspace_v0.11.1_colorjs_pr.json` | **59-8** | M2 renormed: `0.21193779...`, L(white)≈1.0 |
-| MetricSpace (production) | `research/checkpoints/metricspace_v21.json` | COMBVD=22.48, Mac=19.51, HF=23.26 | v21 — WITH Bradford CAT |
+| GenSpace (PyPI/npm, v0.13.0+) | `research/checkpoints/genspace_v0.11.1_colorjs_pr.json` | **65-9-16 / 90** | CJS canonical M2 renormed: `0.21193779...`, L(white)=1.0 exact |
+| GenSpace (legacy, pre-v0.13) | `research/checkpoints/genspace_v0.11.1.json` | 66-9-15 / 90 | API M2: `0.21186668...`, L(white)=0.9996 — kept as reference, not bundled |
+| MetricSpace (production) | `research/checkpoints/metricspace_v21.json` | COMBVD=22.48, Mac=19.51, HF=23.26 | v21 — WITH Bradford CAT, display_phi_deg=−28.2° |
 | MetricSpace (archived) | `helmlab-experimental/checkpoints/metricspace_v20b.json` | COMBVD=27.69 (w/ CAT) | v20b — no CAT optimization |
 
 ## GenSpace Pipeline (v0.11.1)
@@ -41,8 +41,8 @@
 XYZ → M1 → depcubic(α=0.021) → M2 → chroma_power(0.978) → PW_L → L-gated enrichment → Lab
 ```
 
-- M2 L-row: `[0.21186668013760682, 0.7989440040850104, -0.004099375589489282]`
-- color.js PR M2 L-row: `[0.21193779684470104, 0.7992121834263127, -0.00410075161564345]` (renormed)
+- M2 L-row (canonical, bundled in v0.13.0+): `[0.21193779684470104, 0.7992121834263127, -0.00410075161564345]` (renormed for L(white)=1.0)
+- M2 L-row (legacy, pre-v0.13.0 bundles): `[0.21186668013760682, 0.7989440040850104, -0.004099375589489282]`
 
 ## color.js PR #722
 
@@ -79,6 +79,6 @@ helmlab/
 
 ## Key Decisions
 
-- **GenSpace M2**: v2_51wins M2 (`0.21186668...`) → 60-8. color.js PR'da renormed versiyon kullanılıyor (L(white)≈1.0).
+- **GenSpace M2**: v0.13.0'dan itibaren CJS-canonical M2 (`0.21193779...`) bundled — L(white)=1.0 exact, ColorBench 65-9-16 / 90, Python ↔ JS Lab parity 5e-16. Legacy API M2 (`0.21186668...`) → 66-9-15, kept as reference checkpoint only.
 - **MetricSpace CAT**: helmlab.js Bradford CAT hâlâ mevcut (Color.js D65 ↔ Helmlab D65 farkı için).
 - **refRanges**: helmgen a/b=[-0.6,0.6], helmgenlch c=[0,0.65] — Display P3 gamutunu kapsar.
