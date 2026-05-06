@@ -120,9 +120,12 @@ Direct measurement against `research/checkpoints/metricspace_v21.json`:
 | Hue RMS (HSL ref, φ=−28.2°) | 26.4° | 26.4° | ✓ |
 | Hue max | 53.4° | 53.4° | ✓ |
 | Munsell CV | 32.0% | 32.0% | ✓ |
-| Round-trip sRGB | 7e-15 | ~7e-15 | ✓ |
-| Achromatic max C (NC on) | <1e-6 | <1e-6 | ✓ |
-| Achromatic max C (NC off) | ~0.34 | (mentioned) | ✓ |
+| Round-trip sRGB | 3.3e-15 | ~7e-15 | ✓ |
+| Round-trip XYZ random | 6.8e-14 | ~1e-13 | ✓ (corrected from "1e-15" in v0.13) |
+| Achromatic max C (NC on, 21-step) | 2.4e-6 | <1e-5 | ✓ (corrected from "<1e-6" in v0.13) |
+| Achromatic max C (NC on, 1000-step worst) | 3.1e-5 | "worst-case ≈3×10⁻⁵" | ✓ |
+| Achromatic max C (NC off) | 0.290 | ~0.29 | ✓ (corrected from "0.34" in v0.13) |
+| GenSpace ColorBench (CJS bundled) | 65/9/16 | 65/9/16 | ✓ |
 
 All headline numbers in the paper now match measurement.
 
