@@ -39,10 +39,10 @@ export const stressScores = [
   {
     metric: "DIN99",
     shortName: "DIN99",
-    combvd: 35.76,
-    macadam: 23.28,
-    humanFeedback: 56.46,
-    average: 38.50,
+    combvd: 35.57,
+    macadam: 23.31,
+    humanFeedback: 56.44,
+    average: 38.44,
     isHelmlab: false,
   },
   {
