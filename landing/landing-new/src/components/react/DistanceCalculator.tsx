@@ -237,6 +237,17 @@ export default function DistanceCalculator() {
   const helmDE = deltas.find((d) => d.key === 'helmlab')?.value ?? NaN;
   const jnd = !Number.isNaN(helmDE) ? classifyJnd(helmDE) : null;
 
+  // Beta: predict how much real observers would agree this difference is meaningful.
+  const conf = useMemo(() => {
+    if (!hlMod) return null;
+    try {
+      const c = new hlMod.Helmlab().differenceWithConfidence(hex1, hex2);
+      return { reliability: c.reliability, reliable: c.reliable };
+    } catch {
+      return null;
+    }
+  }, [hex1, hex2, hlMod]);
+
   function handleBlur(which: 1 | 2) {
     if (which === 1) {
       if (isValidHex(input1)) setHex1(input1.toLowerCase());
@@ -393,6 +404,27 @@ export default function DistanceCalculator() {
             </span>
           </div>
           <p className="text-sm text-[#a1a1aa] mt-1.5">{jnd.desc}</p>
+        </div>
+      )}
+
+      {/* Confidence (beta) — difference_with_confidence() */}
+      {conf && (
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 mb-6">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs uppercase tracking-wider font-medium text-[#a1a1aa]">
+              difference_with_confidence()
+            </span>
+            <span className="text-[10px] font-mono uppercase tracking-wide text-[#f97316] border border-[#f97316]/30 rounded px-1 py-0.5">
+              beta
+            </span>
+          </div>
+          <p className="text-sm text-[#a1a1aa]">
+            Predicted observer agreement:{' '}
+            <span className={`font-medium ${conf.reliable ? 'text-[#34d399]' : 'text-[#f87171]'}`}>
+              {conf.reliable ? 'reliable' : 'within human noise'} · {(conf.reliability * 100).toFixed(0)}%
+            </span>{' '}
+            — how much real observers would agree this difference is meaningful.
+          </p>
         </div>
       )}
 

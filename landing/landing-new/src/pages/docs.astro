@@ -48,6 +48,19 @@ const sections = [
 
         <!-- Desktop sticky sidebar -->
         <nav class="hidden lg:block sticky top-20">
+          <div class="relative mb-4">
+            <input
+              id="docs-search"
+              type="search"
+              placeholder="Search docs… (⌘K)"
+              autocomplete="off"
+              class="w-full rounded-md border border-white/[0.08] bg-[#0c0c0f] px-3 py-1.5 text-sm text-[#fafafa] placeholder:text-[#52525b] focus:border-[#f97316]/40 focus:outline-none"
+            />
+            <div
+              id="docs-search-results"
+              class="hidden absolute z-30 mt-1 w-full max-h-80 overflow-auto rounded-md border border-white/[0.08] bg-[#0c0c0f] p-1 shadow-xl"
+            ></div>
+          </div>
           <p class="text-xs uppercase tracking-widest text-[#52525b] font-medium mb-4">On this page</p>
           <ul class="space-y-1">
             {sections.map((s) => (
@@ -59,7 +72,7 @@ const sections = [
             ))}
           </ul>
           <div class="mt-8 pt-6 border-t border-white/[0.06]">
-            <a href="https://github.com/Grkmyldz148/helmlab" target="_blank" rel="noopener noreferrer" class="text-xs text-[#52525b] hover:text-[#a1a1aa] transition-colors">
+            <a href="https://github.com/Grkmyldz148/helmlab/edit/main/landing/landing-new/src/pages/docs.astro" target="_blank" rel="noopener noreferrer" class="text-xs text-[#52525b] hover:text-[#a1a1aa] transition-colors">
               Edit on GitHub
             </a>
           </div>
@@ -831,7 +844,7 @@ rotated.<span class="text-[#34d399]">set</span>(<span class="text-[#fb923c]">"he
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- ADVANCED -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <section id="advanced" class="mb-16 scroll-mt-24">
+        <section id="advanced" class="for-dev mb-16 scroll-mt-24">
           <h2 class="text-2xl font-bold mb-2">Advanced</h2>
           <div class="h-px bg-white/[0.06] mb-8"></div>
 
@@ -1107,5 +1120,54 @@ json_str = ex.<span class="text-[#34d399]">export_json</span>({"{"}<span class="
         }
       });
     });
+  </script>
+
+  <!-- Client-side docs search (no deps): indexes section headings + method names -->
+  <script is:inline>
+    (function () {
+      const input = document.getElementById('docs-search');
+      const out = document.getElementById('docs-search-results');
+      if (!input || !out) return;
+      const index = [];
+      document.querySelectorAll('section[id]').forEach((sec) => {
+        const sectionLabel = (sec.querySelector('h2')?.textContent || sec.id).trim();
+        sec.querySelectorAll('h2, h3').forEach((h) => {
+          if (!h.id) {
+            h.id = (sec.id + '-' + (h.textContent || '').trim().toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')).replace(/-+$/, '');
+          }
+          const title = (h.textContent || '').trim();
+          if (title) index.push({ title, section: sectionLabel, id: h.id });
+        });
+      });
+      function render(items) {
+        if (!items.length) {
+          out.innerHTML = '<div class="px-3 py-2 text-sm text-[#52525b]">No matches</div>';
+        } else {
+          out.innerHTML = items.slice(0, 12).map((it) =>
+            '<a href="#' + it.id + '" class="block rounded px-3 py-1.5 text-sm text-[#a1a1aa] hover:bg-white/[0.06] hover:text-white">' +
+            it.title + '<span class="block text-[10px] text-[#52525b]">' + it.section + '</span></a>'
+          ).join('');
+        }
+        out.classList.remove('hidden');
+      }
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        if (!q) { out.classList.add('hidden'); return; }
+        render(index.filter((it) =>
+          it.title.toLowerCase().includes(q) || it.section.toLowerCase().includes(q)));
+      });
+      out.addEventListener('click', () => { out.classList.add('hidden'); input.value = ''; });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { input.value = ''; out.classList.add('hidden'); input.blur(); }
+        if (e.key === 'Enter') { const a = out.querySelector('a'); if (a) a.click(); }
+      });
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); input.focus(); }
+      });
+      document.addEventListener('click', (e) => {
+        if (e.target !== input && !out.contains(e.target)) out.classList.add('hidden');
+      });
+    })();
   </script>
 </BaseLayout>
