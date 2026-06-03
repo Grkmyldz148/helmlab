@@ -1,6 +1,6 @@
 # Helmlab
 
-> Helmlab is a perceptual color space library shipping two purpose-built Lab spaces: GenSpace for color generation (palettes, gradients, gamut mapping) and MetricSpace for color difference measurement. GenSpace beats OKLab 65-9 across 90 benchmarks; MetricSpace v21 achieves STRESS 22.48 on COMBVD, beating CIEDE2000 by 23%. Available as MIT-licensed Python and JavaScript packages with zero dependencies.
+> Helmlab is a perceptual color space library shipping two purpose-built Lab spaces: GenSpace for color generation (palettes, gradients, gamut mapping) and MetricSpace for color difference measurement. GenSpace beats OKLab 62-9 across 90 benchmarks; MetricSpace v21 achieves STRESS 22.48 on COMBVD, beating CIEDE2000 by 23%. Available as MIT-licensed Python and JavaScript packages with zero dependencies.
 
 Helmlab solves three problems that existing color spaces fail at: blue-to-white gradients shifting toward lavender (OKLab), uneven lightness scales causing "dark holes" in palettes at 700-800, and inaccurate perceptual distance prediction. The library is the first to achieve state-of-the-art in both visual generation quality and perceptual color difference simultaneously.
 
@@ -39,7 +39,7 @@ Important notes:
 ## Source
 
 - [GitHub repository](https://github.com/Grkmyldz148/helmlab): MIT-licensed source code, ColorBench benchmarks, optimization scripts
-- [npm package](https://www.npmjs.com/package/helmlab): JavaScript/TypeScript package, 11.6 KB gzipped, zero dependencies
+- [npm package](https://www.npmjs.com/package/helmlab): JavaScript/TypeScript package, 16.9 KB gzipped, zero dependencies
 - [PyPI package](https://pypi.org/project/helmlab/): Python package
 - [Color.js spaces](https://colorjs.io/docs/spaces.html#helmgen): Helmlab is merged into Color.js master as three registered spaces (helmgen, helmgenlch, helmlab-metric) plus a custom deltaE method "Helmlab" — pending the next Color.js release
 - [Research paper](https://arxiv.org/abs/2602.23010): Academic paper on the perceptual color space methodology

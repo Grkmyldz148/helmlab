@@ -1,3 +1,5 @@
+import { claims } from './claims';
+
 export type MetricCategory =
   | "Numerical"
   | "Achromatic"
@@ -806,28 +808,22 @@ export interface CategorySummary {
   readonly total: number;
 }
 
-export const categorySummary = [
-  { category: "Gamut", genspace: 24, oklab: 0, ties: 3, total: 27 },
-  { category: "Application", genspace: 9, oklab: 0, ties: 3, total: 12 },
-  { category: "Gradient", genspace: 7, oklab: 3, ties: 1, total: 11 },
-  { category: "Independent", genspace: 6, oklab: 1, ties: 0, total: 7 },
-  { category: "Perceptual", genspace: 5, oklab: 0, ties: 0, total: 5 },
-  { category: "Structural", genspace: 4, oklab: 2, ties: 2, total: 8 },
-  { category: "Hue", genspace: 2, oklab: 0, ties: 0, total: 2 },
-  { category: "Achromatic", genspace: 2, oklab: 0, ties: 0, total: 2 },
-  { category: "Advanced", genspace: 2, oklab: 0, ties: 4, total: 6 },
-  { category: "Special", genspace: 2, oklab: 1, ties: 0, total: 3 },
-  { category: "Banding", genspace: 1, oklab: 0, ties: 1, total: 2 },
-  { category: "Accessibility", genspace: 1, oklab: 1, ties: 0, total: 2 },
-  { category: "Numerical", genspace: 0, oklab: 1, ties: 2, total: 3 },
-] as const satisfies readonly CategorySummary[];
+// Derived from the single source of truth (claims.ts), which the ColorBench
+// generator keeps in sync. Do not hand-edit the win numbers here.
+export const categorySummary: readonly CategorySummary[] = claims.categories.map((c) => ({
+  category: c.name,
+  genspace: c.genspace,
+  oklab: c.oklab,
+  ties: c.ties,
+  total: c.genspace + c.oklab + c.ties,
+}));
 
-/** Headline totals across 90 ColorBench metrics (CJS canonical, v0.11.1 colorjs_pr) */
+/** Headline totals — derived from claims.ts (single source of truth). */
 export const headlineScore = {
-  totalMetrics: 90,
-  internalMetrics: 83,
-  independentMetrics: 7,
-  genspaceWins: 65,
-  oklabWins: 9,
-  ties: 16,
+  totalMetrics: claims.record.total,
+  internalMetrics: claims.internalMetrics,
+  independentMetrics: claims.independentMetrics,
+  genspaceWins: claims.record.genspace,
+  oklabWins: claims.record.oklab,
+  ties: claims.record.ties,
 } as const;

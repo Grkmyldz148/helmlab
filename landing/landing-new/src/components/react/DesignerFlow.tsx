@@ -2,11 +2,19 @@
 // React component (instead of Astro) to avoid esbuild template parsing issues
 
 import MiniPlayground from "./MiniPlayground";
+import {
+  claims,
+  munsellMult,
+  darkGradientPct,
+  oklabNearAchromAdvantagePct,
+  oklabDeutanAdvantagePct,
+} from "../../data/claims";
 
 // REAL computed gradient values (not hardcoded approximations)
 const gradients = {
-  // Blue→White: OKLab midpoint #8ba8ff (blueish-white), Helmlab midpoint #649cff (stronger blue)
-  blueOk: "linear-gradient(to right, #0000ff, #3c5cff, #6586ff, #8ba8ff, #b1c6ff, #d8e3ff, #ffffff)",
+  // Blue→White (real OKLab + Helmlab interpolation). OKLab midpoint #74a3ff,
+  // Helmlab midpoint #649cff — both stay blue (~220°), Helmlab a touch more saturated.
+  blueOk: "linear-gradient(to right, #0000ff, #1957ff, #4780ff, #74a3ff, #a1c3ff, #cfe1ff, #ffffff)",
   blueHl: "linear-gradient(to right, #0000ff, #104fff, #3375ff, #649cff, #a3c4ff, #d9e5ff, #ffffff)",
   // Red→White: very similar — both stay warm
   redOk: "linear-gradient(to right, #ff0000, #ff5545, #ff7e6d, #ffa192, #ffc1b6, #ffe0da, #ffffff)",
@@ -27,7 +35,7 @@ const faqs = [
   { q: "Does it work with Tailwind / Figma / Tokens Studio?", a: "Helmlab outputs hex values and CSS variables. It works with anything that accepts standard color formats. Tailwind config export is built in." },
   { q: "Why can't I just use oklch() in CSS?", a: "You can! oklch() is great for CSS-only gradients. But if you're generating colors in JavaScript (design tokens, palette tools, theme generators), Helmlab gives visibly better results because it uses a richer perceptual model." },
   { q: "Is it free?", a: "Yes. MIT licensed. Use it in any personal or commercial project." },
-  { q: "How much does it add to my bundle?", a: "11.6 KB gzipped, zero dependencies. About the same as a small icon set." },
+  { q: "How much does it add to my bundle?", a: `${claims.bundleKB} KB gzipped, zero dependencies. About the same as a small icon set.` },
   { q: "What if I need to match brand colors exactly?", a: "Helmlab is exactly invertible. The same hex always produces the same Lab values, and vice versa. Zero rounding error." },
 ];
 
@@ -50,7 +58,7 @@ export default function DesignerFlow() {
             <span className="text-xs uppercase tracking-widest text-blue-400 font-medium">The Problem</span>
             <h2 className="text-3xl sm:text-4xl font-bold mt-3 mb-4">You've seen this before</h2>
             <p className="text-zinc-400 max-w-2xl mx-auto">
-              You pick a vivid blue. You make a gradient to white. And the midpoint loses its punch — it fades out instead of staying blue. The difference is subtle, but once you see it, you can't unsee it.
+              You pick a vivid blue. You make a gradient to white. In OKLab the midpoint comes out a little paler — slightly less saturated, though still blue. Helmlab keeps a touch more saturation. The difference is real but subtle.
             </p>
           </div>
 
@@ -58,12 +66,12 @@ export default function DesignerFlow() {
             <div className="rounded-2xl border border-white/5 bg-zinc-950 p-6">
               <div className="text-xs text-red-400 uppercase tracking-widest font-medium mb-3">OKLab (the current standard)</div>
               <div className="h-16 rounded-xl mb-3" style={{ background: gradients.blueOk }} />
-              <p className="text-sm text-zinc-500">The midpoint (#8ba8ff) loses blue intensity — it fades toward a pale, washed-out periwinkle.</p>
+              <p className="text-sm text-zinc-500">Midpoint #74a3ff — slightly paler / less saturated (G/R 1.41), but still blue at hue ~220°.</p>
             </div>
             <div className="rounded-2xl border border-emerald-400/20 bg-zinc-950 p-6">
               <div className="text-xs text-emerald-400 uppercase tracking-widest font-medium mb-3">Helmlab</div>
               <div className="h-16 rounded-xl mb-3" style={{ background: gradients.blueHl }} />
-              <p className="text-sm text-zinc-400">The midpoint (#649cff) holds stronger blue saturation through the transition.</p>
+              <p className="text-sm text-zinc-400">Midpoint #649cff — a little more saturated (G/R 1.56). Small gap, but consistent through the transition.</p>
             </div>
           </div>
 
@@ -98,9 +106,9 @@ export default function DesignerFlow() {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-16">
             <span className="text-xs uppercase tracking-widest text-violet-400 font-medium">Palettes</span>
-            <h2 className="text-3xl sm:text-4xl font-bold mt-3 mb-4">The dark hole problem</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mt-3 mb-4">Even palette steps</h2>
             <p className="text-zinc-400 max-w-2xl mx-auto">
-              You generate a 50-950 scale from your brand color. But 700-800 looks like a black hole — the steps aren't even. That's because OKLab's lightness channel isn't actually uniform.
+              You generate a 50-950 scale from your brand color. OKLab's lightness is good, but its steps aren't perfectly even — the dark end is slightly compressed. Helmlab spaces them a bit more evenly. The difference is measurable, though often subtle.
             </p>
           </div>
 
@@ -113,7 +121,7 @@ export default function DesignerFlow() {
               <div className="flex rounded-xl overflow-hidden h-14">
                 {palOk.map((c, i) => <div key={i} className="flex-1" style={{ background: c }} />)}
               </div>
-              <p className="text-xs text-zinc-500 mt-2">Notice the jump between 700 and 800. The dark end feels compressed.</p>
+              <p className="text-xs text-zinc-500 mt-2">The dark steps (700–900) are marginally less even than the light end.</p>
             </div>
             <div>
               <div className="flex items-center gap-2 mb-3">
@@ -123,7 +131,7 @@ export default function DesignerFlow() {
               <div className="flex rounded-xl overflow-hidden h-14">
                 {palHl.map((c, i) => <div key={i} className="flex-1" style={{ background: c }} />)}
               </div>
-              <p className="text-xs text-zinc-400 mt-2">Every step looks evenly spaced. The dark end is smooth. 18x better lightness uniformity.</p>
+              <p className="text-xs text-zinc-400 mt-2">Steps are a bit more even — about {munsellMult()}× lower step variation on the Munsell value scale, though the visual difference is small.</p>
             </div>
           </div>
         </div>
@@ -159,7 +167,7 @@ export default function DesignerFlow() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { title: "Design Systems", desc: "Generate a full 50-950 Tailwind-style scale from any brand color. Every step is perceptually even. Export to CSS variables, Tailwind config, or design tokens.", code: 'hl.semanticScale("#3b82f6")' },
-              { title: "Dark Mode", desc: "Dark gradients that don't turn muddy. 26% smoother in the dark range where OKLab struggles most. Your dark theme looks intentional, not accidental.", code: 'hl.adaptToMode("#3b82f6", "light", "dark")' },
+              { title: "Dark Mode", desc: `Dark gradients that don't turn muddy. ${darkGradientPct()}% smoother in the dark range where OKLab struggles most. Your dark theme looks intentional, not accidental.`, code: 'hl.adaptToMode("#3b82f6", "light", "dark")' },
               { title: "Data Visualization", desc: "Categorical palettes with maximum separation. Your chart colors stay distinct even for colorblind users.", code: "hl.palette_hues(lightness=0.6, steps=8)" },
               { title: "Wide Gamut (P3)", desc: "Modern displays show colors outside sRGB. Helmlab maps them correctly — no ugly hue shifts when clipping P3 colors to sRGB.", code: 'hl.gamutMap("#ff0080", "srgb")' },
             ].map((uc) => (
@@ -184,10 +192,10 @@ export default function DesignerFlow() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { t: "CSS-only gradients", d: "If you need gradients in pure CSS without JavaScript, use oklch() — it's built into browsers." },
-              { t: "Very subtle gray gradients", d: "Gradients between nearly identical grays are 24% smoother in OKLab. It's our biggest weakness." },
-              { t: "Green-blind accessibility", d: "OKLab gives 43% better step distinction for deuteranopia palettes. Use it for CVD-critical designs." },
+              { t: "Very subtle gray gradients", d: `Gradients between nearly identical grays are ${oklabNearAchromAdvantagePct()}% smoother in OKLab. It's our biggest weakness.` },
+              { t: "Green-blind accessibility", d: `OKLab gives ${oklabDeutanAdvantagePct()}% better step distinction for deuteranopia palettes. Use it for CVD-critical designs.` },
               { t: "HDR displays", d: "For >1000 cd/m2 content, use Jzazbz. Helmlab is optimized for standard dynamic range." },
-              { t: "Smallest possible bundle", d: "OKLab is ~2KB. Helmlab is 11.6KB gzipped. If every kilobyte counts, OKLab is lighter." },
+              { t: "Smallest possible bundle", d: `OKLab is ~${claims.oklabBundleKB}KB. Helmlab is ${claims.bundleKB}KB gzipped. If every kilobyte counts, OKLab is lighter.` },
               { t: "Legacy CIE Lab workflows", d: "Decades of industry hue naming is based on CIE Lab. If you need interop with those systems, stick with Lab." },
             ].map((item) => (
               <div key={item.t} className="rounded-2xl border border-white/5 bg-zinc-950 p-6">

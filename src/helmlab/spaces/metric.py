@@ -598,12 +598,19 @@ class MetricSpace(ColorSpace):
         helmlab.Helmlab.delta_e : Euclidean Lab distance (uncompressed) on hex inputs.
         helmlab.Helmlab.perceptual_distance : Convenience wrapper from Lab inputs.
         """
-        c1 = self.from_XYZ(XYZ_1)
-        c2 = self.from_XYZ(XYZ_2)
+        # apply_neutral=False: the neutral-axis correction is display-only and
+        # distorts the trained metric (~+5 STRESS on COMBVD). See from_XYZ.
+        c1 = self.from_XYZ(XYZ_1, apply_neutral=False)
+        c2 = self.from_XYZ(XYZ_2, apply_neutral=False)
         return self._distance_pair(c1, c2)
 
     def distance_from_lab(self, lab_1: np.ndarray, lab_2: np.ndarray) -> np.ndarray:
         """Same as :meth:`distance` but accepts Lab inputs directly (no XYZ→Lab conversion).
+
+        ⚠ INPUTS MUST BE HELMLAB Lab (output of :meth:`from_XYZ`), NOT CIELAB.
+        Helmlab Lab is normalized so L≈0..1 and a,b are small (≈ −0.5..0.5).
+        Passing CIE L*a*b* (L*=0..100, a*,b*=±128) produces silently-wrong
+        results — use :meth:`distance` with XYZ inputs if you only have CIELAB.
 
         Use this when you already have Lab coordinates from :meth:`from_XYZ`
         and don't want the round-trip via XYZ.
@@ -611,15 +618,23 @@ class MetricSpace(ColorSpace):
         Parameters
         ----------
         lab_1, lab_2 : np.ndarray
-            Lab coordinates (output of from_XYZ), shape (..., 3).
+            Helmlab Lab coordinates (output of from_XYZ), shape (..., 3).
 
         Returns
         -------
         np.ndarray
             Per-pair perceptual distances, shape (...).
         """
-        return self._distance_pair(np.asarray(lab_1, dtype=np.float64),
-                                    np.asarray(lab_2, dtype=np.float64))
+        lab_1 = np.asarray(lab_1, dtype=np.float64)
+        lab_2 = np.asarray(lab_2, dtype=np.float64)
+        # Guard: CIELAB (L* up to 100) is the most common misuse. Helmlab L is ≈0..1.
+        if max(np.max(np.abs(lab_1[..., 0])), np.max(np.abs(lab_2[..., 0]))) > 3.0:
+            raise ValueError(
+                "distance_from_lab expects HELMLAB Lab (L≈0..1), but got L>3 — "
+                "this looks like CIELAB (L*=0..100). Convert via from_XYZ first, "
+                "or use distance() with XYZ inputs."
+            )
+        return self._distance_pair(lab_1, lab_2)
 
     def _distance_pair(self, c1: np.ndarray, c2: np.ndarray) -> np.ndarray:
         """Core distance computation given Lab coordinates. Used by distance()
@@ -985,8 +1000,16 @@ class MetricSpace(ColorSpace):
         if not getattr(self, '_nc_lut_built', False):
             self._build_neutral_lut()
 
-        a_err = self._nc_a_interp(L)
-        b_err = self._nc_b_interp(L)
+        # Clamp L into the LUT range before interpolating. PchipInterpolator was
+        # built with extrapolate=False, which returns NaN for L outside the range
+        # (e.g. negative L from out-of-gamut/invalid XYZ) — that NaN then leaks
+        # into (a, b). Clamping uses the boundary correction instead (finite),
+        # matching the JS sibling. For valid colors (L already in range) this is
+        # a no-op, so trained-color results and round-trip are unchanged.
+        lo, hi = self._nc_L_range
+        L_clamped = np.clip(L, lo, hi)
+        a_err = self._nc_a_interp(L_clamped)
+        b_err = self._nc_b_interp(L_clamped)
         return a_err, b_err
 
     # ── Base Lab (M1 → power → M2 only, no enrichment) ─────────────
@@ -1015,13 +1038,22 @@ class MetricSpace(ColorSpace):
 
     # ── Forward transform ──────────────────────────────────────────
 
-    def from_XYZ(self, XYZ: np.ndarray, S: float | None = None) -> np.ndarray:
+    def from_XYZ(self, XYZ: np.ndarray, S: float | None = None,
+                 apply_neutral: bool = True) -> np.ndarray:
         """XYZ -> Analytical Lab (enriched pipeline).
 
         Parameters
         ----------
         S : surround luminance (0=dark, 0.5=average, 1=bright).
             If None, uses instance default (self._surround).
+        apply_neutral : bool, default True
+            Whether to apply the end-of-pipeline neutral-axis correction (when
+            ``self._neutral_correction`` is enabled). The distance methods pass
+            ``False`` here: neutral correction is a display nicety (it makes the
+            gray axis render exactly neutral) but it shifts (a, b) by an
+            L-dependent offset, which distorts distances between colors at
+            different lightness — degrading the trained perceptual metric by
+            ~5 STRESS on COMBVD. Keep it for display, never for the metric.
         """
         XYZ = np.asarray(XYZ, dtype=np.float64)
         if S is None:
@@ -1123,7 +1155,7 @@ class MetricSpace(ColorSpace):
 
         # 10. Neutral axis correction (v19): subtract achromatic error at pipeline end
         # Applied AFTER all enrichment stages to avoid hue interaction issues
-        if self._neutral_correction:
+        if self._neutral_correction and apply_neutral:
             a_err, b_err = self._neutral_error(L1)
             a = a - a_err
             b = b - b_err

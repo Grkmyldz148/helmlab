@@ -15,11 +15,21 @@ import {
   pointerGamutSummary,
 } from "../data/independent";
 import { headlineScore } from "../data/genspace-results";
+import {
+  claims,
+  winShort,
+  totalMetrics,
+  independentStr,
+  ciede2000ImprovementPct,
+  humanFeedbackImprovementPct,
+  oklabDeutanAdvantagePct,
+  oklabNearAchromAdvantagePct,
+} from "../data/claims";
 ---
 
 <BaseLayout
   title="Benchmark — Helmlab"
-  description="90 metrics, 13 categories, complete transparency. GenSpace beats OKLab 65-9. MetricSpace achieves STRESS 22.48, beating CIEDE2000 by 23%."
+  description={`${totalMetrics()} metrics, 13 categories, complete transparency. GenSpace beats OKLab ${winShort()}. MetricSpace achieves STRESS ${claims.stress.metricSpace.combvd}, beating CIEDE2000 by ${ciede2000ImprovementPct()}%.`}
 >
   <!-- ═══════════════════════════ Hero ═══════════════════════════ -->
   <section class="relative py-20 md:py-28 overflow-hidden">
@@ -74,8 +84,8 @@ import { headlineScore } from "../data/genspace-results";
           including the industry-standard CIEDE2000 formula.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
-          STRESS (CIE 217:2016) evaluated on COMBVD (3,813 pairs from 6 sub-datasets),
-          MacAdam 1974 (128 pairs), and Human Feedback (3,552 judgements). Lower is better.
+          STRESS (CIE 217:2016) evaluated on COMBVD ({claims.datasets.combvdPairs.toLocaleString()} pairs from 6 sub-datasets),
+          MacAdam 1974 ({claims.datasets.macadamPairs} pairs), and Human Feedback ({claims.datasets.humanFeedbackPairs.toLocaleString()} judgements). Lower is better.
         </p>
       </div>
 
@@ -91,11 +101,11 @@ import { headlineScore } from "../data/genspace-results";
       <div class="mb-10">
         <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">GenSpace</span>
         <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-3">
-          Generation Benchmark: 65-9
+          Generation Benchmark: {winShort()}
         </h2>
         <p class="for-designer text-[#a1a1aa] max-w-2xl">
           GenSpace is purpose-built for creating colors: gradients, palettes, gamut mapping.
-          Head-to-head against OKLab (the current CSS standard), it wins 65 out of 90 metrics.
+          Head-to-head against OKLab (the current CSS standard), it wins {claims.record.genspace} out of {totalMetrics()} metrics.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
           83 internal metrics (deterministic, float64) + 7 independent validation metrics.
@@ -106,15 +116,15 @@ import { headlineScore } from "../data/genspace-results";
       <!-- Summary stat boxes -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12">
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-4 text-center">
-          <div class="text-3xl font-bold text-[#34d399]">66</div>
+          <div class="text-3xl font-bold text-[#34d399]">{claims.record.genspace}</div>
           <div class="text-xs text-[#52525b] mt-1">GenSpace wins</div>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-4 text-center">
-          <div class="text-3xl font-bold text-[#f87171]">9</div>
+          <div class="text-3xl font-bold text-[#f87171]">{claims.record.oklab}</div>
           <div class="text-xs text-[#52525b] mt-1">OKLab wins</div>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-4 text-center">
-          <div class="text-3xl font-bold text-[#52525b]">15</div>
+          <div class="text-3xl font-bold text-[#52525b]">{claims.record.ties}</div>
           <div class="text-xs text-[#52525b] mt-1">Ties</div>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-4 text-center">
@@ -177,7 +187,7 @@ import { headlineScore } from "../data/genspace-results";
         </h2>
         <p class="for-designer text-[#a1a1aa] max-w-2xl">
           Three independent datasets from published color science research (1980-1998).
-          GenSpace wins 6 out of 7 metrics against OKLab on data it never saw.
+          GenSpace wins {independentStr()} against OKLab on data it never saw.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
           Hung & Berns 1995 (hue linearity, 168 samples), Ebner & Fairchild 1998 (constant-hue surfaces, 321 samples),
@@ -379,7 +389,7 @@ import { headlineScore } from "../data/genspace-results";
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">Quality Control</h3>
-          <p class="text-xs text-[#a1a1aa]">Print, display, textile color matching. 23% lower STRESS than CIEDE2000 on COMBVD.</p>
+          <p class="text-xs text-[#a1a1aa]">Print, display, textile color matching. {ciede2000ImprovementPct()}% lower STRESS than CIEDE2000 on COMBVD.</p>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">Color Matching Tolerance</h3>
@@ -387,11 +397,11 @@ import { headlineScore } from "../data/genspace-results";
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">A/B Testing</h3>
-          <p class="text-xs text-[#a1a1aa]">Human Feedback STRESS = 23.26 vs CIEDE2000's 62.54. 63% better at predicting real user preferences.</p>
+          <p class="text-xs text-[#a1a1aa]">Human Feedback STRESS = {claims.stress.metricSpace.humanFeedback} vs CIEDE2000's {claims.stress.ciede2000.humanFeedback}. {humanFeedbackImprovementPct()}% better at predicting real user preferences.</p>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">Accessibility Checking</h3>
-          <p class="text-xs text-[#a1a1aa]">Euclidean deltaE that's actually perceptually calibrated. OKLab STRESS = 47 — not designed for distance prediction.</p>
+          <p class="text-xs text-[#a1a1aa]">Euclidean deltaE that's actually perceptually calibrated. OKLab STRESS = {claims.stress.oklab.combvd} — not designed for distance prediction.</p>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">Research</h3>
@@ -413,16 +423,17 @@ import { headlineScore } from "../data/genspace-results";
         <div class="rounded-2xl border border-[#34d399]/20 bg-[#34d399]/[0.04] p-6">
           <h3 class="text-lg font-bold text-[#34d399] mb-2">Color difference measurement: Yes.</h3>
           <p class="text-sm text-[#a1a1aa]">
-            MetricSpace v21 achieves the lowest published STRESS on COMBVD, MacAdam, and Human Feedback simultaneously.
-            No other metric matches human perception this accurately across multiple datasets.
-            <span class="text-[#52525b]">Caveat: cross-validated estimate is ~24.3 (not the published 22.48), and CIEDE2000 wins on 3 of 6 COMBVD sub-datasets.</span>
+            MetricSpace v21 achieves the lowest published STRESS on COMBVD and Human Feedback,
+            and is within 0.8 of the best (CAM16-UCS) on the {claims.datasets.macadamPairs}-pair MacAdam set.
+            No other metric matches human perception this accurately across this range of datasets.
+            <span class="text-[#52525b]">Caveat: cross-validated estimate is ~{claims.overfit.crossValidated} (not the published {claims.stress.metricSpace.combvd}), and CIEDE2000 wins on 3 of 6 COMBVD sub-datasets.</span>
           </p>
         </div>
         <div class="rounded-2xl border border-[#34d399]/20 bg-[#34d399]/[0.04] p-6">
           <h3 class="text-lg font-bold text-[#34d399] mb-2">Generation tasks: Best-rounded, not best at everything.</h3>
           <p class="text-sm text-[#a1a1aa]">
-            GenSpace wins 65-9 vs OKLab across 90 metrics, including 6-1 on independent 3rd-party datasets OKLab was optimized on.
-            However: OKLab is better for near-achromatic gradients (24%), CVD deutan palettes (43%), and native CSS oklch().
+            GenSpace wins {winShort()} vs OKLab across {totalMetrics()} metrics, including {independentStr()} on independent 3rd-party datasets OKLab was optimized on.
+            However: OKLab is better for near-achromatic gradients ({oklabNearAchromAdvantagePct()}%), CVD deutan palettes ({oklabDeutanAdvantagePct()}%), and native CSS oklch().
             CIE Lab's hue angles remain the established industry reference for hue naming.
           </p>
         </div>
@@ -465,7 +476,7 @@ import { headlineScore } from "../data/genspace-results";
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-2">No Cherry-picking</h3>
           <p class="text-xs text-[#a1a1aa]">
-            All metrics are reported, including our 9 losses.
+            All metrics are reported, including our {claims.record.oklab} losses.
             We do not add or remove metrics based on whether we win them.
           </p>
         </div>

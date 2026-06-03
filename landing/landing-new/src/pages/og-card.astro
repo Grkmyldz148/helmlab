@@ -1,10 +1,15 @@
+---
+// OG social card — 1200×630. Numbers derive from claims.ts (single source of
+// truth), so this can never show stale figures. Regenerate the PNG with `npm run og`.
+import { claims, winShort, munsellMult } from '../data/claims';
+---
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1200, initial-scale=1">
 <title>Helmlab OG Card — 1200x630</title>
-<style>
+<style is:global>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
@@ -298,7 +303,7 @@
         <div class="badge-stack">
           <div class="version-badge">
             <div class="version-dot"></div>
-            v0.12.0 — MIT
+            v{claims.version} — {claims.license}
           </div>
           <div class="colorjs-badge">
             <svg width="14" height="14" viewBox="0 -625 630 615" aria-hidden="true">
@@ -332,19 +337,19 @@
       <div class="bottom">
         <div class="stats">
           <div class="stat">
-            <div class="stat-value orange">65-9</div>
+            <div class="stat-value orange">{winShort()}</div>
             <div class="stat-label">vs OKLab</div>
           </div>
           <div class="stat">
-            <div class="stat-value">22.48</div>
+            <div class="stat-value">{claims.stress.metricSpace.combvd}</div>
             <div class="stat-label">STRESS</div>
           </div>
           <div class="stat">
-            <div class="stat-value">360/360</div>
+            <div class="stat-value">{claims.cusps.sRGB.genspace}/{claims.cusps.sRGB.total}</div>
             <div class="stat-label">Gamut Cusps</div>
           </div>
           <div class="stat">
-            <div class="stat-value">18<sup>×</sup></div>
+            <div class="stat-value">{munsellMult()}<sup>×</sup></div>
             <div class="stat-label">Lightness</div>
           </div>
         </div>

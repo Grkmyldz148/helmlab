@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { claims, ciede2000ImprovementPct } from "../data/claims";
 
 const sections = [
   { id: "installation", label: "Installation" },
@@ -99,7 +100,7 @@ const sections = [
 
           <div class="for-dev mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              Zero dependencies in the JS package (~12KB gzipped). Python requires NumPy. Both packages ship the same default parameters and produce identical output.
+              Zero dependencies in the JS package ({claims.bundleKB}KB gzipped). Python requires NumPy. Both packages ship the same default parameters and produce identical output.
             </p>
           </div>
 
@@ -206,7 +207,7 @@ scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-
 
           <div class="for-designer mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              GenSpace is the color space optimized for <strong class="text-[#fafafa]">creating</strong> colors -- gradients, palettes, and gamut mapping. It produces smooth, visually pleasing gradients without the lavender shift that plagues OKLab in the blue region.
+              GenSpace is the color space optimized for <strong class="text-[#fafafa]">creating</strong> colors -- gradients, palettes, and gamut mapping. It produces smooth, visually pleasing gradients that keep slightly more saturation through the blue→white midpoint than OKLab (both stay blue; the gap is small but consistent).
             </p>
             <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4 mb-4">
               <p class="text-sm text-[#a1a1aa]">
@@ -224,35 +225,37 @@ scale = hl.<span class="text-[#34d399]">semantic_scale</span>(<span class="text-
           <h3 class="text-lg font-semibold mb-4 mt-8">Forward / Inverse Transform</h3>
 
           <div class="docs-py">
-            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab.spaces.gen</span> <span class="text-[#c084fc]">import</span> GenSpace
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">from</span> <span class="text-[#60a5fa]">helmlab</span> <span class="text-[#c084fc]">import</span> Helmlab, GenSpace
 
+hl = Helmlab()
 gen = GenSpace()
 
-<span class="text-[#52525b]"># sRGB [0,1] &rarr; Helmlab Lab [L, a, b]</span>
-lab = gen.<span class="text-[#34d399]">from_srgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>])
+<span class="text-[#52525b]"># sRGB [0,1] &rarr; GenSpace Lab [L, a, b]  (via the Helmlab wrapper)</span>
+lab = hl.<span class="text-[#34d399]">gen_from_srgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>])
 
-<span class="text-[#52525b]"># Helmlab Lab &rarr; sRGB [0,1]</span>
-rgb = gen.<span class="text-[#34d399]">to_srgb</span>(lab)
+<span class="text-[#52525b]"># GenSpace Lab &rarr; sRGB [0,1]</span>
+rgb = hl.<span class="text-[#34d399]">gen_to_srgb</span>(lab)
 
-<span class="text-[#52525b]"># XYZ &rarr; Lab (lower level)</span>
-lab = gen.<span class="text-[#34d399]">forward</span>(xyz)
-xyz = gen.<span class="text-[#34d399]">inverse</span>(lab)</code></pre>
+<span class="text-[#52525b]"># XYZ &rarr; Lab and back (GenSpace directly)</span>
+lab = gen.<span class="text-[#34d399]">from_XYZ</span>(xyz)
+xyz = gen.<span class="text-[#34d399]">to_XYZ</span>(lab)</code></pre>
           </div>
 
           <div class="docs-js">
-            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} GenSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
+            <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto"><code class="font-mono text-sm"><span class="text-[#c084fc]">import</span> {"{"} Helmlab, GenSpace {"}"} <span class="text-[#c084fc]">from</span> <span class="text-[#fb923c]">'helmlab'</span>;
 
+<span class="text-[#c084fc]">const</span> hl = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">Helmlab</span>();
 <span class="text-[#c084fc]">const</span> gen = <span class="text-[#c084fc]">new</span> <span class="text-[#60a5fa]">GenSpace</span>();
 
-<span class="text-[#52525b]">// sRGB [0,1] &rarr; Helmlab Lab [L, a, b]</span>
-<span class="text-[#c084fc]">const</span> lab = gen.<span class="text-[#34d399]">fromSrgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>]);
+<span class="text-[#52525b]">// sRGB [0,1] &rarr; GenSpace Lab [L, a, b]  (via the Helmlab wrapper)</span>
+<span class="text-[#c084fc]">const</span> lab = hl.<span class="text-[#34d399]">genFromSrgb</span>([<span class="text-[#f97316]">0.231</span>, <span class="text-[#f97316]">0.510</span>, <span class="text-[#f97316]">0.965</span>]);
 
-<span class="text-[#52525b]">// Helmlab Lab &rarr; sRGB [0,1]</span>
-<span class="text-[#c084fc]">const</span> rgb = gen.<span class="text-[#34d399]">toSrgb</span>(lab);
+<span class="text-[#52525b]">// GenSpace Lab &rarr; sRGB [0,1]</span>
+<span class="text-[#c084fc]">const</span> rgb = hl.<span class="text-[#34d399]">genToSrgb</span>(lab);
 
-<span class="text-[#52525b]">// XYZ &rarr; Lab (lower level)</span>
-<span class="text-[#c084fc]">const</span> lab2 = gen.<span class="text-[#34d399]">forward</span>(xyz);
-<span class="text-[#c084fc]">const</span> xyz2 = gen.<span class="text-[#34d399]">inverse</span>(lab2);</code></pre>
+<span class="text-[#52525b]">// XYZ &rarr; Lab and back (GenSpace directly)</span>
+<span class="text-[#c084fc]">const</span> lab2 = gen.<span class="text-[#34d399]">fromXYZ</span>(xyz);
+<span class="text-[#c084fc]">const</span> xyz2 = gen.<span class="text-[#34d399]">toXYZ</span>(lab2);</code></pre>
           </div>
 
           <h3 class="text-lg font-semibold mb-4 mt-10">Gradient Generation</h3>
@@ -300,7 +303,7 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
           <div class="for-dev mt-6">
             <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4">
               <p class="text-sm text-[#a1a1aa]">
-                <strong class="text-[#fafafa]">Key properties:</strong> 360/360/360 valid cusps across sRGB, Display P3, and Rec.2020. Zero monotonicity violations. Blue-to-white gradient produces sky blue midpoint (G/R = 1.51), not lavender. Achromatic precision: C* &lt; 10<sup>-15</sup>.
+                <strong class="text-[#fafafa]">Key properties:</strong> 360/360/360 valid cusps across sRGB, Display P3, and Rec.2020. Zero monotonicity violations in sRGB/P3 (1 in Rec.2020). Blue-to-white gradient midpoint (G/R ≈ 1.5) stays a touch more saturated than OKLab (≈ 1.4) — both blue. Achromatic precision: C* ≈ 10<sup>-15</sup>.
               </p>
             </div>
           </div>
@@ -326,21 +329,35 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
 
           <div class="for-dev mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              72-parameter enriched pipeline jointly optimized against COMBVD (3,813 pairs, 64,000+ human judgments). STRESS 22.48 -- 23% better than CIEDE2000's 29.20. Pipeline: <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">XYZ &rarr; M1 &rarr; &gamma; &rarr; M2 &rarr; Hue &rarr; H-K &rarr; L &rarr; C &rarr; HL &rarr; NC &rarr; &phi; &rarr; Lab</code>.
+              {claims.metricParams}-parameter enriched pipeline jointly optimized against COMBVD ({claims.datasets.combvdPairs.toLocaleString()} pairs, 64,000+ human judgments). STRESS {claims.stress.metricSpace.combvd} -- {ciede2000ImprovementPct()}% better than CIEDE2000's {claims.stress.ciede2000.combvd}. Pipeline: <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">XYZ &rarr; M1 &rarr; &gamma; &rarr; M2 &rarr; Hue &rarr; H-K &rarr; L &rarr; C &rarr; HL &rarr; NC &rarr; &phi; &rarr; Lab</code>.
             </p>
           </div>
 
           <h3 class="text-lg font-semibold mb-4 mt-8">Color Difference</h3>
 
           <p class="text-[#a1a1aa] mb-4 text-sm">
-            Two distance metrics are exposed:
-            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">delta_e()</code>
-            returns Euclidean Lab (uncompressed, fast, ΔE76-style on hex inputs);
+            The recommended entry point is
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">difference()</code>
+            — it returns the trained perceptual distance directly from hex (the
+            full Minkowski + compression metric optimized against COMBVD,
+            STRESS {claims.stress.metricSpace.combvd}, {ciede2000ImprovementPct()}% better than CIEDE2000). Two lower-level metrics
+            are also exposed:
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">euclidean_distance()</code>
+            (a clearer alias of
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">delta_e()</code>)
+            returns uncompressed Euclidean Lab — ΔE76-style, fast, for quick UI
+            comparisons — and
             <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">perceptual_distance()</code>
-            applies the full Minkowski + compression metric optimized against COMBVD
-            (STRESS ≈ 22.5, ~24% better than CIEDE2000). Use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">delta_e()</code>
-            for quick UI comparisons; use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">perceptual_distance()</code>
-            for benchmarking or perception-critical workflows.
+            is the same trained metric on Lab inputs.
+          </p>
+          <p class="text-[#a1a1aa] mb-4 text-sm">
+            <span class="text-[#fafafa]">New (experimental):</span>
+            <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">difference_with_confidence()</code>
+            returns the difference <em>plus how much observers will disagree about
+            it</em> — a calibrated reliability on the ΔE (small / low-chroma
+            differences come back unreliable). Fit on a 47-pair × 74-observer set
+            and validated out-of-sample on a second multi-observer dataset
+            (Python only for now).
           </p>
 
           <div class="docs-py">
@@ -348,14 +365,17 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
 
 hl = Helmlab()
 
-<span class="text-[#52525b]"># Euclidean Lab distance (uncompressed, hex inputs)</span>
-dist = hl.<span class="text-[#34d399]">delta_e</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
-<span class="text-[#52525b]"># &rarr; 1.62 — black/white &rarr; 1.12; range 0–1.6+</span>
-
-<span class="text-[#52525b]"># Compressed perceptual distance (Lab inputs, COMBVD-fit)</span>
-lab1, lab2 = hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#ff0000"</span>), hl.<span class="text-[#34d399]">from_hex</span>(<span class="text-[#fb923c]">"#00ff00"</span>)
-dist = hl.<span class="text-[#34d399]">perceptual_distance</span>(lab1, lab2)
+<span class="text-[#52525b]"># Recommended: perceptual difference from hex (COMBVD-fit metric)</span>
+dist = hl.<span class="text-[#34d399]">difference</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
 <span class="text-[#52525b]"># &rarr; ~0.149 (saturates near 0.15 for very dissimilar pairs)</span>
+
+<span class="text-[#52525b]"># Difference + observer-disagreement reliability (experimental)</span>
+r = hl.<span class="text-[#34d399]">difference_with_confidence</span>(<span class="text-[#fb923c]">"#808080"</span>, <span class="text-[#fb923c]">"#828282"</span>)
+<span class="text-[#52525b]"># &rarr; de=0.012, disagreement=29.6, reliability=0.19, reliable=False</span>
+
+<span class="text-[#52525b]"># Uncompressed Euclidean Lab (fast, for quick UI checks)</span>
+dist = hl.<span class="text-[#34d399]">euclidean_distance</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
+<span class="text-[#52525b]"># &rarr; 1.62 — black/white &rarr; 1.12; range 0–1.6+</span>
 
 <span class="text-[#52525b]"># Contrast ratio (WCAG-compatible)</span>
 ratio = hl.<span class="text-[#34d399]">contrast_ratio</span>(<span class="text-[#fb923c]">"#ffffff"</span>, <span class="text-[#fb923c]">"#3b82f6"</span>)
@@ -408,7 +428,7 @@ dist = metric.<span class="text-[#34d399]">distance</span>(lab1, lab2)</code></p
           <div class="for-dev mt-6">
             <div class="rounded-lg border border-white/[0.06] bg-[#0c0c0f] p-4">
               <p class="text-sm text-[#a1a1aa]">
-                <strong class="text-[#fafafa]">Benchmark:</strong> STRESS 22.48 on COMBVD (with Bradford CAT). Beats CIEDE2000 (29.20), CIE94 (33.37), CAM16-UCS (33.47), CIECAM02-UCS (30.90), and every other published Lab-only formula. Includes Helmholtz-Kohlrausch compensation, hue-dependent lightness, chroma scaling, and neutral correction.
+                <strong class="text-[#fafafa]">Benchmark:</strong> STRESS {claims.stress.metricSpace.combvd} on COMBVD (with Bradford CAT). Beats CIEDE2000 ({claims.stress.ciede2000.combvd}), CIE94 ({claims.stress.cie94.combvd}), CAM16-UCS ({claims.stress.cam16ucs.combvd}), CIECAM02-UCS ({claims.stress.ciecam02ucs.combvd}), and every other published Lab-only formula. Includes Helmholtz-Kohlrausch compensation, hue-dependent lightness, chroma scaling, and neutral correction.
               </p>
             </div>
           </div>
@@ -549,7 +569,7 @@ fg, bg = hl.<span class="text-[#34d399]">adapt_pair</span>(
           <h3 class="text-lg font-semibold mb-4 mt-10">perceptualDistance() / distance_from_lab()</h3>
           <p class="text-[#a1a1aa] mb-4 text-sm">
             Compressed perceptual distance using MetricSpace with Minkowski exponent
-            and monotonic compression — STRESS ≈ 22.5 on COMBVD vs CIEDE2000's ~29.2.
+            and monotonic compression — STRESS {claims.stress.metricSpace.combvd} on COMBVD vs CIEDE2000's {claims.stress.ciede2000.combvd}.
             More accurate than <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">deltaE()</code>
             which is simple Euclidean. Note: compression saturates near ~0.15 for
             very dissimilar pairs — relative ordering is preserved but absolute
@@ -559,7 +579,7 @@ fg, bg = hl.<span class="text-[#34d399]">adapt_pair</span>(
             ⚠ <strong>Input contract:</strong> <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">MetricSpace.distance(XYZ_1, XYZ_2)</code>
             expects <strong>CIE XYZ</strong>, not Lab. Passing Lab silently saturates near 0.15.
             For Lab inputs use <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">MetricSpace.distance_from_lab(lab_1, lab_2)</code>
-            (added v0.12.1) or the convenience wrapper <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">Helmlab.perceptual_distance(lab1, lab2)</code>.
+            (added v{claims.version}) or the convenience wrapper <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">Helmlab.perceptual_distance(lab1, lab2)</code>.
           </p>
 
           <div class="docs-py">
@@ -724,7 +744,7 @@ xyz = hl.<span class="text-[#34d399]">to_XYZ</span>(lab)</code></pre>
             </div>
 
             <p class="text-sm text-[#a1a1aa] mb-2">
-              Plus a custom deltaE method <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-xs">"Helmlab"</code> implementing the v21 pair-dependent SL/SC weighting (STRESS 22.48 on COMBVD).
+              Plus a custom deltaE method <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-xs">"Helmlab"</code> implementing the v21 pair-dependent SL/SC weighting (STRESS {claims.stress.metricSpace.combvd} on COMBVD).
             </p>
           </div>
 

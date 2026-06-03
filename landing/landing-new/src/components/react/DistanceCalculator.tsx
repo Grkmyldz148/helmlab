@@ -263,9 +263,9 @@ export default function DistanceCalculator() {
         </span>
       </div>
       <p className="text-sm text-[#a1a1aa] mb-6">
-        Measure how different two colors look. Helmlab ΔE is trained on{' '}
-        <span className="text-[#fafafa]">COMBVD + MacAdam + He</span> — the
-        other metrics are shown for comparison.
+        Measure how different two colors look. Helmlab ΔE is{' '}
+        <span className="text-[#fafafa]">trained on COMBVD; validated held-out on MacAdam and Human Feedback</span>{' '}
+        — the other metrics are shown for comparison.
       </p>
 
       {/* Color swatches */}
@@ -435,7 +435,7 @@ export default function DistanceCalculator() {
         Helmlab ΔE and OKLab ΔE are Euclidean distances in their respective
         Lab spaces (scaled by 100 to match the CIE Lab range). CIEDE2000 is
         the industry reference — Helmlab achieves lower STRESS than CIEDE2000
-        on COMBVD, MacAdam, and He datasets.
+        on COMBVD and Human Feedback.
       </p>
     </div>
   );

@@ -18,6 +18,7 @@ import { hexToSrgb, srgbToHex, srgbToXyz, xyzToSrgb, xyzToDisplayP3, xyzToRec202
 import { gamutMap, isInGamut, type SpaceLike } from './utils/gamut.js';
 import { contrastRatio as wcagCR } from './utils/contrast.js';
 import { TokenExporter } from './export.js';
+import { assessConfidence, type Confidence } from './core/confidence.js';
 
 const { sqrt, atan2, cos, sin, PI, pow, abs } = Math;
 
@@ -324,6 +325,32 @@ export class Helmlab {
    */
   distanceFromLab(lab1: Lab, lab2: Lab): number {
     return this.metric.distanceFromLab(lab1, lab2);
+  }
+
+  /**
+   * Recommended entry point: perceptual color difference between two hex colors.
+   *
+   * Returns the trained perceptual distance (the COMBVD-fit metric, STRESS ≈ 22.5)
+   * directly from hex — no need to convert to Lab or pick a lower-level method.
+   * For the uncompressed Euclidean analogue use {@link deltaE}; for a reliability
+   * estimate use {@link differenceWithConfidence}.
+   */
+  difference(color1: Hex, color2: Hex): number {
+    return this.perceptualDistance(this.fromHex(color1), this.fromHex(color2));
+  }
+
+  /**
+   * EXPERIMENTAL (beta): perceptual difference plus how much observers will
+   * disagree about it. Returns `{ de, disagreement, reliability, reliable, ... }`.
+   * Small / low-chroma differences come back unreliable — that is the point.
+   * See {@link Confidence} and `core/confidence.ts` for provenance and limits.
+   */
+  differenceWithConfidence(color1: Hex, color2: Hex): Confidence {
+    const lab1 = this.fromHex(color1);
+    const lab2 = this.fromHex(color2);
+    const de = this.perceptualDistance(lab1, lab2);
+    const chroma = 0.5 * (sqrt(lab1[1] ** 2 + lab1[2] ** 2) + sqrt(lab2[1] ** 2 + lab2[2] ** 2));
+    return assessConfidence(de, chroma);
   }
 
   // ── Palette Generation (GenSpace) ──────────────────────────────

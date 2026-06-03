@@ -1,5 +1,6 @@
 ---
 // Hero section — full viewport height with animated grid background
+import { claims, winShort, totalMetrics } from '../data/claims';
 ---
 
 <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -10,7 +11,7 @@
   <div class="relative z-10 max-w-4xl mx-auto px-6 text-center py-24">
     <!-- Version badge -->
     <div class="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 text-sm text-[#a1a1aa] mb-3">
-      v0.12.0 — MetricSpace + GenSpace
+      v{claims.version} — MetricSpace + GenSpace
     </div>
 
     <!-- Color.js badge -->
@@ -55,8 +56,9 @@
 
     <!-- Subtitle -->
     <p class="for-designer text-lg sm:text-xl text-[#a1a1aa] max-w-2xl mx-auto mb-8">
-      You know the problem: blue-to-white gradients go purple. Dark palettes have muddy holes.
-      Yellows look washed out. <strong class="text-white">Helmlab fixes all of that.</strong>
+      The small stuff OKLab leaves on the table: blue-to-white midpoints drift a little pale,
+      dark palette steps aren't perfectly even, saturated yellows lose a touch of punch.
+      <strong class="text-white">Helmlab tightens all of that</strong> — modest, measurable gains.
     </p>
     <p class="for-dev text-lg sm:text-xl text-[#a1a1aa] max-w-2xl mx-auto mb-8">
       GenSpace for generation. MetricSpace for measurement.<br />
@@ -65,12 +67,12 @@
 
     <!-- Score badge -->
     <div class="for-designer inline-flex items-center gap-3 rounded-full bg-[#f97316]/10 border border-[#f97316]/20 px-5 py-2.5 mb-8">
-      <span class="text-[#f97316] font-bold text-lg">Wins 65 out of 90</span>
+      <span class="text-[#f97316] font-bold text-lg">Wins {claims.record.genspace} out of {totalMetrics()}</span>
       <span class="text-[#a1a1aa] text-sm">quality tests vs OKLab</span>
     </div>
     <div class="for-dev inline-flex items-center gap-3 rounded-full bg-[#f97316]/10 border border-[#f97316]/20 px-5 py-2.5 mb-8">
-      <span class="text-[#f97316] font-bold text-lg">65-9</span>
-      <span class="text-[#a1a1aa] text-sm">vs OKLab on 90 benchmarks (15 ties)</span>
+      <span class="text-[#f97316] font-bold text-lg">{winShort()}</span>
+      <span class="text-[#a1a1aa] text-sm">vs OKLab on {totalMetrics()} benchmarks ({claims.record.ties} ties)</span>
     </div>
 
     <!-- Install commands -->

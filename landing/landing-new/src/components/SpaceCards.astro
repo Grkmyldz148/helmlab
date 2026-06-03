@@ -1,5 +1,6 @@
 ---
 // SpaceCards — two side-by-side cards for GenSpace and MetricSpace
+import { claims, winShort, ciede2000ImprovementPct } from '../data/claims';
 ---
 
 <section class="py-16 md:py-24" id="architecture">
@@ -20,13 +21,13 @@
         </div>
         <h3 class="text-2xl font-bold mb-2">For Generation</h3>
         <p class="text-[#a1a1aa] text-sm mb-6">
-          ~35 parameters, depressed cubic transfer, CMA-ES optimized M1/M2 matrices, structural achromatic.
+          ~{claims.genParams} parameters, depressed cubic transfer, CMA-ES optimized M1/M2 matrices, structural achromatic.
         </p>
 
         <!-- Key stats -->
         <div class="flex flex-wrap gap-4 mb-6">
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-[#fafafa]">65-9</span>
+            <span class="text-lg font-bold text-[#fafafa]">{winShort()}</span>
             <span class="text-xs text-[#52525b]">vs OKLab</span>
           </div>
           <div class="flex flex-col">
@@ -35,7 +36,7 @@
           </div>
           <div class="flex flex-col">
             <span class="text-lg font-bold text-[#fafafa]">0 deps</span>
-            <span class="text-xs text-[#52525b]">11.6KB gzip</span>
+            <span class="text-xs text-[#52525b]">{claims.bundleKB}KB gzip</span>
           </div>
         </div>
 
@@ -77,21 +78,21 @@
         </div>
         <h3 class="text-2xl font-bold mb-2">For Measurement</h3>
         <p class="text-[#a1a1aa] text-sm mb-6">
-          72-parameter enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, pair-dependent SL/SC weighting.
+          {claims.metricParams}-parameter enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, pair-dependent SL/SC weighting.
         </p>
 
         <!-- Key stats -->
         <div class="flex flex-wrap gap-4 mb-6">
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-[#fafafa]">22.48</span>
+            <span class="text-lg font-bold text-[#fafafa]">{claims.stress.metricSpace.combvd}</span>
             <span class="text-xs text-[#52525b]">STRESS</span>
           </div>
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-[#fafafa]">72</span>
+            <span class="text-lg font-bold text-[#fafafa]">{claims.metricParams}</span>
             <span class="text-xs text-[#52525b]">parameters</span>
           </div>
           <div class="flex flex-col">
-            <span class="text-lg font-bold text-[#fafafa]">23%</span>
+            <span class="text-lg font-bold text-[#fafafa]">{ciede2000ImprovementPct()}%</span>
             <span class="text-xs text-[#52525b]">better than CIEDE2000</span>
           </div>
         </div>

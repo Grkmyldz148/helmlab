@@ -24,6 +24,7 @@ export default function MiniPlayground() {
   const [end, setEnd] = useState(DEFAULT_END);
   const [startInput, setStartInput] = useState(DEFAULT_START);
   const [endInput, setEndInput] = useState(DEFAULT_END);
+  const [conf, setConf] = useState<{ de: number; reliability: number; reliable: boolean } | null>(null);
 
   useEffect(() => {
     import('helmlab').then(setHlMod).catch(() => {});
@@ -40,12 +41,16 @@ export default function MiniPlayground() {
       if (mod) {
         const hl = new mod.Helmlab();
         const helmlabColors = hl.gradient(s, e, STEPS);
+        // Beta: how different the two endpoints are, and how reliable that is.
+        const c = hl.differenceWithConfidence(s, e);
+        setConf({ de: c.de, reliability: c.reliability, reliable: c.reliable });
         setRows([
           { label: 'Helmlab', colors: helmlabColors, cv: gradientCV(helmlabColors) },
           oklabRow,
           cielabRow,
         ]);
       } else {
+        setConf(null);
         setRows([
           { label: 'Helmlab', colors: [], cv: 0 },
           oklabRow,
@@ -163,6 +168,23 @@ export default function MiniPlayground() {
           </div>
         ))}
       </div>
+
+      {conf && (
+        <div className="mt-5 flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#a1a1aa]">Endpoint difference</span>
+            <span className="text-[10px] font-mono uppercase tracking-wide text-[#f97316] border border-[#f97316]/30 rounded px-1 py-0.5">
+              beta
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-xs font-mono">
+            <span className="text-[#a1a1aa]">ΔE {conf.de.toFixed(3)}</span>
+            <span className={conf.reliable ? 'text-[#34d399]' : 'text-[#f87171]'}>
+              {conf.reliable ? 'reliable' : 'within human noise'} · {(conf.reliability * 100).toFixed(0)}%
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mt-4">
         <span className="text-[10px] text-[#52525b]">

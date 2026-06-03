@@ -223,8 +223,8 @@ export default function GradientTool() {
       {/* Explanation */}
       <p className="text-xs text-[#52525b] mt-6">
         Helmlab gradients use CIEDE2000 arc-length reparameterization for perceptually equal step sizes.
-        OKLab and CIE Lab use simple linear interpolation. Notice the blue midpoint: Helmlab keeps it sky blue,
-        while OKLab shifts toward lavender.
+        OKLab and CIE Lab use simple linear interpolation. At the blue midpoint Helmlab stays a little more
+        saturated than OKLab — both stay blue, the difference is subtle.
       </p>
     </div>
   );

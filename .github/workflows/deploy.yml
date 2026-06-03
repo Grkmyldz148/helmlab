@@ -30,9 +30,18 @@ jobs:
           node-version: 20
       - run: cd packages/helmlab-js && npm ci && npx vitest run
 
+  # ─── Version consistency guard ────────────────────────
+  # Fails the build if pyproject / __init__ / helmlab-js / site version.ts drift.
+  # Blocks every deploy and publish job below — no drifted version ships.
+  version-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/bump_version.py --check
+
   # ─── 2. Build & Deploy landing-new (Astro) ────────────
   deploy:
-    needs: [test-js]
+    needs: [test-js, version-guard]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,6 +64,20 @@ jobs:
 
       - name: Build Astro site
         run: cd landing/landing-new && npm run build
+
+      - name: Claims consistency guard
+        # Every site number derives from src/data/claims.ts. This blocks deploy
+        # if a stale / inconsistent claim leaked into the built output (the old
+        # 64/65/66 win records, the 11.6 KB bundle, an out-of-date version, etc.).
+        # When ColorBench is re-run, regenerate with colorbench/scripts/generate_claims.py.
+        run: |
+          cd landing/landing-new
+          if grep -rqE "64-9-17|65-9-16|wins 6[456][^0-9]|6[456]-9-1[0-9]|11\.6 ?KB|v0\.12\.[0-9]" dist; then
+            echo "::error::Stale/inconsistent claim numbers in built site:"
+            grep -rnE "64-9-17|65-9-16|wins 6[456][^0-9]|11\.6 ?KB|v0\.12\.[0-9]" dist | head
+            exit 1
+          fi
+          echo "claims guard OK — site numbers consistent"
 
       - name: Setup SSH
         run: |
@@ -80,7 +103,7 @@ jobs:
 
   # ─── 3. Publish npm (only when version changes) ────────
   publish-npm:
-    needs: [test-js]
+    needs: [test-js, version-guard]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -162,7 +185,7 @@ jobs:
 
   # ─── 4. Publish PyPI (only when version changes) ───────
   publish-pypi:
-    needs: [test-python]
+    needs: [test-python, version-guard]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

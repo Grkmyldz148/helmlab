@@ -1,21 +1,22 @@
 ---
 // FaqSection — accordion FAQ using CSS-only details/summary
+import { claims, winShort, totalMetrics, independentStr, ciede2000ImprovementPct, oklabNearAchromAdvantagePct, oklabDeutanAdvantagePct } from '../data/claims';
 const faqs = [
   {
     q: "What's the difference between GenSpace and MetricSpace?",
-    a: "GenSpace is optimized for visual quality in generation tasks: palette creation, gradient interpolation, gamut mapping, and animation. ~35 parameters, depressed cubic transfer. MetricSpace is optimized for predicting perceptual color differences. 72 parameters, full enrichment pipeline with H-K correction, pair-dependent SL/SC weighting. Same library, two pipelines.",
+    a: `GenSpace is optimized for visual quality in generation tasks: palette creation, gradient interpolation, gamut mapping, and animation. ~${claims.genParams} parameters, depressed cubic transfer. MetricSpace is optimized for predicting perceptual color differences. ${claims.metricParams} parameters, full enrichment pipeline with H-K correction, pair-dependent SL/SC weighting. Same library, two pipelines.`,
   },
   {
     q: "Is Helmlab a replacement for OKLab?",
-    a: "For most generation tasks, yes. GenSpace scores 65-9 against OKLab across 90 benchmarks, including 6-1 on independent datasets OKLab was optimized on. OKLab remains better for: near-achromatic gradients (24% better CV), CVD deutan palettes (43%), native CSS oklch(), or minimal bundle size (~2KB vs 11.6KB).",
+    a: `For most generation tasks, yes. GenSpace scores ${winShort()} against OKLab across ${totalMetrics()} benchmarks, including ${independentStr()} on independent datasets OKLab was optimized on. OKLab remains better for: near-achromatic gradients (${oklabNearAchromAdvantagePct()}% better CV), CVD deutan palettes (${oklabDeutanAdvantagePct()}%), native CSS oklch(), or minimal bundle size (~${claims.oklabBundleKB}KB vs ${claims.bundleKB}KB).`,
   },
   {
     q: "How was it optimized? Is there overfitting?",
-    a: "CMA-ES optimization on COMBVD (3813 pairs). Proper holdout test: +1.8 STRESS gap between train and held-out 20% split. Published STRESS 22.48 is a training metric; cross-validated estimate ~24.3. Still beats CIEDE2000 (29.20) and every other Lab-only baseline. On the small held-out MacAdam 1974 set (128 pairs, never trained on) MetricSpace = 19.51 vs CAM16-UCS 18.71 — CAM16 leads by 0.80 STRESS due to its appearance-model formulation matching MacAdam's controlled-viewing conditions. Across the 3-dataset average MetricSpace remains #1 by a 14+ STRESS margin (21.75 vs CIECAM02-UCS 35.98). Full analysis in BENCHMARK.md.",
+    a: `CMA-ES optimization on COMBVD (${claims.datasets.combvdPairs.toLocaleString()} pairs). Proper holdout test: +1.8 STRESS gap between train and held-out 20% split. Published STRESS ${claims.stress.metricSpace.combvd} is a training metric; cross-validated estimate ~${claims.overfit.crossValidated}. Still beats CIEDE2000 (${claims.stress.ciede2000.combvd}) and every other Lab-only baseline. On the small held-out MacAdam 1974 set (${claims.datasets.macadamPairs} pairs, never trained on) MetricSpace = ${claims.stress.metricSpace.macadam} vs CAM16-UCS ${claims.stress.cam16ucs.macadam} — CAM16 leads by 0.80 STRESS due to its appearance-model formulation matching MacAdam's controlled-viewing conditions. Across the 3-dataset average MetricSpace remains #1 by a 14+ STRESS margin (${claims.stress.metricSpace.average} vs CIECAM02-UCS ${claims.stress.ciecam02ucs.average}). Full analysis in BENCHMARK.md.`,
   },
   {
     q: "How does this relate to Color.js?",
-    a: "Helmlab was merged into Color.js master in April 2026: three spaces (helmgen, helmgenlch, helmlab-metric) plus a custom 'Helmlab' deltaE method. The published colorjs.io@0.6.1 does NOT include it yet — it ships in the next release; until then use 'npm install github:color-js/color.js' or stick with the helmlab package below. The helmlab npm package is the right pick if you want a tiny zero-dep bundle (11.6 KB) with palette/gradient/semanticScale helpers. The math is identical in both.",
+    a: `Helmlab was merged into Color.js master in April 2026: three spaces (helmgen, helmgenlch, helmlab-metric) plus a custom 'Helmlab' deltaE method. The published colorjs.io@${claims.external.colorjsPublishedVersion} does NOT include it yet — it ships in the next release; until then use 'npm install github:color-js/color.js' or stick with the helmlab package below. The helmlab npm package is the right pick if you want a tiny zero-dep bundle (${claims.bundleKB} KB) with palette/gradient/semanticScale helpers. The math is identical in both.`,
   },
   {
     q: "Can I use it in CSS?",
@@ -23,11 +24,11 @@ const faqs = [
   },
   {
     q: "What about browser support?",
-    a: "ES module, zero dependencies, 11.6KB gzipped. Works in all modern browsers and Node.js. TypeScript types included. Outputs standard hex/RGB. helmlab.js is tree-shakeable.",
+    a: `ES module, zero dependencies, ${claims.bundleKB}KB gzipped. Works in all modern browsers and Node.js. TypeScript types included. Outputs standard hex/RGB. helmlab.js is tree-shakeable.`,
   },
   {
     q: "Is it open source?",
-    a: "MIT licensed. GitHub: github.com/Grkmyldz148/helmlab. Full benchmark methodology (ColorBench), optimization scripts, and psychophysical datasets are published. Research paper: arxiv.org/abs/2602.23010.",
+    a: `${claims.license} licensed. GitHub: ${claims.external.repo}. Full benchmark methodology (ColorBench), optimization scripts, and psychophysical datasets are published. Research paper: arxiv.org/abs/${claims.external.arxivId}.`,
   },
 ];
 ---

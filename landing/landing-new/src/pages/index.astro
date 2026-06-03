@@ -3,11 +3,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import DesignerFlow from "../components/react/DesignerFlow";
 import DeveloperFlow from "../components/DeveloperFlow.astro";
+import { claims, winShort } from "../data/claims";
 ---
 
 <BaseLayout
   title="Helmlab — The Most Accurate Color Space"
-  description="Two purpose-built Lab spaces: GenSpace for generation (65-9 vs OKLab), MetricSpace for measurement (STRESS 22.48, beats CIEDE2000). Python and JavaScript. MIT licensed."
+  description={`Two purpose-built Lab spaces: GenSpace for generation (${winShort()} vs OKLab), MetricSpace for measurement (STRESS ${claims.stress.metricSpace.combvd}, beats CIEDE2000). Python and JavaScript. MIT licensed.`}
 >
   <Hero />
 

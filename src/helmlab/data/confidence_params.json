@@ -1,0 +1,13 @@
+{
+  "a": -98.2432184776279,
+  "b": -11.538177805266077,
+  "c": 30.716489232811135,
+  "scale": 591.1523027745784,
+  "dis_floor": 4.759084879353265,
+  "de_train_max": 0.14811473587883495,
+  "loo_r2": 0.5811624379953361,
+  "n_pairs": 47,
+  "base": "perceptual_distance",
+  "chroma": "mean helmlab-Lab chroma from from_hex",
+  "note": "EXPERIMENTAL confidence model. disagreement = a*de + b*chroma + c (human rating units). Fit on HumanFB 47 pairs x ~74 obs. 2nd-source hong_2025 held-out R2=0.26 same direction. NOT for large de (trained de<=de_train_max)."
+}

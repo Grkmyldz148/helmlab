@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 22.48 on COMBVD with Bradford CAT — 23% better than CIEDE2000's 29.20), and **GenSpace** for gradient/palette generation (**65-9-16 vs OKLab** on ColorBench's 90 metrics including 6-1 on independent datasets, 360/360/360 gamut cusps, zero monotonicity violations).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 22.48 on COMBVD with Bradford CAT — 23% better than CIEDE2000's 29.20), and **GenSpace** for gradient/palette generation (**62-9-19 vs OKLab** on ColorBench's 90 metrics including independent datasets, 360/360/360 gamut cusps, zero monotonicity violations in sRGB/P3 — 1 in Rec.2020).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -14,7 +14,7 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 ## Key Features
 
 - **State-of-the-art color difference** — MetricSpace: STRESS 22.48 vs CIEDE2000's 29.20 on COMBVD (3,813 pairs, with Bradford CAT pre-processing)
-- **Superior gradient generation** — GenSpace: **65 wins** vs OKLab's 9 across 90 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations
+- **Superior gradient generation** — GenSpace: **62 wins** vs OKLab's 9 (19 ties) across 90 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations in sRGB/P3 (1 in Rec.2020)
 - **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
 - **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
 - **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
@@ -45,7 +45,8 @@ const lab = hl.fromHex('#3B82F6');                    // Hex → Helmlab Lab
 const hex = hl.toHex([0.5, -0.1, 0.2]);              // Lab → hex (gamut mapped)
 hl.contrastRatio('#ffffff', '#3B82F6');                // → 3.68
 hl.ensureContrast('#3B82F6', '#ffffff', 4.5);         // Adjust to meet 4.5:1
-hl.deltaE('#ff0000', '#00ff00');                      // Perceptual distance
+hl.difference('#ff0000', '#00ff00');                  // Perceptual color difference (the good metric)
+hl.deltaE('#ff0000', '#00ff00');                      // Euclidean Lab distance (uncompressed, ΔE76-style)
 hl.gradient('#ff0000', '#0000ff', 8);                 // Perfectly uniform gradient
 hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950 scale
 ```
@@ -136,7 +137,7 @@ Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`,
 
 **Key properties:**
 - 360/360/360 valid cusps in sRGB, Display P3, and Rec.2020 (OKLab: 299/308/360)
-- Zero monotonicity violations and zero invalid cusps across all gamuts
+- Zero invalid cusps across all gamuts; zero monotonicity violations in sRGB/P3 (1 in Rec.2020)
 - Blue→White gradient: sky blue midpoint (G/R = 1.51), no lavender shift
 - Achromatic: C* < 10⁻¹⁵ (structural guarantee — uniform transfer × orthogonal M₂)
 - Munsell Value uniformity: 0.16% (OKLab: 2.80% — 18x better)

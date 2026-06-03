@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>helmlab × Color.js — Badge variants</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f4f4f6; font-family: 'Inter', system-ui, sans-serif; color: #18181b; }
+  #app { width: 100%; height: 100vh; }
+
+  /* The artboard's content lives inside .badge-stage which sets the page tone */
+  .badge-stage {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    flex-direction: column;
+  }
+  .badge-stage.light { background: #ffffff; color: #0a0a0c; }
+  .badge-stage.dark  { background: #060608; color: #fafafa; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .label-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.4;
+  }
+  .badge-stage.dark .label-tag { opacity: 0.45; }
+
+  /* keyframes for animated badge */
+  @property --cjs-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+  }
+  .cjs-animated { --cjs-angle: 0deg; animation: cjs-rotate 6s linear infinite; }
+  @keyframes cjs-rotate { to { --cjs-angle: 360deg; } }
+  @keyframes cjs-spin { to { transform: rotate(360deg); } }
+
+  /* Hero variant scale fixes */
+  .stage-hero { padding: 0; }
+  .stage-hero .hero-wrap {
+    padding: 48px;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="badges.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "showLightDark": true,
+  "minimalKicker": "available in",
+  "minimalBrand": "Color.js",
+  "logoForwardEyebrow": "shipped in",
+  "heroKicker": "helmlab is now",
+  "heroBrand": "in Color.js",
+  "heroSub": "A new perceptual color space, available everywhere Color.js runs.",
+  "shieldsLeft": "color.js",
+  "shieldsRight": "supported",
+  "stickyTag": "New",
+  "stickyLine1": "helmlab is now in"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  // Each artboard renders both themes side-by-side (or just one if toggled)
+  const Pair = ({ children }) => (
+    <>
+      <div className="badge-stage light">
+        <span className="label-tag">light</span>
+        <div className="row">{children('light')}</div>
+      </div>
+      {tweaks.showLightDark && (
+        <div className="badge-stage dark">
+          <span className="label-tag">dark</span>
+          <div className="row">{children('dark')}</div>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection id="pills" title="Pills & inline">
+          <DCArtboard id="minimal" label="01 · Minimal pill" width={520} height={tweaks.showLightDark ? 360 : 200}>
+            <Pair>
+              {(theme) => (
+                <MinimalPill theme={theme} text={{ kicker: tweaks.minimalKicker, brand: tweaks.minimalBrand }} />
+              )}
+            </Pair>
+          </DCArtboard>
+
+          <DCArtboard id="shields" label="02 · Shields.io style (README)" width={520} height={tweaks.showLightDark ? 360 : 200}>
+            <Pair>
+              {(theme) => (
+                <ShieldsBadge theme={theme} text={{ left: tweaks.shieldsLeft, right: tweaks.shieldsRight }} />
+              )}
+            </Pair>
+          </DCArtboard>
+
+          <DCArtboard id="footer" label="03 · Inline footer" width={520} height={tweaks.showLightDark ? 360 : 200}>
+            <Pair>
+              {(theme) => (
+                <InlineFooter theme={theme} text={{ prefix: "Color spaces by", brand: tweaks.minimalBrand }} />
+              )}
+            </Pair>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="logo" title="Logo-forward">
+          <DCArtboard id="logoforward" label="04 · Logo card" width={520} height={tweaks.showLightDark ? 360 : 200}>
+            <Pair>
+              {(theme) => (
+                <LogoForward theme={theme} text={{ eyebrow: tweaks.logoForwardEyebrow, brand: tweaks.minimalBrand }} />
+              )}
+            </Pair>
+          </DCArtboard>
+
+          <DCArtboard id="animated" label="05 · Animated chromaticity" width={520} height={tweaks.showLightDark ? 360 : 200}>
+            <Pair>
+              {(theme) => (
+                <AnimatedBadge theme={theme} text={{ brand: "color.js", suffix: "supported" }} />
+              )}
+            </Pair>
+          </DCArtboard>
+
+          <DCArtboard id="terminal" label="06 · Terminal / mono" width={520} height={tweaks.showLightDark ? 380 : 220}>
+            <Pair>
+              {(theme) => (
+                <TerminalBadge theme={theme} />
+              )}
+            </Pair>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="big" title="Hero & sticky">
+          <DCArtboard id="hero" label="07 · Hero / proud" width={640} height={tweaks.showLightDark ? 540 : 300}>
+            <Pair>
+              {(theme) => (
+                <HeroBadge theme={theme} text={{ kicker: tweaks.heroKicker, brand: tweaks.heroBrand, sub: tweaks.heroSub }} />
+              )}
+            </Pair>
+          </DCArtboard>
+
+          <DCArtboard id="sticky" label="08 · Floating sticky (corner)" width={520} height={tweaks.showLightDark ? 380 : 220}>
+            <Pair>
+              {(theme) => (
+                <FloatingSticky theme={theme} text={{ tag: tweaks.stickyTag, line1: tweaks.stickyLine1, brand: tweaks.minimalBrand }} />
+              )}
+            </Pair>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Display">
+          <TweakToggle label="Show light + dark" value={tweaks.showLightDark} onChange={(v) => setTweak('showLightDark', v)} />
+        </TweakSection>
+
+        <TweakSection label="Minimal / shared brand">
+          <TweakText label="Kicker text" value={tweaks.minimalKicker} onChange={(v) => setTweak('minimalKicker', v)} />
+          <TweakText label="Brand label" value={tweaks.minimalBrand} onChange={(v) => setTweak('minimalBrand', v)} />
+        </TweakSection>
+
+        <TweakSection label="Logo card eyebrow">
+          <TweakText label="Eyebrow" value={tweaks.logoForwardEyebrow} onChange={(v) => setTweak('logoForwardEyebrow', v)} />
+        </TweakSection>
+
+        <TweakSection label="Hero">
+          <TweakText label="Kicker" value={tweaks.heroKicker} onChange={(v) => setTweak('heroKicker', v)} />
+          <TweakText label="Headline" value={tweaks.heroBrand} onChange={(v) => setTweak('heroBrand', v)} />
+          <TweakText label="Sub" value={tweaks.heroSub} onChange={(v) => setTweak('heroSub', v)} />
+        </TweakSection>
+
+        <TweakSection label="Shields style">
+          <TweakText label="Left" value={tweaks.shieldsLeft} onChange={(v) => setTweak('shieldsLeft', v)} />
+          <TweakText label="Right" value={tweaks.shieldsRight} onChange={(v) => setTweak('shieldsRight', v)} />
+        </TweakSection>
+
+        <TweakSection label="Sticky">
+          <TweakText label="Tag" value={tweaks.stickyTag} onChange={(v) => setTweak('stickyTag', v)} />
+          <TweakText label="Subtitle" value={tweaks.stickyLine1} onChange={(v) => setTweak('stickyLine1', v)} />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,21 +1,22 @@
 ---
 // MetricHighlights — 6 key metric cards in a responsive grid
+import { claims, winShort, totalMetrics, independentStr, ciede2000ImprovementPct, munsellMult } from '../data/claims';
 const metrics = [
   {
-    value: "22.48",
+    value: claims.stress.metricSpace.combvd,
     unit: "",
     designerLabel: "Predicts what humans see",
     designerDesc: "When you ask \"do these two colors match?\" — Helmlab's answer agrees with human observers better than any other tool.",
-    devLabel: "STRESS score on COMBVD (3813 pairs)",
-    devDesc: "23% better than CIEDE2000",
+    devLabel: `STRESS score on COMBVD (${claims.datasets.combvdPairs.toLocaleString()} pairs)`,
+    devDesc: `${ciede2000ImprovementPct()}% better than CIEDE2000`,
   },
   {
-    value: "65-9",
+    value: winShort(),
     unit: "",
     designerLabel: "Wins almost every test",
-    designerDesc: "Out of 90 quality checks — gradient smoothness, gamut coverage, palette uniformity — Helmlab wins 65. OKLab wins 9.",
-    devLabel: "90 metrics, 13 categories",
-    devDesc: "Including 6-1 on independent 3rd-party datasets",
+    designerDesc: `Out of ${totalMetrics()} quality checks — gradient smoothness, gamut coverage, palette uniformity — Helmlab wins ${claims.record.genspace}. OKLab wins ${claims.record.oklab}.`,
+    devLabel: `${totalMetrics()} metrics, 13 categories`,
+    devDesc: `Including ${independentStr()} on independent 3rd-party datasets`,
   },
   {
     value: "360/360",
@@ -23,23 +24,23 @@ const metrics = [
     designerLabel: "No gamut holes",
     designerDesc: "Every hue angle has a clean, usable boundary. No sudden clipping artifacts when you push saturation.",
     devLabel: "sRGB + P3 valid cusp coverage",
-    devDesc: "OKLab: 299/360 sRGB, 308/360 P3",
+    devDesc: `OKLab: ${claims.cusps.sRGB.oklab}/360 sRGB, ${claims.cusps.P3.oklab}/360 P3`,
   },
   {
-    value: "18",
+    value: munsellMult(),
     unit: "x",
     designerLabel: "Even lightness steps",
-    designerDesc: "Your 50-950 palette scale looks evenly spaced. No dark hole at 800, no bright jump at 200.",
-    devLabel: "Munsell Value: 0.16% vs 2.80%",
+    designerDesc: "Slightly more even 50-950 palette steps — the dark end is a little less compressed than OKLab's. A small but measurable difference.",
+    devLabel: `Munsell Value: ${claims.munsellValueCV.genspace}% vs ${claims.munsellValueCV.oklab}%`,
     devDesc: "Uniform L channel by construction",
   },
   {
-    value: "1.513",
+    value: claims.blueWhiteGR.genspace,
     unit: "",
-    designerLabel: "Blue stays blue",
-    designerDesc: "Blue-to-white gradients actually look blue in the middle — not lavender or purple like in OKLab.",
+    designerLabel: "Blue stays a touch more saturated",
+    designerDesc: "Blue-to-white gradients keep slightly more saturation through the middle than OKLab — both stay blue (~220°), Helmlab a little more vivid.",
     devLabel: "Blue-to-White midpoint G/R ratio",
-    devDesc: "OKLab: 1.408 (purple-shifted)",
+    devDesc: `OKLab: ${claims.blueWhiteGR.oklab} (slightly less saturated)`,
   },
   {
     value: "10",
@@ -48,7 +49,7 @@ const metrics = [
     designerLabel: "Perfect neutrals",
     designerDesc: "Gray is truly gray. No color tint sneaking into your neutral palette, ever.",
     devLabel: "Achromatic purity (D65 C*)",
-    devDesc: "1M times better than OKLab",
+    devDesc: "~10⁸× better than OKLab",
   },
 ];
 ---
@@ -59,7 +60,7 @@ const metrics = [
       <span class="text-xs uppercase tracking-widest text-[#f97316] font-medium">Key Metrics</span>
       <h2 class="text-3xl sm:text-4xl font-bold mt-3 mb-4">Numbers that speak for themselves</h2>
       <p class="text-[#a1a1aa] max-w-2xl mx-auto">
-        ColorBench: 90 metrics, 3,038 gradient pairs, 3 gamuts, float64 precision. Head-to-head vs OKLab.
+        ColorBench: {totalMetrics()} metrics, {claims.gradientPairs.toLocaleString()} gradient pairs, 3 gamuts, float64 precision. Head-to-head vs OKLab.
       </p>
     </div>
 

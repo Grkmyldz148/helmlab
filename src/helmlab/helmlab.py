@@ -562,6 +562,16 @@ class Helmlab:
         lab2 = self.from_hex(color2_hex)
         return float(np.sqrt(np.sum((lab1 - lab2) ** 2)))
 
+    def euclidean_distance(self, color1_hex: str, color2_hex: str) -> float:
+        """Clearer alias of :meth:`delta_e` — uncompressed Euclidean Lab distance.
+
+        Prefer this name: ``delta_e`` is easily mistaken for a CIEDE2000-style ΔE,
+        but this method is the CIE76 analogue (plain Euclidean distance in Helmlab
+        Lab). For the trained perceptual difference, use :meth:`difference`; for a
+        true CIEDE2000 number, use :data:`helmlab.metrics.delta_e.DELTA_E_METHODS`.
+        """
+        return self.delta_e(color1_hex, color2_hex)
+
     def perceptual_distance(self, lab1: np.ndarray, lab2: np.ndarray) -> float:
         """Compressed perceptual distance (Minkowski + compression) between two Lab values.
 
@@ -585,6 +595,47 @@ class Helmlab:
         XYZ1 = self._metric.to_XYZ(np.asarray(lab1, dtype=np.float64))
         XYZ2 = self._metric.to_XYZ(np.asarray(lab2, dtype=np.float64))
         return float(self._metric.distance(XYZ1, XYZ2))
+
+    # ── Recommended single entry points for color difference ──────────
+    def difference(self, color1_hex: str, color2_hex: str) -> float:
+        """Perceptual color difference between two hex colors (the good metric).
+
+        This is the recommended entry point: it returns the trained perceptual
+        distance (the v21 metric, STRESS ≈ 22.7 on COMBVD) directly from hex,
+        so callers don't have to convert to Lab first or pick between the
+        lower-level methods. Larger = more different; the metric saturates near
+        ~0.15 for very different colors.
+
+        For the uncompressed Euclidean analogue use :meth:`euclidean_distance`;
+        for a reliability estimate alongside the difference use
+        :meth:`difference_with_confidence`.
+        """
+        lab1 = self.from_hex(color1_hex)
+        lab2 = self.from_hex(color2_hex)
+        return self.perceptual_distance(lab1, lab2)
+
+    def difference_with_confidence(self, color1_hex: str, color2_hex: str) -> dict:
+        """Perceptual difference plus how much observers will disagree about it.
+
+        EXPERIMENTAL. Returns a dict with the difference (``de``) and a
+        calibrated reliability: ``disagreement`` (predicted inter-observer std),
+        ``reliability`` ∈ [0, 1), and ``reliable`` (is the difference bigger than
+        the human noise band?). Small / low-chroma differences come back
+        unreliable — that is the point. See :mod:`helmlab.metrics.confidence`
+        for provenance and limits.
+        """
+        lab1 = self.from_hex(color1_hex)
+        lab2 = self.from_hex(color2_hex)
+        de = self.perceptual_distance(lab1, lab2)
+        chroma = 0.5 * (float(np.hypot(lab1[1], lab1[2])) + float(np.hypot(lab2[1], lab2[2])))
+        cm = getattr(self, "_confidence_cache", None)
+        if cm is None:
+            from helmlab.metrics.confidence import ConfidenceModel
+            cm = ConfidenceModel()
+            self._confidence_cache = cm
+        out = cm.assess(de, chroma)
+        out["de"] = de  # report the perceptual distance itself, not the array form
+        return out
 
     def export(self):
         """Return a TokenExporter for this Helmlab instance."""

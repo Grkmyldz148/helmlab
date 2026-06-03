@@ -1,0 +1,506 @@
+<!--
+aesthetic_dna: Modern scientific instrument dashboard. Framed technical plates floating on a deep, breathable void. High-contrast typography and precise chromatic accents.
+ui_paradigm: Desktop-first architectural report. Sticky left index rail + linear narrative stream.
+palette: Deep charcoal (#09090b), ultra-low opacity ghost framing (rgba(255,255,255,0.06)), harsh mono labels, punctuated by vibrant, literal color spectrums.
+-->
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helmlab | Project Zero Error</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#09090b',
+                        plate: '#0c0c0f',
+                        elevated: '#111115',
+                        fg: '#fafafa',
+                        muted: '#a1a1aa',
+                        dim: '#52525b',
+                        ghost: 'rgba(255, 255, 255, 0.06)',
+                        accent: {
+                            cyan: '#06b6d4',
+                            orange: '#f97316',
+                            blue: '#60a5fa',
+                            green: '#34d399',
+                            purple: '#a78bfa',
+                            red: '#f87171'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
+                    },
+                    fontSize: {
+                        'micro': '0.65rem'
+                    },
+                    letterSpacing: {
+                        'tighter': '-0.04em',
+                        'tight': '-0.02em',
+                        'widest': '0.15em',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #09090b;
+            color: #fafafa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .tabular { font-variant-numeric: tabular-nums; }
+        ::selection { background: rgba(255,255,255,0.2); color: #fff; }
+
+        /* Framed Technical Plate (Instead of global grid) */
+        .plate {
+            position: relative;
+            background: #0c0c0f;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 24px -12px rgba(0,0,0,0.5);
+        }
+
+        /* Scientific Corner Brackets (Viewfinders) - Subtle */
+        .bracket {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-color: rgba(255,255,255,0.25);
+            border-style: solid;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .br-tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+        .br-tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+        .br-bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+        .br-br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+        /* Table specific styles for measurement section */
+        table th { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+        .row-active {
+            background: rgba(96, 165, 250, 0.05);
+            box-shadow: inset 2px 0 0 #60a5fa;
+            color: #fafafa;
+        }
+        .row-dim { color: #a1a1aa; }
+        .row-dim:hover, .row-active:hover { background: rgba(255,255,255,0.02); }
+
+        /* Realistic Color Gradients for Hero & Proofs */
+        .grad-lab { background: linear-gradient(90deg, #1e3a8a, #83726d, #fcd34d); }
+        .grad-oklab { background: linear-gradient(90deg, #1e3a8a, #991b1b, #fcd34d); }
+        .grad-genspace { background: linear-gradient(90deg, #1e3a8a, #5b21b6, #db2777, #f97316, #fcd34d); }
+
+        /* Chromaticity Ab-Plane Simulation (Hero Art) */
+        .hero-ab-plane {
+            background: conic-gradient(from 180deg at 50% 50%, #1e3a8a, #a21caf, #e11d48, #ea580c, #eab308, #22c55e, #0ea5e9, #1e3a8a);
+            mask-image: radial-gradient(circle, white 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle, white 20%, transparent 70%);
+            opacity: 0.85;
+            mix-blend-mode: screen;
+        }
+
+        /* Nav Tracker line */
+        .nav-tracker::before {
+            content: '';
+            position: absolute;
+            left: -1px;
+            top: 20%;
+            height: 20%;
+            width: 2px;
+            background: #fafafa;
+            transition: top 0.3s ease;
+        }
+    </style>
+</head>
+<body class="flex relative min-h-screen">
+
+    <!-- Sticky Left Rail (Simplistic, Narrative Scope) -->
+    <aside class="hidden xl:flex w-[160px] flex-col fixed h-screen top-0 left-0 border-r border-ghost bg-bg/95 backdrop-blur z-50 py-8 px-6">
+
+        <div class="font-mono text-micro text-dim flex flex-col gap-1 mb-16">
+            <span class="text-fg flex items-center gap-1.5"><i class="ph-fill ph-hexagon text-accent-cyan"></i> HELMLAB</span>
+            <span>VER. 0.11.8</span>
+            <span>STABLE</span>
+        </div>
+
+        <nav class="flex-1 relative border-l border-ghost pl-4 font-mono text-xs flex flex-col gap-6 text-dim nav-tracker">
+            <a href="#problem" class="hover:text-fg transition-colors">01. PROBLEM</a>
+            <a href="#architecture" class="hover:text-fg transition-colors">02. TOPOLOGY</a>
+            <a href="#metricspace" class="hover:text-fg transition-colors">03. MEASURE</a>
+            <a href="#genspace" class="hover:text-fg transition-colors">04. GENERATE</a>
+            <a href="#limits" class="hover:text-fg transition-colors">05. BOUNDS</a>
+            <a href="#install" class="hover:text-fg transition-colors mt-auto pt-6 border-t border-ghost border-dashed text-fg">INSTALL &rsaquo;</a>
+        </nav>
+    </aside>
+
+    <!-- Main Spacing Wrapper -->
+    <main class="flex-1 xl:ml-[160px] pb-32">
+
+        <!-- Header (Mobile/Tablet Top Bar) -->
+        <header class="xl:hidden flex items-center justify-between border-b border-ghost px-6 py-4 font-mono text-xs bg-bg/95 sticky top-0 z-50">
+            <div class="text-fg flex items-center gap-2"><i class="ph-fill ph-hexagon text-accent-cyan"></i> HELMLAB 0.11.8</div>
+            <a href="#install" class="text-muted hover:text-fg">INSTALL</a>
+        </header>
+
+        <!-- Content Stream -->
+        <div class="max-w-7xl mx-auto px-6 md:px-12 pt-24 space-y-32 xl:space-y-48">
+
+            <!-- §01 HERO / PROBLEM -->
+            <section id="problem" class="relative z-10 flex flex-col lg:flex-row gap-16 lg:items-center">
+
+                <!-- Left: Typography & Narrative -->
+                <div class="flex-1 relative z-10">
+                    <div class="font-mono text-micro text-dim tracking-widest uppercase mb-8 flex items-center gap-3">
+                        <span class="w-4 h-px bg-dim"></span> FIG. 01 &mdash; THE DUAL EXTREMES
+                    </div>
+
+                    <h1 class="text-5xl md:text-6xl xl:text-7xl font-medium tracking-tighter leading-[1.05] mb-8">
+                        The topology of <br class="hidden md:block"/>
+                        color is broken. <br class="hidden md:block"/>
+                        <span class="text-muted">We mapped a new one.</span>
+                    </h1>
+
+                    <p class="text-base text-muted font-light leading-relaxed max-w-lg mb-10">
+                        Existing color spaces force a compromise: they are either optimized to calculate perceptual difference accurately (like CIEDE2000), or they are optimized to generate linear gradients smoothly (like OKLab).
+                        Until now, mathematical mapping has failed to do both perfectly within a single geometric space.
+                    </p>
+
+                    <!-- Terminal Plate CTA -->
+                    <div class="plate inline-flex flex-col sm:flex-row p-4 gap-6 font-mono text-xs shadow-none items-start sm:items-center">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                        <div class="flex items-center gap-3 text-fg tabular">
+                            <span class="text-dim">&rsaquo;</span> pip install helmlab
+                        </div>
+                        <div class="hidden sm:block w-px h-4 bg-ghost"></div>
+                        <div class="flex items-center gap-3 text-fg tabular">
+                            <span class="text-dim">&rsaquo;</span> npm install helmlab
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Hero Visual (The Gradient Problem) -->
+                <div class="flex-1 relative w-full aspect-square md:aspect-auto md:h-[600px] flex items-center justify-center pt-12 lg:pt-0">
+                    <!-- Art Layer -->
+                    <div class="absolute inset-0 hero-ab-plane flex items-center justify-center mix-blend-screen scale-150 -translate-x-[10%] lg:translate-x-0 opacity-[0.15]"></div>
+
+                    <!-- Gradient Comparison Plates -->
+                    <div class="relative z-20 w-full max-w-sm flex flex-col gap-6">
+
+                        <!-- CIELAB -->
+                        <div class="plate p-3 pb-4">
+                            <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                            <div class="flex justify-between font-mono text-micro text-dim uppercase mb-2 px-1">
+                                <span>CIE_LAB_76</span><span>MUDDY MIDTONE</span>
+                            </div>
+                            <div class="w-full h-12 grad-lab border border-black/20"></div>
+                        </div>
+
+                        <!-- OKLab -->
+                        <div class="plate p-3 pb-4">
+                            <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                            <div class="flex justify-between font-mono text-micro text-dim uppercase mb-2 px-1">
+                                <span>OKLAB</span><span class="text-accent-red border-b border-dashed border-accent-red/30">HUE SHIFT</span>
+                            </div>
+                            <div class="w-full h-12 grad-oklab border border-black/20"></div>
+                        </div>
+
+                        <!-- GenSpace -->
+                        <div class="plate p-3 pb-4 translate-x-8 group">
+                            <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                            <div class="absolute -left-6 top-[28px] w-4 border-t border-ghost"></div>
+                            <div class="flex justify-between font-mono text-micro text-accent-cyan uppercase mb-2 px-1">
+                                <span class="flex items-center gap-2">GS-V1 (HELMLAB)</span><span>LINEAR TARGET</span>
+                            </div>
+                            <div class="w-full h-16 grad-genspace border border-black/20 group-hover:scale-[1.02] transition-transform"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- §02 ARCHITECTURE: SPLIT PARADIGM -->
+            <section id="architecture">
+                <div class="max-w-2xl mb-12">
+                    <div class="font-mono text-micro text-dim tracking-widest uppercase mb-4">02 &mdash; ARCHITECTURAL TOPOLOGY</div>
+                    <h2 class="text-3xl font-medium tracking-tight mb-4">Isolation is truth.</h2>
+                    <p class="text-muted leading-relaxed">
+                        Instead of forcing a single non-Euclidean geometry to handle both distance and arrays, Helmlab isolates them. Two mathematical topologies mapped to the identical origin source, ensuring the proper tool for the exact mathematical objective to avoid matrix singularities.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Module 1: MetricSpace -->
+                    <div class="plate p-8 sm:p-12 flex flex-col justify-between">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="flex items-center justify-between mb-16">
+                            <div class="w-12 h-12 rounded-full border border-ghost flex items-center justify-center font-mono text-xs text-accent-blue tabular">MS</div>
+                            <span class="font-mono text-micro text-dim tracking-widest">OBJ: &Delta;E MEASUREMENT</span>
+                        </div>
+
+                        <div>
+                            <h3 class="font-mono text-lg text-fg mb-3">MetricSpace (v21)</h3>
+                            <p class="text-muted text-sm leading-relaxed mb-8">
+                                Applies local volumetric distortion to align perfectly with human visual ellipses (MacAdam). Exclusively purposed for finding the exact perceptual distance between two colors. Validated against multi-corpus empirical data.
+                            </p>
+                            <div class="border-t border-ghost pt-4 font-mono text-micro grid grid-cols-2 text-dim gap-4 tabular">
+                                <div><span class="text-muted block mb-1">AXIS</span> J', a', b'</div>
+                                <div><span class="text-muted block mb-1">BEYOND</span> Do not use for arrays.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Module 2: GenSpace -->
+                    <div class="plate p-8 sm:p-12 flex flex-col justify-between">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="flex items-center justify-between mb-16">
+                            <div class="w-12 h-12 rounded-full border border-ghost shadow-[inset_0_0_12px_rgba(6,182,212,0.2)] flex items-center justify-center font-mono text-xs text-accent-cyan tabular">GS</div>
+                            <span class="font-mono text-micro text-dim tracking-widest">OBJ: INTERPOLATION</span>
+                        </div>
+
+                        <div>
+                            <h3 class="font-mono text-lg text-fg mb-3">GenSpace (v1)</h3>
+                            <p class="text-muted text-sm leading-relaxed mb-8">
+                                Keeps global topology entirely flat across opponent planes. Mathematically ensures linear transitions &mdash; preventing hue spiraling and chroma clipping when generating gradients or multi-stop palettes.
+                            </p>
+                            <div class="border-t border-ghost pt-4 font-mono text-micro grid grid-cols-2 text-dim gap-4 tabular">
+                                <div><span class="text-muted block mb-1">AXIS</span> Lg, Cg, Hg</div>
+                                <div><span class="text-muted block mb-1">BEYOND</span> Requires float64 precision.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- §03 MEASUREMENT / STRESS DATA -->
+            <section id="metricspace">
+                <div class="max-w-2xl mb-12">
+                    <div class="font-mono text-micro text-dim tracking-widest uppercase mb-4">03 &mdash; METRICSPACE BENCHMARK</div>
+                    <h2 class="text-3xl font-medium tracking-tight mb-4 text-fg flex items-baseline gap-4">
+                        22.48 vs 29.20 <span class="font-mono text-sm font-normal text-muted bg-[#111115] px-2 py-1 rounded">COMBVD STRESS</span>
+                    </h2>
+                    <p class="text-muted leading-relaxed">
+                        To prove MetricSpace's accuracy, we utilized STRESS (Standardized Residual Sum of Squares) &mdash; the industry standard for calculating how well an algorithm aligns with independent human truth-data. Lower numbers signal closer alignment to human perception. MetricSpace beats the CIEDE2000 standard by 23%.
+                    </p>
+                </div>
+
+                <!-- Framed Data Plate -->
+                <div class="plate w-full overflow-x-auto">
+                    <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                    <table class="w-full text-left border-collapse whitespace-nowrap font-mono text-sm tabular">
+                        <thead>
+                            <tr class="text-micro text-dim bg-bg/50">
+                                <th class="p-5 font-medium tracking-widest uppercase border-0 border-b border-ghost">Space Algorithm</th>
+                                <th class="p-5 font-medium text-right tracking-widest uppercase border-0 border-b border-ghost">COMBVD</th>
+                                <th class="p-5 font-medium text-right tracking-widest uppercase border-0 border-b border-ghost">MacAdam</th>
+                                <th class="p-5 font-medium text-right tracking-widest uppercase border-0 border-b border-ghost">Human F.B.</th>
+                                <th class="p-5 font-medium text-right tracking-widest uppercase border-0 border-b border-ghost text-muted">Avg STRESS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs">
+                            <!-- MS v21 Highlight -->
+                            <tr class="row-active border-b border-ghost relative">
+                                <td class="p-5 font-medium text-fg flex items-center gap-3 relative">
+                                    <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3/4 bg-accent-blue"></span>
+                                    MetricSpace v21
+                                    <span class="px-1.5 py-0.5 rounded border border-accent-blue/30 text-[10px] text-accent-blue bg-accent-blue/10 ml-2">WINNER</span>
+                                </td>
+                                <td class="p-5 text-right font-bold">22.48</td>
+                                <td class="p-5 text-right font-bold">19.51</td>
+                                <td class="p-5 text-right font-bold">23.26</td>
+                                <td class="p-5 text-right font-bold text-fg">21.75</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost">
+                                <td class="p-5">CIE94</td><td class="p-5 text-right">33.37</td><td class="p-5 text-right">19.78</td><td class="p-5 text-right">59.75</td><td class="p-5 text-right">37.63</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost hover:text-fg transition-colors group">
+                                <td class="p-5 group-hover:text-fg">CIEDE2000 <span class="text-micro opacity-50 ml-2">(Previous Std)</span></td><td class="p-5 text-right">29.20</td><td class="p-5 text-right">22.13</td><td class="p-5 text-right">62.54</td><td class="p-5 text-right">37.96</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost">
+                                <td class="p-5">DIN99</td><td class="p-5 text-right">35.76</td><td class="p-5 text-right">23.28</td><td class="p-5 text-right">56.46</td><td class="p-5 text-right">38.50</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost">
+                                <td class="p-5">Jzazbz</td><td class="p-5 text-right">40.63</td><td class="p-5 text-right">25.50</td><td class="p-5 text-right">52.93</td><td class="p-5 text-right">39.69</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost text-opacity-75">
+                                <td class="p-5">CIE Lab (&Delta;E76)</td><td class="p-5 text-right">42.86</td><td class="p-5 text-right">24.53</td><td class="p-5 text-right">62.32</td><td class="p-5 text-right">43.24</td>
+                            </tr>
+                            <tr class="row-dim border-b border-ghost text-opacity-75">
+                                <td class="p-5">OKLab (&Delta;E_OK)</td><td class="p-5 text-right">47.35</td><td class="p-5 text-right">32.72</td><td class="p-5 text-right">57.27</td><td class="p-5 text-right">45.78</td>
+                            </tr>
+                            <tr class="row-dim text-opacity-50">
+                                <td class="p-5">CAM16-UCS</td><td class="p-5 text-right">56.19</td><td class="p-5 text-right">33.15</td><td class="p-5 text-right">65.89</td><td class="p-5 text-right">51.74</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- §04 GENERATION / VISUAL PROOF -->
+            <section id="genspace">
+                <div class="max-w-2xl mb-12">
+                    <div class="font-mono text-micro text-dim tracking-widest uppercase mb-4">04 &mdash; GENSPACE LINEARITY</div>
+                    <h2 class="text-3xl font-medium tracking-tight mb-4">The OKLab Trajectory Correction.</h2>
+                    <p class="text-muted leading-relaxed">
+                        While OKLab is widely adopted for gradients due to its general perceptual uniformity, mathematically it clips mid-tone chroma during drastic coordinate shifts (vivid blue to vivid yellow). We optimized GenSpace strictly to solve this vector degradation. The result is pure linearity.
+                    </p>
+                </div>
+
+                <div class="grid lg:grid-cols-[1fr_2fr] gap-8 xl:gap-12 items-center">
+
+                    <!-- Head to Head Board -->
+                    <div class="plate p-8 sm:p-12 relative flex flex-col justify-center">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="font-mono text-micro text-dim pb-4 mb-6 tracking-widest uppercase border-b border-ghost">Head-to-Head Vector Paths</div>
+
+                        <div class="flex items-center justify-between mb-8">
+                            <div>
+                                <span class="block text-4xl sm:text-6xl text-fg tabular mb-1">66</span>
+                                <span class="font-mono text-xs text-accent-cyan flex gap-1 items-center">GS WINS</span>
+                            </div>
+                            <div class="w-px h-12 bg-ghost"></div>
+                            <div>
+                                <span class="block text-4xl sm:text-6xl text-muted tabular mb-1 opacity-70">9</span>
+                                <span class="font-mono text-xs text-dim">OKLAB WINS</span>
+                            </div>
+                        </div>
+
+                        <div class="font-mono text-xs tabular text-dim flex justify-between">
+                            <span>TOTAL METRICS SCORED</span>
+                            <span class="text-muted">90 (15 TIES)</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Comparison Strip -->
+                    <div class="plate p-8 bg-bg relative">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="space-y-12 w-full">
+
+                            <!-- OKLab Row -->
+                            <div>
+                                <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-3 gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-2 h-2 rounded-full border border-accent-orange"></div>
+                                        <h4 class="font-mono text-sm text-fg">OKLab Matrix</h4>
+                                    </div>
+                                    <div class="font-mono text-xs text-accent-orange bg-accent-orange/10 px-2 py-0.5 rounded border border-accent-orange/20">
+                                        C* DRIFT (CLIPPING)
+                                    </div>
+                                </div>
+                                <div class="w-full h-16 grad-oklab rounded-sm"></div>
+                            </div>
+
+                            <!-- GenSpace Row -->
+                            <div>
+                                <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-3 gap-2">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-2 h-2 rounded-full bg-accent-cyan shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
+                                        <h4 class="font-mono text-sm text-fg flex items-center gap-2">
+                                            GenSpace Matrix
+                                        </h4>
+                                    </div>
+                                    <div class="font-mono text-xs text-dim">
+                                        TRAJECTORY: STABLE &lt; &plusmn;0.5 &Delta;E
+                                    </div>
+                                </div>
+                                <div class="w-full h-20 grad-genspace rounded-sm relative shadow-xl z-20 shadow-black/50 overflow-hidden ring-1 ring-white/10"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- §05 LOGGED LIMITATIONS -->
+            <section id="limits" class="relative z-10">
+                <div class="max-w-2xl mb-12 flex flex-col gap-4">
+                    <div class="font-mono text-micro text-dim tracking-widest uppercase">05 &mdash; LOGGED CONSTRAINTS</div>
+                    <h2 class="text-3xl font-medium tracking-tight text-fg flex items-center gap-3">
+                        <i class="ph ph-warning-octagon text-muted text-3xl"></i> Scientific Integrity
+                    </h2>
+                    <p class="text-muted leading-relaxed">
+                        Perceptual uniformity in a non-Euclidean 3D space cannot be mapped mathematically without encountering some degree of singularity. For full transparency, below are three proven scenarios where our models hit boundaries or lose to legacy constraints.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4 lg:gap-6">
+
+                    <!-- Constraint 1 -->
+                    <div class="plate p-6 relative">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                        <div class="absolute left-6 top-0 w-8 h-px bg-accent-red/50"></div>
+
+                        <div class="font-mono text-xs text-fg mb-3 pt-2">&sect; MILD OVERFITTING</div>
+                        <p class="text-sm text-muted leading-relaxed">
+                            Under MetricSpace v21, we track a +1.8 STRESS gap between the full-data train block and the held-out 20% test block (Train: <span class="tabular">22.14</span> &rarr; Test: <span class="tabular">23.91</span>). While remaining functionally superior, isolated generalizability loss is verified.
+                        </p>
+                    </div>
+
+                    <!-- Constraint 2 -->
+                    <div class="plate p-6 relative">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="font-mono text-xs text-fg mb-3 pt-2">&sect; LEGACY DOMINANCE</div>
+                        <p class="text-sm text-muted leading-relaxed">
+                            CIEDE2000 still numerically outperforms MetricSpace on 3 of the 6 COMBVD micro-data sets (specifically LEEDS, RIT-DuPont, and WITT). MetricSpace achieves its ultimate aggregate dominance via overwhelming victory on the massive BFD-P set.
+                        </p>
+                    </div>
+
+                    <!-- Constraint 3 -->
+                    <div class="plate p-6 relative">
+                        <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+
+                        <div class="font-mono text-xs text-fg mb-3 pt-2">&sect; FLOAT PRECISION</div>
+                        <p class="text-sm text-muted leading-relaxed">
+                            GenSpace sRGB 16.7M full-cycle roundtrip variance is logged at <code class="bg-[#000] px-1 font-mono tabular border border-ghost">5.64e-08</code>. While thoroughly sub-visual (human threshold sits roughly at ~1e-4), strictly mathematically, OKLab holds a purer float threshold (1.67e-15).
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Install Plate CTA -->
+            <section id="install" class="py-12 flex justify-center">
+                <div class="plate p-12 text-center max-w-2xl w-full flex flex-col items-center">
+                    <div class="bracket br-tl"></div><div class="bracket br-tr"></div><div class="bracket br-bl"></div><div class="bracket br-br"></div>
+                    <i class="ph-fill ph-hexagon text-accent-cyan text-4xl mb-6"></i>
+                    <h2 class="text-2xl font-medium tracking-tight mb-2">Initialize Helmlab</h2>
+                    <p class="text-muted text-sm mb-8">Open source under MIT License. Production ready zero-dependency libraries available for Python and Node.</p>
+
+                    <div class="flex flex-col sm:flex-row gap-4 font-mono text-sm w-full sm:w-auto">
+                        <div class="bg-[#000] py-3 px-6 border border-ghost text-fg flex gap-3 items-center w-full justify-center tabular">
+                            <span class="text-dim">&rsaquo;</span> pip install helmlab
+                        </div>
+                        <div class="bg-[#000] py-3 px-6 border border-ghost text-fg flex gap-3 items-center w-full justify-center tabular">
+                            <span class="text-dim">&rsaquo;</span> npm install helmlab
+                        </div>
+                    </div>
+
+                    <a href="#" class="mt-8 text-xs text-dim font-mono hover:text-fg transition-colors border-b border-dashed border-dim pb-1">VIEW GITHUB REPOSITORY</a>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>

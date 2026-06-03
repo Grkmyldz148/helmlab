@@ -392,18 +392,32 @@ export class AnalyticalSpace {
    */
   distance(lab1: Lab, lab2: Lab): number {
     const r = this.p.raw;
-    let dL2 = (lab1[0] - lab2[0]) ** 2;
-    let dab2 = (lab1[1] - lab2[1]) ** 2 + (lab1[2] - lab2[2]) ** 2;
+    // Neutral correction is a display-only post-step: fromXYZ() subtracts an
+    // L-dependent (a, b) offset so grays render exactly neutral. That offset
+    // distorts the trained metric (~+5 STRESS on COMBVD) because it shifts
+    // colors at different lightness by different amounts. Undo it here so the
+    // distance uses the trained metric — mirrors the Python sibling, where
+    // distance() bypasses NC.
+    let L1 = lab1[0], a1 = lab1[1], b1 = lab1[2];
+    let L2 = lab2[0], a2 = lab2[1], b2 = lab2[2];
+    if (this.nc) {
+      const [aE1, bE1] = neutralError(L1);
+      const [aE2, bE2] = neutralError(L2);
+      a1 += aE1; b1 += bE1;
+      a2 += aE2; b2 += bE2;
+    }
+    let dL2 = (L1 - L2) ** 2;
+    let dab2 = (a1 - a2) ** 2 + (b1 - b2) ** 2;
 
     // Pair-dependent SL/SC
     if (r.dist_sl !== 0) {
-      const Lavg = (lab1[0] + lab2[0]) * 0.5;
+      const Lavg = (L1 + L2) * 0.5;
       const SL = 1 + r.dist_sl * (Lavg - 0.5) ** 2;
       dL2 /= SL ** 2;
     }
     if (r.dist_sc !== 0) {
-      const C1 = sqrt(lab1[1] ** 2 + lab1[2] ** 2);
-      const C2 = sqrt(lab2[1] ** 2 + lab2[2] ** 2);
+      const C1 = sqrt(a1 ** 2 + b1 ** 2);
+      const C2 = sqrt(a2 ** 2 + b2 ** 2);
       const SC = 1 + r.dist_sc * (C1 + C2) * 0.5;
       dab2 /= SC ** 2;
     }

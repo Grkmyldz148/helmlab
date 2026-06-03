@@ -55,7 +55,7 @@ export const genSpaceUseCases = [
     useCase: "Gamut mapping",
     why: "Smooth boundary, no cliffs",
     alternative: "OKLab",
-    advantage: "11\u00D7 smoother cusps, 0 monotonicity violations",
+    advantage: "11\u00D7 smoother cusps, 0 monotonicity violations (sRGB/P3)",
   },
   {
     useCase: "Data visualization",
@@ -83,7 +83,7 @@ export const genSpaceUseCases = [
   },
   {
     useCase: "Blue-sensitive design",
-    why: "G/R=1.51 (actual blue, not lavender)",
+    why: "G/R=1.51 vs OKLab 1.41 — stays a bit more saturated, both blue",
     alternative: "OKLab (G/R=1.41)",
     advantage: "Blue\u2192white midpoint is actually blue",
   },

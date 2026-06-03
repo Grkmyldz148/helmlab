@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
+import { VERSION } from "../data/version.ts";
 
 interface Props {
   title?: string;
@@ -69,7 +70,7 @@ const ogImageURL = new URL(ogImage, siteURL).href;
       "image": "https://helmlab.space/og-card.png",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Any",
-      "softwareVersion": "0.11.8",
+      "softwareVersion": VERSION,
       "offers": {
         "@type": "Offer",
         "price": "0",

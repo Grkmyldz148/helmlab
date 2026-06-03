@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { claims, hueDriftReductionPct } from "../../data/claims";
 
 const posts = [
   {
@@ -13,7 +14,7 @@ const posts = [
     slug: "rigid-rotation",
     title: "Rigid Rotation: Free Hue Fix",
     date: "2026-03-25",
-    excerpt: "A single rotation matrix applied post-pipeline reduces maximum hue drift from 48 degrees to 20 degrees -- at zero cost to color difference accuracy.",
+    excerpt: `A single rotation matrix applied post-pipeline produces ${hueDriftReductionPct()}% less max hue drift than OKLab -- at zero cost to color difference accuracy.`,
     tag: "research",
   },
   {
@@ -34,7 +35,7 @@ const posts = [
     slug: "why-another-color-space",
     title: "Why Another Color Space?",
     date: "2026-03-01",
-    excerpt: "OKLab is great. CIELAB is everywhere. So why build something new? The answer starts with 3,813 color pairs and 64,000 human judgments.",
+    excerpt: `OKLab is great. CIELAB is everywhere. So why build something new? The answer starts with ${claims.datasets.combvdPairs.toLocaleString()} color pairs and 64,000 human judgments.`,
     tag: "explainer",
   },
   {
