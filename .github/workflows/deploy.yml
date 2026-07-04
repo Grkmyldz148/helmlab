@@ -65,6 +65,17 @@ jobs:
       - name: Build Astro site
         run: cd landing/landing-new && npm run build
 
+      - name: Regenerate OG card (claims-driven)
+        # public/og-card.png is a screenshot of the claims-driven /og-card page —
+        # regenerate it every deploy so the social card never ships stale numbers.
+        # Google Chrome is preinstalled on ubuntu runners; the fresh PNG must be
+        # copied into dist/ because the build already copied the old public/ one.
+        run: |
+          cd landing/landing-new
+          CHROME_BIN="$(command -v google-chrome || command -v chromium-browser)" \
+            node scripts/generate-og.mjs
+          cp public/og-card.png dist/og-card.png
+
       - name: Claims consistency guard
         # Every site number derives from src/data/claims.ts. This blocks deploy
         # if a stale / inconsistent claim leaked into the built output (the old
