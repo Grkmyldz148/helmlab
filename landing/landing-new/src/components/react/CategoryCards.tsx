@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { categorySummary, genspaceResults, type MetricCategory } from "../../data/genspace-results";
+import { categorySummary, genspaceResults, headlineScore, type MetricCategory } from "../../data/genspace-results";
 
 const categoryDescriptions: Record<MetricCategory, { designer: string; dev: string }> = {
   Gamut: {
@@ -129,7 +129,7 @@ export default function CategoryCards() {
           Performance breakdown across 13 test categories. Click any card to see individual metrics.
         </p>
         <p className="for-dev text-sm text-[#a1a1aa]">
-          83 internal metrics in 12 categories + 7 independent validation metrics. All deterministic, float64.
+          {headlineScore.internalMetrics} internal metrics + {headlineScore.independentMetrics} independent validation metrics in {categorySummary.length} categories. All deterministic, float64.
         </p>
       </div>
 

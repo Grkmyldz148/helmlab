@@ -39,7 +39,9 @@ export default function PaletteTool() {
 
       if (mod) {
         const hl = new mod.Helmlab();
-        const helmlabColors = hl.palette(hex, STEPS);
+        // semanticScale IS the Tailwind-style 50-950 API (palette() is a plain
+        // lightness ramp); keys iterate ascending, so values arrive 50 → 950.
+        const helmlabColors = Object.values(hl.semanticScale(hex));
         setPalettes([
           { label: 'Helmlab', colors: helmlabColors },
           oklabData,

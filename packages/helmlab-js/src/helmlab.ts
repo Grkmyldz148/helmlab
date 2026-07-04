@@ -5,7 +5,7 @@
  *   GenSpace    — generation-optimized pipeline (palette, gradient, gamut map)
  */
 
-import type { Lab, XYZ, RGB, Hex, SemanticScale, WCAGLevel } from './types.js';
+import type { Lab, XYZ, RGB, Hex, LCh, SemanticScale, WCAGLevel } from './types.js';
 import { AnalyticalSpace } from './core/analytical.js';
 import { GenSpace } from './spaces/gen.js';
 import {
@@ -193,6 +193,26 @@ export class Helmlab {
     return this.genToSrgb(lab);
   }
 
+  /**
+   * Gen Lab → cylindrical LCh [L, C, h°]; h in [0, 360).
+   *
+   * Same coordinates as the `helmgenlch` space registered on Color.js.
+   * Use for hue rotations / harmonies: rotate h, keep L and C, convert back
+   * with {@link genFromLch}. Mirrors Python's `gen_to_lch()`.
+   */
+  genToLch(lab: Lab): LCh {
+    const C = sqrt(lab[1] ** 2 + lab[2] ** 2);
+    let h = (atan2(lab[2], lab[1]) * 180) / PI;
+    if (h < 0) h += 360;
+    return [lab[0], C, h];
+  }
+
+  /** Cylindrical LCh [L, C, h°] → Gen Lab. Mirrors Python's `gen_from_lch()`. */
+  genFromLch(lch: LCh): Lab {
+    const rad = (lch[2] * PI) / 180;
+    return [lch[0], lch[1] * cos(rad), lch[1] * sin(rad)];
+  }
+
   // ── Deprecated base* aliases → gen* ─────────────────────────────
 
   /** @deprecated Use genFromHex(). */
@@ -308,6 +328,18 @@ export class Helmlab {
   }
 
   /**
+   * Clearer alias of {@link deltaE} — uncompressed Euclidean Lab distance.
+   *
+   * Prefer this name: `deltaE` is easily mistaken for a CIEDE2000-style ΔE,
+   * but this method is the CIE76 analogue (plain Euclidean distance in
+   * Helmlab metric Lab). For the trained perceptual difference, use
+   * {@link difference}. Mirrors Python's `Helmlab.euclidean_distance()`.
+   */
+  euclideanDistance(color1: Hex, color2: Hex): number {
+    return this.deltaE(color1, color2);
+  }
+
+  /**
    * Compressed perceptual distance (Minkowski + compression) between two Lab values.
    *
    * Optimized against COMBVD-class human-judgment data (STRESS ≈ 22.5 vs
@@ -418,15 +450,19 @@ export class Helmlab {
     const lab2 = this.genFromHex(end);
     const dL = lab2[0] - lab1[0], da = lab2[1] - lab1[1], db = lab2[2] - lab1[2];
 
-    // Fine-sample the GenSpace Lab line and build cumulative CIEDE2000 arc length
+    // Fine-sample the GenSpace Lab line and build cumulative CIEDE2000 arc
+    // length. Samples go through genToSrgb (gamut-MAPPED, like the final
+    // stops and the Python sibling) — raw clamping here made the arc length
+    // disagree with what is actually displayed whenever the Lab line leaves
+    // sRGB (e.g. saturated blue→white), shifting stops by up to 3/255.
     const N = 256;
     const cumDist: number[] = [0];
-    let prevCie = srgbToCieLab(clampRgb(xyzToSrgb(this.gen.toXYZ([lab1[0], lab1[1], lab1[2]]))));
+    let prevCie = srgbToCieLab(this.genToSrgb([lab1[0], lab1[1], lab1[2]]));
     for (let i = 1; i <= N; i++) {
       const t = i / N;
-      const srgb = clampRgb(xyzToSrgb(this.gen.toXYZ([
+      const srgb = this.genToSrgb([
         lab1[0] + dL * t, lab1[1] + da * t, lab1[2] + db * t,
-      ])));
+      ]);
       const cie = srgbToCieLab(srgb);
       cumDist.push(cumDist[i - 1] + ciede2000(prevCie[0], prevCie[1], prevCie[2], cie[0], cie[1], cie[2]));
       prevCie = cie;

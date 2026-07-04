@@ -58,10 +58,10 @@ export const genSpaceUseCases = [
     advantage: "11\u00D7 smoother cusps, 0 monotonicity violations (sRGB/P3)",
   },
   {
-    useCase: "Data visualization",
-    why: "Better pairwise \u0394E separation",
-    alternative: "OKLab / CIE Lab",
-    advantage: "Higher min-\u0394E between palette colors",
+    useCase: "Color harmony tools",
+    why: "Hue rotations stay truer to targets",
+    alternative: "OKLab",
+    advantage: "Palette harmony accuracy 9.1\u00b0 vs 11.7\u00b0",
   },
   {
     useCase: "Dark UI themes",

@@ -105,6 +105,13 @@ jobs:
   publish-npm:
     needs: [test-js, version-guard]
     runs-on: ubuntu-latest
+    # npm Trusted Publishing (OIDC): no NPM_TOKEN — npm mints a short-lived
+    # credential from the GitHub Actions OIDC token. Requires the trusted
+    # publisher to be configured on npmjs.com for the `helmlab` package
+    # (repo Grkmyldz148/helmlab, workflow deploy.yml) and npm CLI >= 11.5.1.
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -126,19 +133,26 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.version-check.outputs.changed == 'true'
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
-      - name: Build & publish to npm
+      - name: Update npm for OIDC trusted publishing
+        if: steps.version-check.outputs.changed == 'true'
+        run: npm install -g npm@latest && npm --version
+
+      - name: Build & publish to npm (OIDC, provenance)
         if: steps.version-check.outputs.changed == 'true'
         run: cd packages/helmlab-js && npm ci && npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ─── 3b. Publish postcss-helmlab (only when version changes) ──
   publish-postcss-helmlab:
     needs: [publish-npm]
     runs-on: ubuntu-latest
+    # Same OIDC trusted-publishing setup — configured separately on npmjs.com
+    # for the `postcss-helmlab` package (same repo + workflow values).
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,8 +174,12 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.version-check.outputs.changed == 'true'
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
+
+      - name: Update npm for OIDC trusted publishing
+        if: steps.version-check.outputs.changed == 'true'
+        run: npm install -g npm@latest && npm --version
 
       - name: Rewrite local helmlab dependency to published version
         if: steps.version-check.outputs.changed == 'true'
@@ -177,16 +195,21 @@ jobs:
           json.dump(d, open(p, 'w'), indent=2)
           "
 
-      - name: Publish postcss-helmlab
+      - name: Publish postcss-helmlab (OIDC, provenance)
         if: steps.version-check.outputs.changed == 'true'
         run: cd packages/postcss-helmlab && npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # ─── 4. Publish PyPI (only when version changes) ───────
   publish-pypi:
     needs: [test-python, version-guard]
     runs-on: ubuntu-latest
+    # PyPI Trusted Publishing (OIDC): no PYPI_TOKEN — pypa/gh-action-pypi-publish
+    # exchanges the GitHub OIDC token for a short-lived PyPI credential.
+    # Requires the trusted publisher to be configured on pypi.org for `helmlab`
+    # (owner Grkmyldz148, repo helmlab, workflow deploy.yml, no environment).
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -221,13 +244,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build & publish to PyPI
+      - name: Build sdist + wheel
         if: steps.version-check.outputs.changed == 'true'
         run: |
-          pip install build twine
+          pip install build
           python -m build
-          python -m twine upload dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Publish to PyPI (OIDC)
+        if: steps.version-check.outputs.changed == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
 

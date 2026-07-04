@@ -166,13 +166,31 @@ class Helmlab:
         XYZ = self._gen.to_XYZ(mapped)
         return clamp_srgb(XYZ_to_sRGB(XYZ))
 
+    def gen_to_lch(self, lab: np.ndarray) -> np.ndarray:
+        """Gen Lab [L, a, b] → cylindrical [L, C, h_deg]; h ∈ [0, 360).
+
+        Same coordinates as the ``helmgenlch`` space registered on Color.js.
+        Use for hue rotations / harmonies: rotate h, keep L and C, convert
+        back with :meth:`gen_from_lch`. Mirrors JS ``genToLch()``.
+        """
+        lab = np.asarray(lab, dtype=np.float64)
+        C = float(np.hypot(lab[1], lab[2]))
+        h = float(np.degrees(np.arctan2(lab[2], lab[1]))) % 360.0
+        return np.array([lab[0], C, h])
+
+    def gen_from_lch(self, lch: np.ndarray) -> np.ndarray:
+        """Cylindrical [L, C, h_deg] → Gen Lab [L, a, b]. Mirrors JS ``genFromLch()``."""
+        lch = np.asarray(lch, dtype=np.float64)
+        rad = float(np.radians(lch[2]))
+        return np.array([lch[0], lch[1] * np.cos(rad), lch[1] * np.sin(rad)])
+
     # ── Deprecated base_* aliases → gen_* ──────────────────────────
 
     @staticmethod
     def _warn_base_deprecated(old: str, new: str) -> None:
         import warnings
         warnings.warn(
-            f"Helmlab.{old}() is deprecated and will be removed in v0.13. "
+            f"Helmlab.{old}() is deprecated and will be removed in a future release. "
             f"Use Helmlab.{new}() instead.",
             DeprecationWarning,
             stacklevel=3,

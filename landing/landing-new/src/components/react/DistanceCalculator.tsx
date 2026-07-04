@@ -274,8 +274,9 @@ export default function DistanceCalculator() {
         </span>
       </div>
       <p className="text-sm text-[#a1a1aa] mb-6">
-        Measure how different two colors look. Helmlab ΔE is{' '}
-        <span className="text-[#fafafa]">trained on COMBVD; validated held-out on MacAdam and Human Feedback</span>{' '}
+        Measure how different two colors look. Helmlab ΔE is Euclidean distance
+        in MetricSpace Lab —{' '}
+        <span className="text-[#fafafa]">a space trained on COMBVD and validated held-out on MacAdam and Human Feedback</span>{' '}
         — the other metrics are shown for comparison.
       </p>
 
@@ -466,8 +467,10 @@ export default function DistanceCalculator() {
       <p className="text-xs text-[#52525b] mt-6 leading-relaxed">
         Helmlab ΔE and OKLab ΔE are Euclidean distances in their respective
         Lab spaces (scaled by 100 to match the CIE Lab range). CIEDE2000 is
-        the industry reference — Helmlab achieves lower STRESS than CIEDE2000
-        on COMBVD and Human Feedback.
+        the industry reference. Helmlab's headline STRESS result (22.48 vs
+        CIEDE2000's 29.2 on COMBVD) belongs to the trained difference()
+        metric — the one behind the observer-agreement panel above — not to
+        this Euclidean ΔE.
       </p>
     </div>
   );

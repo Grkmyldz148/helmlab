@@ -573,6 +573,35 @@ describe('deltaE vs perceptualDistance (distinct metrics)', () => {
     expect(actual).toBeCloseTo(expected, 12);
   });
 
+  it('genToLch/genFromLch round-trip Gen Lab exactly', () => {
+    const hl = new Helmlab();
+    for (const hex of ['#3b82f6', '#ff0000', '#facc15', '#14b8a6', '#123456']) {
+      const lab = hl.genFromHex(hex);
+      const lch = hl.genToLch(lab);
+      const back = hl.genFromLch(lch);
+      expect(back[0]).toBeCloseTo(lab[0], 12);
+      expect(back[1]).toBeCloseTo(lab[1], 12);
+      expect(back[2]).toBeCloseTo(lab[2], 12);
+      expect(lch[1]).toBeGreaterThanOrEqual(0);
+      expect(lch[2]).toBeGreaterThanOrEqual(0);
+      expect(lch[2]).toBeLessThan(360);
+    }
+  });
+
+  it('genToLch hue matches manual atan2 (degrees)', () => {
+    const hl = new Helmlab();
+    const lab = hl.genFromHex('#3b82f6');
+    const [, , h] = hl.genToLch(lab);
+    const expected = ((Math.atan2(lab[2], lab[1]) * 180) / Math.PI + 360) % 360;
+    expect(h).toBeCloseTo(expected, 12);
+  });
+
+  it('euclideanDistance is an exact alias of deltaE (Python parity)', () => {
+    const hl = new Helmlab();
+    expect(hl.euclideanDistance('#ff0000', '#00ff00')).toBe(hl.deltaE('#ff0000', '#00ff00'));
+    expect(hl.euclideanDistance('#3b82f6', '#4c8af7')).toBe(hl.deltaE('#3b82f6', '#4c8af7'));
+  });
+
   it('deltaE > perceptualDistance for very dissimilar pairs (compression saturates)', () => {
     const hl = new Helmlab();
     const lab_w = hl.fromHex('#ffffff');

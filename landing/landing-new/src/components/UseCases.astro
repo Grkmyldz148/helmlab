@@ -1,6 +1,21 @@
 ---
 // UseCases — when to use / when not to use Helmlab
 import { claims, munsellMult, hueDriftReductionPct, cuspSmoothMult, darkGradientPct, yellowChromaPct, oklabNearAchromAdvantagePct, oklabDeutanAdvantagePct, bundleRatio } from '../data/claims';
+import { genspaceResults } from '../data/genspace-results';
+// Pull individual rows from the canonical ColorBench table so cards can never
+// contradict the Metric Explorer.
+const row = (name: string) => {
+  const m = genspaceResults.find((r) => r.name === name);
+  if (!m) throw new Error(`UseCases: unknown metric "${name}"`);
+  return m;
+};
+const pctBetter = (name: string) => {
+  const m = row(name);
+  const ours = Number(m.genspace), theirs = Number(m.oklab);
+  const gap = m.lowerIsBetter ? (theirs - ours) / theirs : (ours - theirs) / theirs;
+  return Math.round(gap * 100);
+};
+const harmony = row('Palette harmony accuracy');
 const useCases = [
   {
     title: "Design System Palettes",
@@ -8,15 +23,15 @@ const useCases = [
   },
   {
     title: "Gradient Interpolation",
-    desc: `${hueDriftReductionPct()}% less max hue drift, 18% better cross-lightness CV. G/R=${claims.blueWhiteGR.genspace} (OKLab: ${claims.blueWhiteGR.oklab}).`,
+    desc: `${hueDriftReductionPct()}% less max hue drift, ${pctBetter('Cross-lightness gradient CV')}% better cross-lightness CV. G/R=${claims.blueWhiteGR.genspace} (OKLab: ${claims.blueWhiteGR.oklab}).`,
   },
   {
     title: "Gamut Mapping",
     desc: `360/360 cusps, 0 mono violations, cusp smoothness ${claims.cuspSmoothness.genspace} (OKLab: ${claims.cuspSmoothness.oklab}). ${cuspSmoothMult()}x smoother.`,
   },
   {
-    title: "Data Visualization",
-    desc: "Higher min pairwise delta-E (14.50 vs 14.34). Better perceptual distinctiveness.",
+    title: "Color Harmony Tools",
+    desc: `Palette harmony accuracy: ${harmony.genspace}° vs OKLab ${harmony.oklab}°. Hue-rotated palettes stay ${pctBetter('Palette harmony accuracy')}% truer.`,
   },
   {
     title: "Dark UI Themes",

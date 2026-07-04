@@ -12,6 +12,7 @@ import {
 import {
   stressScores,
   combvdSubDatasets,
+  combvdSubsetSplit,
   datasetLabels,
   type StressDataset,
 } from "../../data/stress-scores";
@@ -196,6 +197,55 @@ export default function StressChart() {
               </div>
             ))}
           </div>
+
+          {/* Where the CIEDE2000 gap lives — median-dE split per subset */}
+          <h4 className="text-sm font-medium text-[#a1a1aa] mt-6 mb-1">
+            Where the CIEDE2000 Gap Lives{" "}
+            <span className="text-[#52525b] font-normal">(each subset split at its median ΔE*ab)</span>
+          </h4>
+          <p className="text-xs text-[#52525b] mb-3 leading-relaxed">
+            MetricSpace's deficit on LEEDS / RIT-DuPont is almost entirely in the
+            near-threshold half (ΔE*ab ≲ 1.5) — the tolerance regime CIEDE2000's
+            S-functions were originally derived from. On the larger-ΔE halves the
+            gap shrinks to 0.5–1.6 STRESS, and MetricSpace wins both halves on
+            the much larger BFD-P sets (73% of pairs). Witt sits at its noise floor for
+            both metrics.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[#52525b]">
+                  <th className="text-left font-normal py-1 pr-2">Subset</th>
+                  <th className="text-right font-normal py-1 px-2">median ΔE*ab</th>
+                  <th className="text-right font-normal py-1 px-2">Near-threshold half</th>
+                  <th className="text-right font-normal py-1 pl-2">Larger-ΔE half</th>
+                </tr>
+              </thead>
+              <tbody className="font-mono">
+                {combvdSubsetSplit.map((r) => (
+                  <tr key={r.name} className="border-t border-white/[0.04]">
+                    <td className="py-1.5 pr-2 font-sans text-[#a1a1aa]">{r.name} <span className="text-[#3f3f46]">n={r.n}</span></td>
+                    <td className="text-right py-1.5 px-2 text-[#52525b]">{r.medDE.toFixed(2)}</td>
+                    <td className="text-right py-1.5 px-2">
+                      <span className={r.smallHelm <= r.smallDE2K ? "text-[#34d399]" : "text-[#a1a1aa]"}>{r.smallHelm.toFixed(2)}</span>
+                      <span className="text-[#3f3f46]"> vs </span>
+                      <span className={r.smallDE2K < r.smallHelm ? "text-[#60a5fa]" : "text-[#52525b]"}>{r.smallDE2K.toFixed(2)}</span>
+                    </td>
+                    <td className="text-right py-1.5 pl-2">
+                      <span className={r.bigHelm <= r.bigDE2K ? "text-[#34d399]" : "text-[#a1a1aa]"}>{r.bigHelm.toFixed(2)}</span>
+                      <span className="text-[#3f3f46]"> vs </span>
+                      <span className={r.bigDE2K < r.bigHelm ? "text-[#60a5fa]" : "text-[#52525b]"}>{r.bigDE2K.toFixed(2)}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[10px] text-[#3f3f46] mt-2">
+            STRESS per half, optimal scale refit per half. Shipped v21 params, Bradford CAT to D65,
+            CIEDE2000 from the same harness (half-values are internally consistent; totals table above
+            uses the canonical published run — protocols agree to ≤0.05 STRESS).
+          </p>
         </div>
       )}
     </div>

@@ -116,3 +116,34 @@ export const combvdSubDatasets = [
   { name: "RIT-DuPont", n: 312, metricSpace: 21.90, ciede2000: 19.47, winner: "ciede2000" },
   { name: "WITT", n: 418, metricSpace: 30.93, ciede2000: 30.22, winner: "ciede2000" },
 ] as const satisfies readonly SubDatasetScore[];
+
+export interface SubsetSplitScore {
+  readonly name: string;
+  readonly n: number;
+  /** median in-subset CIELAB ΔE*ab used as the split point */
+  readonly medDE: number;
+  readonly smallHelm: number;
+  readonly smallDE2K: number;
+  readonly bigHelm: number;
+  readonly bigDE2K: number;
+}
+
+/**
+ * Where the CIEDE2000 gap lives — each COMBVD subset split at its median
+ * CIELAB ΔE*ab into a near-threshold half and a larger-difference half,
+ * STRESS computed per half (optimal scale refit per half).
+ *
+ * Measured 2026-07-05 with the shipped v21 params, Bradford CAT to D65,
+ * CIEDE2000 from the same harness. Deterministic; rerun reproduces exactly.
+ * Takeaway: the LEEDS/RIT-DuPont deficit is almost entirely near-threshold
+ * (ΔE*ab ≲ 1.5) — the tolerance regime CIEDE2000's S-functions were derived
+ * from — while MetricSpace wins both halves on the (much larger) BFD-P sets.
+ */
+export const combvdSubsetSplit = [
+  { name: "BFD-P (C)", n: 200, medDE: 0.73, smallHelm: 31.72, smallDE2K: 26.96, bigHelm: 27.49, bigDE2K: 27.13 },
+  { name: "BFD-P (D65)", n: 2028, medDE: 2.24, smallHelm: 23.57, smallDE2K: 23.99, bigHelm: 20.98, bigDE2K: 23.91 },
+  { name: "BFD-P (M)", n: 548, medDE: 4.49, smallHelm: 29.07, smallDE2K: 34.63, bigHelm: 17.50, bigDE2K: 32.27 },
+  { name: "LEEDS", n: 307, medDE: 1.57, smallHelm: 23.15, smallDE2K: 18.94, bigHelm: 18.07, bigDE2K: 16.48 },
+  { name: "RIT-DuPont", n: 312, medDE: 1.35, smallHelm: 22.67, smallDE2K: 19.07, bigHelm: 18.48, bigDE2K: 17.93 },
+  { name: "WITT", n: 418, medDE: 1.46, smallHelm: 29.83, smallDE2K: 28.71, bigHelm: 29.35, bigDE2K: 29.08 },
+] as const satisfies readonly SubsetSplitScore[];

@@ -1,6 +1,7 @@
 ---
 // HonestLimits — transparent about where we lose
-import { claims, totalMetrics, oklabNearAchromAdvantagePct, oklabDeutanAdvantagePct } from '../data/claims';
+import { claims, totalMetrics } from '../data/claims';
+import { genspaceResults } from '../data/genspace-results';
 const metricLosses = [
   {
     title: "COMBVD sub-datasets",
@@ -20,17 +21,27 @@ const metricLosses = [
   },
 ];
 
-const genLosses = [
-  { metric: "sRGB Round-trip", ours: claims.roundtrip.sRGB.genspace.toExponential(2), theirs: claims.roundtrip.sRGB.oklab.toExponential(2), gap: "34M x", note: "NC LUT adds noise. Below visual threshold." },
-  { metric: "Near-ach gradient CV", ours: `${claims.nearAchromCV.genspace}%`, theirs: `${claims.nearAchromCV.oklab}%`, gap: `${oklabNearAchromAdvantagePct()}%`, note: "Real weakness. Grays less uniform." },
-  { metric: "Bright gradient CV", ours: "32.76%", theirs: "32.18%", gap: "2%", note: "Marginal. Within noise." },
-  { metric: "Gradient CV p95", ours: "138.78%", theirs: "136.69%", gap: "2%", note: "Marginal. Tail-end outliers." },
-  { metric: "CVD deutan step", ours: `${claims.deutanStep.genspace}`, theirs: `${claims.deutanStep.oklab}`, gap: `${oklabDeutanAdvantagePct()}%`, note: "Real weakness. Green-blind see less distinction." },
-  { metric: "Primary hue disc sRGB", ours: "1.65 deg", theirs: "1.31 deg", gap: "26%", note: "Hue jumps at sRGB primaries." },
-  { metric: "Primary hue disc P3", ours: "1.37 deg", theirs: "1.08 deg", gap: "27%", note: "Same issue in Display P3." },
-  { metric: "Red-to-White G-B", ours: "0.063", theirs: "0.062", gap: "2%", note: "Effectively tied." },
-  { metric: "Ebner-Fairchild max", ours: "8.6 deg", theirs: "8.1 deg", gap: "6%", note: "Slightly worse worst-case hue surface." },
-];
+// Derived from the canonical ColorBench table — every metric OKLab wins,
+// no hand-picked list. Notes are the only hand-written part.
+const lossNotes: Record<string, string> = {
+  "Worst-case gradient CV": "Single worst pair regresses. Tail case, not typical.",
+  "Bright gradient CV (L>0.6)": "Marginal. Bright-end steps slightly less even.",
+  "Near-achromatic gradient CV": "Real weakness. Grays less uniform.",
+  "CVD deutan min step dE": "Real weakness. Green-blind see less distinction.",
+  "Data viz min pairwise dE": "Slightly lower minimum palette separation.",
+  "Red-White midpoint G-B": "Effectively tied.",
+  "Primary hue disc (sRGB)": "Hue jumps at sRGB primaries.",
+  "Primary hue disc (P3)": "Same issue in Display P3.",
+  "Ebner-Fairchild hue surfaces (max)": "Slightly worse worst-case hue surface.",
+};
+const genLosses = genspaceResults
+  .filter((m) => m.winner === "oklab")
+  .map((m) => {
+    const ours = Number(m.genspace);
+    const theirs = Number(m.oklab);
+    const gap = m.lowerIsBetter ? (ours - theirs) / theirs : (theirs - ours) / ours;
+    return { metric: m.name, gap: `${Math.round(gap * 100)}%`, note: lossNotes[m.name] ?? "" };
+  });
 ---
 
 <section class="py-16 md:py-24" id="honest-limits">

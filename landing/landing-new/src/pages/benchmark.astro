@@ -108,7 +108,7 @@ import {
           Head-to-head against OKLab (the current CSS standard), it wins {claims.record.genspace} out of {totalMetrics()} metrics.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
-          83 internal metrics (deterministic, float64) + 7 independent validation metrics.
+          {claims.internalMetrics} internal metrics (deterministic, float64) + {claims.independentMetrics} independent validation metrics.
           Opponent: OKLab with standard Euclidean deltaE. Same test harness, same precision.
         </p>
       </div>
@@ -163,11 +163,11 @@ import {
           Metric Explorer
         </h2>
         <p class="for-designer text-[#a1a1aa] max-w-2xl">
-          Search and filter all 83 internal benchmark metrics. Every number is reproducible.
+          Search and filter all {claims.record.total} benchmark metrics. Every number is reproducible.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
-          Sortable, filterable table of all metrics. Values are from ColorBench HEAD
-          running GenSpace v10-BH vs OKLab, both at float64 precision.
+          Sortable, filterable table of all metrics. Values are from the canonical
+          ColorBench run: GenSpace v0.11.1 vs OKLab, both at float64 precision.
         </p>
       </div>
 
@@ -496,7 +496,7 @@ import {
           <li><strong class="text-[#fafafa]">HDR color differences</strong> — no HDR psychophysical dataset available</li>
           <li><strong class="text-[#fafafa]">Cross-surround conditions</strong> — all data is standard viewing conditions</li>
           <li><strong class="text-[#fafafa]">Display-specific gamuts</strong> — only standard sRGB / Display P3 / Rec.2020 primaries</li>
-          <li><strong class="text-[#fafafa]">Computational performance</strong> — not benchmarked (GenSpace ~35 FLOPs, MetricSpace ~150 FLOPs per color)</li>
+          <li><strong class="text-[#fafafa]">Computational performance</strong> — not formally benchmarked (JS microbenchmark: GenSpace ≈2.5–2.7× OKLab per color)</li>
           <li><strong class="text-[#fafafa]">Perceptual ranking with human observers</strong> — GenSpace metrics test geometric/mathematical properties, not direct human preference</li>
         </ul>
       </div>

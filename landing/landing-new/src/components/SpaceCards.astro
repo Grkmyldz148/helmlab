@@ -52,9 +52,11 @@ import { claims, winShort, ciede2000ImprovementPct } from '../data/claims';
             <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M2</span>
             <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">PW-L</span>
+            <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">enrich</span>
             <span class="text-[#52525b]">&rarr;</span>
-            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">PW-L</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">C^cp</span>
             <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">NC</span>
             <span class="text-[#52525b]">&rarr;</span>
@@ -78,7 +80,7 @@ import { claims, winShort, ciede2000ImprovementPct } from '../data/claims';
         </div>
         <h3 class="text-2xl font-bold mb-2">For Measurement</h3>
         <p class="text-[#a1a1aa] text-sm mb-6">
-          {claims.metricParams}-parameter enriched pipeline with Bradford CAT, Helmholtz-Kohlrausch correction, pair-dependent SL/SC weighting.
+          {claims.metricParams}-parameter enriched pipeline with Helmholtz-Kohlrausch correction and pair-dependent SL/SC weighting (STRESS evaluated with Bradford CAT).
         </p>
 
         <!-- Key stats -->
@@ -103,11 +105,9 @@ import { claims, winShort, ciede2000ImprovementPct } from '../data/claims';
           <div class="flex flex-wrap items-center gap-1.5 text-xs font-mono">
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">XYZ</span>
             <span class="text-[#52525b]">&rarr;</span>
-            <span class="rounded bg-[#60a5fa]/10 px-2 py-1 text-[#60a5fa]">CAT</span>
-            <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M1</span>
             <span class="text-[#52525b]">&rarr;</span>
-            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">&gamma;</span>
+            <span class="rounded bg-[#60a5fa]/10 px-2 py-1 text-[#60a5fa]">&gamma;</span>
             <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">M2</span>
             <span class="text-[#52525b]">&rarr;</span>
@@ -115,7 +115,11 @@ import { claims, winShort, ciede2000ImprovementPct } from '../data/claims';
             <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">H-K</span>
             <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">L/C</span>
+            <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">NC</span>
+            <span class="text-[#52525b]">&rarr;</span>
+            <span class="rounded bg-white/[0.06] px-2 py-1 text-[#a1a1aa]">&phi;</span>
             <span class="text-[#52525b]">&rarr;</span>
             <span class="rounded bg-white/[0.06] px-2 py-1 text-[#fafafa] font-semibold">Lab</span>
           </div>

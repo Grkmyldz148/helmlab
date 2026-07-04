@@ -69,7 +69,11 @@ def hex_to_srgb(hex_str: str) -> np.ndarray:
         h = h[0]*2 + h[1]*2 + h[2]*2
     if len(h) != 6:
         raise ValueError(f"Expected 3 or 6-char hex, got '{hex_str}'")
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    try:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except ValueError:
+        # Mirror the JS sibling's clean message for non-hex characters
+        raise ValueError(f"Invalid hex color: '{hex_str}'") from None
     return np.array([r, g, b], dtype=np.float64) / 255.0
 
 

@@ -10,6 +10,9 @@ export type RGB = [number, number, number];
 /** CSS hex string '#rrggbb'. */
 export type Hex = string;
 
+/** Cylindrical Lab [L, C, h]. h in degrees, [0, 360). */
+export type LCh = [number, number, number];
+
 /** Semantic scale levels (Tailwind-style). */
 export type SemanticScale = Record<string, Hex>;
 

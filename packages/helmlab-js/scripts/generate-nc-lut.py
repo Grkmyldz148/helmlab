@@ -22,8 +22,10 @@ space = AnalyticalSpace(neutral_correction=False, ab_rotate_deg=0.0)
 # D65 white point
 D65 = np.array([0.95047, 1.0, 1.08883])
 
-# Sample Y values (log-spaced for better dark coverage, matching Python)
+# Sample Y values (log-spaced for better dark coverage, matching Python's
+# MetricSpace._build_neutral_lut EXACTLY — including the black-point anchor)
 Y_vals = np.concatenate([
+    [0.0],  # black point anchor: NC error is zero at L=0
     np.linspace(0.001, 0.01, 10),
     np.linspace(0.01, 0.1, 20),
     np.linspace(0.1, 2.0, N - 30),
@@ -51,18 +53,25 @@ b_sorted = b_sorted[mask]
 # Extend LUT beyond gray-axis peak (L≈1.29) with constant (clamped) values.
 # Chromatic colors (P3 magenta) can reach L≈2.2; the gray axis has no reference
 # there. Clamping to the last measured value is physically reasonable and
-# ensures both Python PCHIP and JS linear interpolation give the same result.
-L_ext = np.arange(L_sorted[-1] + 0.01, 2.6, 0.01)
+# matches Python's constant extension (avoids PCHIP cubic overshoot).
+# Only 3 extension knots are needed: PCHIP derivatives depend on adjacent
+# intervals only, so real-knot derivatives match Python's full extension,
+# and beyond the last knot the JS side clamps to the same constant that
+# Python's flat extension evaluates to. ~120 fewer JSON entries.
+L_ext = np.array([L_sorted[-1] + 0.01, L_sorted[-1] + 0.02, 2.59])
 a_ext = np.full(len(L_ext), a_sorted[-1])
 b_ext = np.full(len(L_ext), b_sorted[-1])
 L_sorted = np.concatenate([L_sorted, L_ext])
 a_sorted = np.concatenate([a_sorted, a_ext])
 b_sorted = np.concatenate([b_sorted, b_ext])
 
+# 12-decimal precision: with PCHIP on both sides, knot rounding bounds the
+# cross-language gap at ~1e-12 (visually nothing) while keeping the JSON
+# ~30% smaller than full float64 repr. 10 decimals put a ~1e-10 floor.
 lut = {
-    "L": [round(float(x), 10) for x in L_sorted],
-    "a_err": [round(float(x), 10) for x in a_sorted],
-    "b_err": [round(float(x), 10) for x in b_sorted],
+    "L": [round(float(x), 12) for x in L_sorted],
+    "a_err": [round(float(x), 12) for x in a_sorted],
+    "b_err": [round(float(x), 12) for x in b_sorted],
 }
 
 out_path = Path(__file__).resolve().parent.parent / "src" / "data" / "neutral-lut.json"

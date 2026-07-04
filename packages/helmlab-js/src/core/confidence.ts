@@ -14,12 +14,15 @@
  * Limits: EXPERIMENTAL, n=47 training pairs, calibrated for the small /
  * near-threshold regime (de ≲ 0.15) where reliability matters.
  */
-const A = -98.243;
-const B = -11.538;
-const C = 30.716;
-const SCALE = 591.15; // maps perceptual `de` → human rating units
-const DIS_FLOOR = 4.76;
-const DE_TRAIN_MAX = 0.1484;
+// Full-precision coefficients from src/helmlab/data/confidence_params.json —
+// rounded copies drifted disagreement ~5e-4 vs Python and put DE_TRAIN_MAX
+// slightly high (0.1484 vs 0.14811…), flipping `extrapolated` in between.
+const A = -98.2432184776279;
+const B = -11.538177805266077;
+const C = 30.716489232811135;
+const SCALE = 591.1523027745784; // maps perceptual `de` → human rating units
+const DIS_FLOOR = 4.759084879353265;
+const DE_TRAIN_MAX = 0.14811473587883495;
 
 export interface Confidence {
   /** the perceptual distance itself */

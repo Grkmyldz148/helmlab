@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helmlab"
-version = "0.14.0"
+version = "0.15.0"
 description = "A data-driven analytical color space trained on 64,000 human color-difference observations"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,7 +37,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://helmlab.space"
-Documentation = "https://grkmyldz148.github.io/helmlab/"
+Documentation = "https://helmlab.space/docs/"
 Repository = "https://github.com/Grkmyldz148/helmlab"
 Issues = "https://github.com/Grkmyldz148/helmlab/issues"
 
@@ -72,7 +72,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-helmlab = ["data/*.json"]
+helmlab = ["data/*.json", "py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

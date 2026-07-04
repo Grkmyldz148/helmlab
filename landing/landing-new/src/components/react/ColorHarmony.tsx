@@ -61,15 +61,14 @@ function rotateHueInGen(
   baseLab: [number, number, number],
   deltaDeg: number
 ): string {
-  const [L, a, b] = baseLab;
-  const C = Math.sqrt(a * a + b * b);
-  const hBase = Math.atan2(b, a);
-  const hNew = hBase + (deltaDeg * Math.PI) / 180;
-  const cosH = Math.cos(hNew);
-  const sinH = Math.sin(hNew);
+  // genToLch/genFromLch = the package's own LCh helpers (same coordinates
+  // as Color.js `helmgenlch`) — no manual atan2/cos/sin here anymore.
+  const [L, C, hBase] = hl.genToLch(baseLab);
+  const hNew = (hBase + deltaDeg) % 360;
+  const atC = (c: number): [number, number, number] => hl.genFromLch([L, c, hNew]);
 
   // Try full chroma first
-  const tryHex = hl.genToHex([L, C * cosH, C * sinH]);
+  const tryHex = hl.genToHex(atC(C));
   const [tr, tg, tb] = hexToRgb(tryHex);
   // genToHex already gamut-maps, but we prefer a chroma-only reduction to preserve hue/L
   // Binary search for max in-gamut chroma at this (L, hNew)
@@ -77,7 +76,7 @@ function rotateHueInGen(
   let hi = C;
   for (let i = 0; i < 22; i++) {
     const mid = (lo + hi) / 2;
-    const hex = hl.genToHex([L, mid * cosH, mid * sinH]);
+    const hex = hl.genToHex(atC(mid));
     // genToHex already gamut-maps; if clipping happened, the round-tripped
     // chroma will be less than `mid`. This isolates chroma reduction only.
     const labRt = hl.genFromHex(hex);
@@ -90,7 +89,7 @@ function rotateHueInGen(
   const fullLabRt = hl.genFromHex(tryHex);
   const fullC = Math.sqrt(fullLabRt[1] * fullLabRt[1] + fullLabRt[2] * fullLabRt[2]);
   if (fullC >= C - 1e-3 && isInSrgb(tr, tg, tb)) return tryHex;
-  return hl.genToHex([L, cUse * cosH, cUse * sinH]);
+  return hl.genToHex(atC(cUse));
 }
 
 interface HarmonyResult {

@@ -1,7 +1,9 @@
 // DesignerFlow — Story-driven visual experience for designers
 // React component (instead of Astro) to avoid esbuild template parsing issues
 
+import { useEffect, useState } from "react";
 import MiniPlayground from "./MiniPlayground";
+import { interpolateOklab, oklabPalette } from "../../lib/color-utils";
 import {
   claims,
   munsellMult,
@@ -10,25 +12,61 @@ import {
   oklabDeutanAdvantagePct,
 } from "../../data/claims";
 
-// REAL computed gradient values (not hardcoded approximations)
-const gradients = {
-  // Blue→White (real OKLab + Helmlab interpolation). OKLab midpoint #74a3ff,
-  // Helmlab midpoint #649cff — both stay blue (~220°), Helmlab a touch more saturated.
-  blueOk: "linear-gradient(to right, #0000ff, #1957ff, #4780ff, #74a3ff, #a1c3ff, #cfe1ff, #ffffff)",
-  blueHl: "linear-gradient(to right, #0000ff, #104fff, #3375ff, #649cff, #a3c4ff, #d9e5ff, #ffffff)",
-  // Red→White: very similar — both stay warm
-  redOk: "linear-gradient(to right, #ff0000, #ff5545, #ff7e6d, #ffa192, #ffc1b6, #ffe0da, #ffffff)",
-  redHl: "linear-gradient(to right, #ff0000, #ff5846, #ff8675, #ffada0, #ffcfc7, #ffeae6, #ffffff)",
-  // Yellow→White: OKLab slightly more saturated early, Helmlab more linear fade
-  yelOk: "linear-gradient(to right, #facc15, #fbd65c, #fcdf84, #fde8a5, #fef0c4, #fff8e2, #ffffff)",
-  yelHl: "linear-gradient(to right, #facc15, #fbd766, #fbe294, #fcebb8, #fdf3d6, #fefaed, #ffffff)",
-  // Teal→Black: computed properly
-  tealOk: "linear-gradient(to right, #14b8a6, #0d8a7e, #075e57, #033633, #011514, #000000)",
-  tealHl: "linear-gradient(to right, #14b8a6, #109e90, #0c8479, #086a62, #04504b, #000000)",
-};
+type HelmlabModule = typeof import("helmlab");
 
-const palOk = ["#eff6ff","#dbeafe","#bfdbfe","#93bbfd","#6296f5","#3b82f6","#2563eb","#1d4ed8","#1e3a8a","#172554","#0c1427"];
-const palHl = ["#eef4ff","#d5e3ff","#b5cfff","#8db5fe","#6398f8","#3b82f6","#2968d4","#1d50aa","#153c82","#0e2a5c","#081a3a"];
+// Every swatch below is COMPUTED from the shipped packages — the OKLab side
+// synchronously via lib/color-utils, the Helmlab side from the same local
+// `helmlab` package the playground uses. Nothing is hand-tuned, so the
+// visuals can never drift from what the library actually outputs.
+const STRIP_PAIRS = [
+  ["blue", "#0000ff", "#ffffff", 7],
+  ["red", "#ff0000", "#ffffff", 7],
+  ["yel", "#facc15", "#ffffff", 7],
+  ["teal", "#14b8a6", "#000000", 6],
+] as const;
+
+const toCss = (stops: string[]) => `linear-gradient(to right, ${stops.join(", ")})`;
+const gr = (hex: string) => parseInt(hex.slice(3, 5), 16) / parseInt(hex.slice(1, 3), 16);
+
+function computeOklabVisuals() {
+  const grads: Record<string, string> = {};
+  const mids: Record<string, string> = {};
+  for (const [name, a, b, n] of STRIP_PAIRS) {
+    const stops = interpolateOklab(a, b, n);
+    grads[`${name}Ok`] = toCss(stops);
+    mids[`${name}Ok`] = stops[Math.floor(n / 2)];
+  }
+  return { grads, mids, pal: oklabPalette("#3b82f6", 11) };
+}
+
+function useHelmlabVisuals() {
+  const ok = computeOklabVisuals();
+  const [hl, setHl] = useState<{ grads: Record<string, string>; mids: Record<string, string>; pal: string[] } | null>(null);
+
+  useEffect(() => {
+    import("helmlab")
+      .then((mod: HelmlabModule) => {
+        const h = new mod.Helmlab();
+        const grads: Record<string, string> = {};
+        const mids: Record<string, string> = {};
+        for (const [name, a, b, n] of STRIP_PAIRS) {
+          const stops = h.gradient(a, b, n);
+          grads[`${name}Hl`] = toCss(stops);
+          mids[`${name}Hl`] = stops[Math.floor(n / 2)];
+        }
+        // semanticScale is the Tailwind-style 50-950 API the copy describes
+        setHl({ grads, mids, pal: Object.values(h.semanticScale("#3b82f6")) });
+      })
+      .catch(() => {});
+  }, []);
+
+  return {
+    gradients: { ...ok.grads, ...(hl?.grads ?? {}) },
+    mids: { ...ok.mids, ...(hl?.mids ?? {}) },
+    palOk: ok.pal,
+    palHl: hl?.pal ?? [],
+  };
+}
 
 const faqs = [
   { q: "Do I need to know color science?", a: "No. Import Helmlab, give it a hex color, get better results back. The math is hidden." },
@@ -49,6 +87,8 @@ function GradientStrip({ label, bg, ok }: { label: string; bg: string; ok?: bool
 }
 
 export default function DesignerFlow() {
+  const { gradients, mids, palOk, palHl } = useHelmlabVisuals();
+  const fmtGR = (hex?: string) => (hex ? gr(hex).toFixed(2) : "…");
   return (
     <>
       {/* SECTION 1: The Blue Problem */}
@@ -66,12 +106,12 @@ export default function DesignerFlow() {
             <div className="rounded-2xl border border-white/5 bg-zinc-950 p-6">
               <div className="text-xs text-red-400 uppercase tracking-widest font-medium mb-3">OKLab (the current standard)</div>
               <div className="h-16 rounded-xl mb-3" style={{ background: gradients.blueOk }} />
-              <p className="text-sm text-zinc-500">Midpoint #74a3ff — slightly paler / less saturated (G/R 1.41), but still blue at hue ~220°.</p>
+              <p className="text-sm text-zinc-500">Midpoint {mids.blueOk} — slightly paler / less saturated (G/R {fmtGR(mids.blueOk)}), but still blue at hue ~220°.</p>
             </div>
             <div className="rounded-2xl border border-emerald-400/20 bg-zinc-950 p-6">
               <div className="text-xs text-emerald-400 uppercase tracking-widest font-medium mb-3">Helmlab</div>
               <div className="h-16 rounded-xl mb-3" style={{ background: gradients.blueHl }} />
-              <p className="text-sm text-zinc-400">Midpoint #649cff — a little more saturated (G/R 1.56). Small gap, but consistent through the transition.</p>
+              <p className="text-sm text-zinc-400">Midpoint {mids.blueHl ?? "…"} — a little more saturated (G/R {fmtGR(mids.blueHl)}). Small gap, but consistent through the transition.</p>
             </div>
           </div>
 

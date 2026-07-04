@@ -400,6 +400,19 @@ export class AnalyticalSpace {
     // distance() bypasses NC.
     let L1 = lab1[0], a1 = lab1[1], b1 = lab1[2];
     let L2 = lab2[0], a2 = lab2[1], b2 = lab2[2];
+    // The display rotation φ is applied AFTER NC in fromXYZ, so the NC offset
+    // is defined in the pre-rotation frame. Un-rotate before adding it back —
+    // adding it in the rotated frame mixed the two frames and left a ~0.3%
+    // gap vs Python (whose distance() computes pre-rotation, pre-NC labs).
+    // The metric itself is rotation-invariant, so we stay in the
+    // pre-rotation frame from here on.
+    if (this.hasRot) {
+      const aU1 = a1 * this.rotCos + b1 * this.rotSin;
+      const bU1 = -a1 * this.rotSin + b1 * this.rotCos;
+      const aU2 = a2 * this.rotCos + b2 * this.rotSin;
+      const bU2 = -a2 * this.rotSin + b2 * this.rotCos;
+      a1 = aU1; b1 = bU1; a2 = aU2; b2 = bU2;
+    }
     if (this.nc) {
       const [aE1, bE1] = neutralError(L1);
       const [aE2, bE2] = neutralError(L2);

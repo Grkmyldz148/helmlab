@@ -48,23 +48,23 @@ export const claims = {
   monotonicity:    { sRGB: 0, P3: 0, Rec2020: 1 },
   oklabP3MonoViol: 71,
   roundtrip: {
-    sRGB:    { genspace: 5.64e-8,  oklab: 1.67e-15 },
-    P3:      { genspace: 2.0e-15,  oklab: 1.67e-15 },
-    Rec2020: { genspace: 1.78e-15, oklab: 1.55e-15 },
+    sRGB:    { genspace: 1.78e-15,  oklab: 1.78e-15 },
+    P3:      { genspace: 1.89e-15,  oklab: 1.67e-15 },
+    Rec2020: { genspace: 1.67e-15, oklab: 1.55e-15 },
   },
   achromaticCstar: { genspace: 1.88e-15, oklab: 7.61e-7 },
   munsellValueCV:  { genspace: 0.156, oklab: 2.797 },   // % (dL_cv)
-  blueWhiteGR:     { genspace: 1.513, oklab: 1.408 },
-  cuspSmoothness:  { genspace: 0.072, oklab: 0.805 },
+  blueWhiteGR:     { genspace: 1.514, oklab: 1.408 },
+  cuspSmoothness:  { genspace: 0.075, oklab: 0.805 },
   yellowChroma:    { genspace: 0.333, oklab: 0.211 },
   hueDriftMax:     { genspace: 77.5, oklab: 112.7 },     // degrees
   hungBernsMad:    { genspace: 4.716, oklab: 4.959 },    // degrees
   hueAgreementVsCieLab: 8.3,                             // degrees (genspace)
   // Where OKLab wins — stated honestly, single source for the % both ways:
-  deutanStep:      { genspace: 0.110, oklab: 0.157 },    // OKLab better
-  nearAchromCV:    { genspace: 106.73, oklab: 85.95 },   // OKLab better
-  darkGradientCV:  { genspace: 37.24, oklab: 47.28 },    // genspace better
-  frameToFrameCV:  { genspace: 60.1, oklab: 62.1 },
+  deutanStep:      { genspace: 0.11, oklab: 0.157 },    // OKLab better
+  nearAchromCV:    { genspace: 102.1, oklab: 79.26 },   // OKLab better
+  darkGradientCV:  { genspace: 33.68, oklab: 46.53 },   // genspace better
+  frameToFrameCV:  { genspace: 53.4, oklab: 55.3 },
 
   // ── Measurement: STRESS on COMBVD / MacAdam / Human Feedback ──
   // (with Bradford CAT; lower is better)
@@ -85,10 +85,10 @@ export const claims = {
   datasets: { combvdPairs: 3813, combvdSubsets: 6, macadamPairs: 128, humanFeedbackPairs: 3552 },
 
   // ── Package facts ──
-  bundleKB: 16.9,            // minified + gzipped (measured: npm run size)
+  bundleKB: 17.8,            // minified + gzipped (measured: npm run size, v0.15 — PCHIP NC + LCh helpers)
   oklabBundleKB: 2,
   metricParams: 72,
-  genParams: 35,
+  genParams: 45,  // active scalars in gen_params.json: M1 9 + M2 9 + depcubic 1 + PW-L 19+1 + enrichment 5 + C^cp 1 (2 dead keys excluded)
   license: 'MIT',
   depcubicAlpha: 0.021,
   chromaPower: 0.978,
