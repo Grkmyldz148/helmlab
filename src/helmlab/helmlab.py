@@ -636,9 +636,10 @@ class Helmlab:
         """Perceptual difference plus how much observers will disagree about it.
 
         EXPERIMENTAL. Returns a dict with the difference (``de``) and a
-        calibrated reliability: ``disagreement`` (predicted inter-observer std),
-        ``reliability`` ∈ [0, 1), and ``reliable`` (is the difference bigger than
-        the human noise band?). Small / low-chroma differences come back
+        calibrated reliability (v2, ordinal model): ``latent`` (mu), ``disagreement``
+        (predicted inter-observer spread sigma, latent units), ``reliability`` ∈ [0, 1),
+        ``p_noticeable`` (chance a random observer rates the pair at least
+        moderately different) and ``reliable`` (p_noticeable > 0.5). Small / low-chroma differences come back
         unreliable — that is the point. See :mod:`helmlab.metrics.confidence`
         for provenance and limits.
         """

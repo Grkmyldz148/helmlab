@@ -367,9 +367,12 @@ palette = hl.<span class="text-[#34d399]">palette</span>(<span class="text-[#fb9
             <span class="text-[#fafafa]">New (experimental):</span>
             <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">difference_with_confidence()</code>
             returns the difference <em>plus how much observers will disagree about
-            it</em> — a calibrated reliability on the ΔE (small / low-chroma
-            differences come back unreliable). Fit on a 47-pair × 74-observer set
-            and validated out-of-sample on a second multi-observer dataset.
+            it</em> — including <code class="text-[#fafafa] bg-white/[0.04] px-1 rounded">p_noticeable</code>,
+            the chance a random observer rates the pair at least moderately different
+            (small / low-chroma differences come back unreliable). v2: ordered-probit
+            refit of our 47-pair × 71-observer set — the categorical ratings are
+            modelled as thresholds on a latent axis, fixing v1's inverted
+            disagreement target.
             Available in both Python (<code class="text-[#fafafa] bg-white/[0.04] px-1 rounded">difference_with_confidence</code>)
             and JS (<code class="text-[#fafafa] bg-white/[0.04] px-1 rounded">differenceWithConfidence</code>) — identical output.
           </p>
@@ -385,7 +388,7 @@ dist = hl.<span class="text-[#34d399]">difference</span>(<span class="text-[#fb9
 
 <span class="text-[#52525b]"># Difference + observer-disagreement reliability (experimental)</span>
 r = hl.<span class="text-[#34d399]">difference_with_confidence</span>(<span class="text-[#fb923c]">"#808080"</span>, <span class="text-[#fb923c]">"#828282"</span>)
-<span class="text-[#52525b]"># &rarr; de=0.012, disagreement=29.6, reliability=0.19, reliable=False</span>
+<span class="text-[#52525b]"># &rarr; de=0.012, p_noticeable=0.08, reliability=0.41, reliable=False</span>
 
 <span class="text-[#52525b]"># Uncompressed Euclidean Lab (fast, for quick UI checks)</span>
 dist = hl.<span class="text-[#34d399]">euclidean_distance</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)

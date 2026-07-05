@@ -59,7 +59,7 @@ hl.difference('#3b82f6', '#4c8af7');     // 0.0227
 
 // Experimental: difference + how much real observers would disagree about it
 hl.differenceWithConfidence('#808080', '#828282');
-// { de: 0.0117, disagreement: 29.6, reliability: 0.19, reliable: false, ... }
+// { de: 0.0117, pNoticeable: 0.077, reliability: 0.41, reliable: false, ... }
 
 // Fast Euclidean for quick UI checks (alias: deltaE)
 hl.euclideanDistance('#000000', '#ffffff'); // 1.12

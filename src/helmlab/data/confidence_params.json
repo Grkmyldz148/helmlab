@@ -1,13 +1,22 @@
 {
-  "a": -98.2432184776279,
-  "b": -11.538177805266077,
-  "c": 30.716489232811135,
-  "scale": 591.1523027745784,
-  "dis_floor": 4.759084879353265,
-  "de_train_max": 0.14811473587883495,
-  "loo_r2": 0.5811624379953361,
-  "n_pairs": 47,
-  "base": "perceptual_distance",
-  "chroma": "mean helmlab-Lab chroma from from_hex",
-  "note": "EXPERIMENTAL confidence model. disagreement = a*de + b*chroma + c (human rating units). Fit on HumanFB 47 pairs x ~74 obs. 2nd-source hong_2025 held-out R2=0.26 same direction. NOT for large de (trained de<=de_train_max)."
+ "model": "ordinal-probit-v2",
+ "mu_scale": 20.827694941963827,
+ "sigma_a": 5.785073154058929,
+ "sigma_b": 1.0148932574050995,
+ "sigma_c": -0.12266288972117914,
+ "sigma_floor": 0.35,
+ "tau": [
+  0.0,
+  0.7421522316160746,
+  1.3671706499983987,
+  2.1853374848591907
+ ],
+ "de_train_max": 0.14811473587883495,
+ "loo_r2_sigma": 0.49171005203216667,
+ "lambda_ridge": 2.0,
+ "n_pairs": 47,
+ "n_judgements": 3477,
+ "n_observers": 71,
+ "base": "perceptual_distance",
+ "note": "EXPERIMENTAL v2. Ordered-probit refit of HumanFB: 5-level categorical ratings modelled as thresholds (tau) on a latent difference axis; per-pair latent mean mu and observer-spread sigma. mu = mu_scale*de (Spearman 0.957); sigma = a*de + b*chroma + c (latent units, LOO-R2 0.49, log-sigma ridge lambda=2). Replaces v1, whose disagreement target (std of category codes) was ANTI-correlated (rho=-0.51) with the latent observer spread \u2014 a ceiling-pile-up artifact. Relative disagreement sigma/mu falls with de (rho=-0.77) and chroma (-0.36): small / low-chroma differences remain the unreliable regime. Chroma sign caveat: absolute sigma RISES with chroma; hong_2025 between-observer JND CV agrees in sign (+0.23), but threshold vs suprathreshold domains differ - do not over-read the chroma axis. p_noticeable = P(latent > tau[1]) ~ chance a random observer rates the pair at least 'moderately different'."
 }

@@ -1,54 +1,68 @@
 /**
- * Confidence layer for color-difference predictions (EXPERIMENTAL / beta).
+ * Confidence layer for color-difference predictions (EXPERIMENTAL, v2).
  *
- * A standard metric returns one number: how different two colors are. This adds
- * a second: how much observers will disagree about that difference, predicted
- * from the colors alone — a calibrated reliability on the difference.
+ * v2 = ordered-probit refit of HumanFB (2026-07-05): the 5-level categorical
+ * ratings are modelled as thresholds `TAU` on a latent difference axis; each
+ * pair gets a latent mean mu and observer-spread sigma. v1's target (std of
+ * category codes) was ANTI-correlated (rho = -0.51) with the true latent
+ * spread — a ceiling pile-up artifact. Runtime model: mu = MU_SCALE*de
+ * (Spearman 0.957), sigma = A*de + B*chroma + C (LOO-R2 0.49, latent units).
+ * Relative disagreement sigma/mu falls with de (-0.77) and chroma (-0.36):
+ * small / low-chroma differences remain the unreliable regime. Mirrors
+ * Python `helmlab.metrics.confidence` exactly (same coefficients, same erf).
  *
- * Model: `disagreement = A·de + B·chroma + C` (human rating units), fit on
- * HumanFB (47 color-pairs × ~74 observers; LOO R² ≈ 0.58) and validated
- * out-of-sample on a second multi-observer dataset (hong_2025, held-out
- * R² ≈ 0.26, same direction: more disagreement at low chroma). Mirrors the
- * Python `helmlab.metrics.confidence` model exactly (same coefficients).
- *
- * Limits: EXPERIMENTAL, n=47 training pairs, calibrated for the small /
- * near-threshold regime (de ≲ 0.15) where reliability matters.
+ * Limits: EXPERIMENTAL, n=47 pairs, zone-conditional sampling, de <~ 0.15.
  */
-// Full-precision coefficients from src/helmlab/data/confidence_params.json —
-// rounded copies drifted disagreement ~5e-4 vs Python and put DE_TRAIN_MAX
-// slightly high (0.1484 vs 0.14811…), flipping `extrapolated` in between.
-const A = -98.2432184776279;
-const B = -11.538177805266077;
-const C = 30.716489232811135;
-const SCALE = 591.1523027745784; // maps perceptual `de` → human rating units
-const DIS_FLOOR = 4.759084879353265;
+const MU_SCALE = 20.827694941963827;
+const A = 5.785073154058929;
+const B = 1.0148932574050995;
+const C = -0.12266288972117914;
+const SIGMA_FLOOR = 0.35;
+const TAU2 = 0.7421522316160746;
 const DE_TRAIN_MAX = 0.14811473587883495;
+const SQRT2 = Math.sqrt(2.0);
+
+/** Abramowitz & Stegun 7.1.26 — IDENTICAL arithmetic to the Python sibling
+ *  (do not swap for a different erf; cross-language parity depends on it). */
+function erf(x: number): number {
+  const sign = x < 0 ? -1.0 : 1.0;
+  const ax = Math.abs(x);
+  const t = 1.0 / (1.0 + 0.3275911 * ax);
+  const y = 1.0 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t
+              - 0.284496736) * t + 0.254829592) * t * Math.exp(-ax * ax);
+  return sign * y;
+}
+
+const phi = (x: number): number => 0.5 * (1.0 + erf(x / SQRT2));
 
 export interface Confidence {
   /** the perceptual distance itself */
   de: number;
-  /** that distance mapped to human rating units */
-  deHuman: number;
-  /** predicted inter-observer disagreement (std, same units as deHuman) */
+  /** latent difference mu = MU_SCALE * de (ordinal-model units) */
+  latent: number;
+  /** predicted inter-observer spread sigma (latent units) */
   disagreement: number;
-  /** deHuman / (deHuman + disagreement), in [0, 1) */
+  /** mu / (mu + sigma), in [0, 1) */
   reliability: number;
-  /** true if the difference exceeds the human noise band */
+  /** P(latent > TAU2) — chance a random observer rates the pair at least "moderately different" */
+  pNoticeable: number;
+  /** true when pNoticeable > 0.5 (mu > TAU2) */
   reliable: boolean;
   /** true if `de` is beyond the trained range (extrapolating) */
   extrapolated: boolean;
 }
 
-/** Assess how reliable a difference `de` at mean `chroma` is. */
 export function assessConfidence(de: number, chroma: number): Confidence {
-  const disagreement = Math.max(A * de + B * chroma + C, DIS_FLOOR);
-  const deHuman = de * SCALE;
+  const mu = MU_SCALE * de;
+  const sigma = Math.max(A * de + B * chroma + C, SIGMA_FLOOR);
+  const pNoticeable = 1.0 - phi((TAU2 - mu) / sigma);
   return {
     de,
-    deHuman,
-    disagreement,
-    reliability: deHuman / (deHuman + disagreement),
-    reliable: deHuman > disagreement,
+    latent: mu,
+    disagreement: sigma,
+    reliability: mu / (mu + sigma),
+    pNoticeable,
+    reliable: mu > TAU2,
     extrapolated: de > DE_TRAIN_MAX,
   };
 }
