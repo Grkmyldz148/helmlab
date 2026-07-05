@@ -128,10 +128,12 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check if JS version changed
+      - name: Check if JS version needs publishing
         id: version-check
+        # Registry-based (not HEAD~1): a failed publish can be retried by
+        # re-running the workflow — the gate only skips versions already live.
         run: |
-          OLD=$(git show HEAD~1:packages/helmlab-js/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])" 2>/dev/null || echo "0.0.0")
+          OLD=$(npm view helmlab version 2>/dev/null || echo "0.0.0")
           NEW=$(python3 -c "import json; print(json.load(open('packages/helmlab-js/package.json'))['version'])")
           echo "old=$OLD" >> "$GITHUB_OUTPUT"
           echo "new=$NEW" >> "$GITHUB_OUTPUT"
@@ -169,10 +171,10 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check if postcss-helmlab version changed
+      - name: Check if postcss-helmlab version needs publishing
         id: version-check
         run: |
-          OLD=$(git show HEAD~1:packages/postcss-helmlab/package.json 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])" 2>/dev/null || echo "0.0.0")
+          OLD=$(npm view postcss-helmlab version 2>/dev/null || echo "0.0.0")
           NEW=$(python3 -c "import json; print(json.load(open('packages/postcss-helmlab/package.json'))['version'])")
           echo "old=$OLD" >> "$GITHUB_OUTPUT"
           echo "new=$NEW" >> "$GITHUB_OUTPUT"
@@ -206,6 +208,13 @@ jobs:
           json.dump(d, open(p, 'w'), indent=2)
           "
 
+      - name: Install build dependencies
+        # prepublishOnly runs build.js (esbuild). The dependency rewrite above
+        # replaced the file: link, so a plain install now resolves helmlab from
+        # the registry and pulls esbuild from devDependencies.
+        if: steps.version-check.outputs.changed == 'true'
+        run: cd packages/postcss-helmlab && npm install --no-audit --no-fund --no-package-lock
+
       - name: Publish postcss-helmlab (OIDC, provenance)
         if: steps.version-check.outputs.changed == 'true'
         run: cd packages/postcss-helmlab && npm publish --access public
@@ -229,13 +238,7 @@ jobs:
       - name: Check if Python version changed
         id: version-check
         run: |
-          OLD=$(git show HEAD~1:pyproject.toml 2>/dev/null | python3 -c "
-          import sys
-          for line in sys.stdin:
-              if line.strip().startswith('version'):
-                  print(line.split('\"')[1])
-                  break
-          " 2>/dev/null || echo "0.0.0")
+          OLD=$(curl -s https://pypi.org/pypi/helmlab/json | python3 -c "import sys,json; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null || echo "0.0.0")
           NEW=$(python3 -c "
           for line in open('pyproject.toml'):
               if line.strip().startswith('version'):
