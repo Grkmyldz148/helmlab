@@ -273,6 +273,10 @@ python -m pytest tests/ -q              # 336 Python tests (334 pass + 2 skip)
 cd packages/helmlab-js && npx vitest run # 252 JS tests
 ```
 
+## AI skill: color-space routing
+
+There is no perfect color space — but there is a right one per task. [`skills/color-space-routing`](skills/color-space-routing/) packages our benchmark evidence as a drop-in skill for Claude Code / Cursor / any AI assistant: task → space routing table, measured numbers (including where each space loses), copy-paste recipes, and a pitfall checklist.
+
 ## Research
 
 The optimization experiments, checkpoints, and analysis scripts that led to the current GenSpace v0.11.1 are available in a separate repository:
