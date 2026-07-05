@@ -134,6 +134,17 @@ hl.toHexP3(hl.fromHex('#ff0000'));  // 'color(display-p3 0.9176 0.2003 0.1386)' 
 10. **Physical vs perceptual confusion**: blurring, resizing, compositing and light mixing are ENERGY operations — do them in linear RGB (decode gamma first, re-encode after). Doing them in gamma sRGB darkens edges; doing them in OKLab/Lab is physically wrong. Reserve perceptual spaces for how things LOOK, linear for how light ADDS.
 11. **Euclidean distance in LCh**: (L, C, h) has an angular coordinate; treating it as a vector for distance or averaging silently corrupts results. Convert to the rectangular form first.
 
+## Graveyard — approaches that are measured dead (don't retry them)
+
+Negative results nobody else publishes. Each was tried properly and killed by data:
+
+- **"One space for everything"** — a space jointly optimal for generation AND measurement doesn't exist; optimizing one measurably degrades the other. Route instead.
+- **Fixing hue-shift effects (Abney) with a static rotation** — the correction doesn't generalize across datasets (inter-observer spread exceeds the effect); appearance phenomena need conditioning, not geometry patches.
+- **Deriving Abney + Bezold-Brücke + Helmholtz-Kohlrausch from one nonlinearity** — refuted three ways; the effects are irreducibly separate mechanisms. CAM16's separate terms are forced by data, not laziness.
+- **Interval statistics on categorical rating data** — 5-level survey ratings + STRESS/RMS = the scale coding dominates the result (we caught our own inverted axis this way). Rank statistics only.
+- **Trusting a benchmark win before endpoint/gray-axis checks** — a white→0.972 endpoint bug once "won" a benchmark. Verify white→L=1, black→L=0, grays→C*≈0 first.
+- **HSL/HSV as a perceptual proxy** — not a simplification, a category error.
+
 ## Provenance
 
 Numbers from: ColorBench (open, deterministic, float64 — github.com/Grkmyldz148/colorbench), COMBVD / MacAdam 1974 / Munsell renotation / He 2022 with Bradford CAT, CAM16-UCS via colour-science (gray-ramp sanity-checked). Full tables incl. every loss: **helmlab.space/benchmark**. The recommendation engine has no favorites: it routes to OKLab, CIELAB, CAM16, Jzazbz, or Helmlab wherever each one measurably wins.
