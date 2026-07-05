@@ -1,6 +1,6 @@
 {
   "name": "postcss-helmlab",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "PostCSS plugin to use Helmlab color spaces in CSS — helmlab(), helmlch(), helmgen(), helmgenlch() with rgb() fallback plus @supports-wrapped color(display-p3 …) and color(rec2020 …) overrides",
   "type": "module",
   "main": "./index.cjs",

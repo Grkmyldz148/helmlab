@@ -21,7 +21,6 @@ import {
   totalMetrics,
   independentStr,
   ciede2000ImprovementPct,
-  humanFeedbackImprovementPct,
   oklabDeutanAdvantagePct,
   oklabNearAchromAdvantagePct,
 } from "../data/claims";
@@ -84,13 +83,85 @@ import {
           including the industry-standard CIEDE2000 formula.
         </p>
         <p class="for-dev text-[#a1a1aa] max-w-2xl">
-          STRESS (CIE 217:2016) evaluated on COMBVD ({claims.datasets.combvdPairs.toLocaleString()} pairs from 6 sub-datasets),
-          MacAdam 1974 ({claims.datasets.macadamPairs} pairs), and Human Feedback ({claims.datasets.humanFeedbackPairs.toLocaleString()} judgements). Lower is better.
+          STRESS (CIE 217:2016) evaluated on COMBVD ({claims.datasets.combvdPairs.toLocaleString()} pairs from 6 sub-datasets)
+          and the held-out MacAdam 1974 set ({claims.datasets.macadamPairs} pairs). Lower is better.
+          Our own human-feedback set is reported separately below — rank-order only.
         </p>
       </div>
 
       <div class="rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 md:p-8">
         <StressChart client:only="react" />
+      </div>
+
+      <!-- Our own human-feedback set — rank-order only (audit 2026-06-10) -->
+      <div class="mt-6 rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 md:p-8">
+        <h3 class="text-sm font-medium text-[#fafafa] mb-1">
+          Our Own Human-Feedback Set
+          <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full border border-[#f97316]/30 text-[#f97316] bg-[#f97316]/5 uppercase tracking-wider">rank-order only</span>
+        </h3>
+        <p class="text-xs text-[#52525b] mb-4 leading-relaxed">
+          {claims.humanFbRank.judgements.toLocaleString()} judgements by {claims.humanFbRank.observers} observers over
+          {claims.humanFbRank.pairs} color pairs, collected on helmlab.space. We audited this set and do NOT publish
+          STRESS on it: ratings are 5-level categorical, which breaks interval-scale metrics — any STRESS number
+          from it (ours included) is a scale artifact. Rank order is the honest statistic. Two more caveats:
+          pairs were sampled from helmlab's own hue zones (not independent), and with 47 pairs the
+          MetricSpace–CIEDE2000 gap is only marginally significant
+          (Δρ 95% CI [+{claims.humanFbRank.deltaRhoCI95[0]}, +{claims.humanFbRank.deltaRhoCI95[1]}], paired bootstrap).
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div class="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+            <div class="text-xs text-[#52525b] mb-1">MetricSpace</div>
+            <div class="text-sm font-mono font-medium text-[#34d399]">ρ = {claims.humanFbRank.spearman.metricSpace}</div>
+          </div>
+          <div class="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+            <div class="text-xs text-[#52525b] mb-1">CIEDE2000</div>
+            <div class="text-sm font-mono text-[#a1a1aa]">ρ = {claims.humanFbRank.spearman.ciede2000}</div>
+          </div>
+          <div class="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+            <div class="text-xs text-[#52525b] mb-1">CIE Lab ΔE76</div>
+            <div class="text-sm font-mono text-[#a1a1aa]">ρ = {claims.humanFbRank.spearman.cielab}</div>
+          </div>
+          <div class="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2">
+            <div class="text-xs text-[#52525b] mb-1">OKLab</div>
+            <div class="text-sm font-mono text-[#a1a1aa]">ρ = {claims.humanFbRank.spearman.oklab}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional held-out datasets (color-perception-datasets pool) -->
+      <div class="mt-6 rounded-2xl border border-white/[0.06] bg-[#0c0c0f] p-6 md:p-8">
+        <h3 class="text-sm font-medium text-[#fafafa] mb-1">More Held-Out Datasets</h3>
+        <p class="text-xs text-[#52525b] mb-4 leading-relaxed">
+          STRESS on independent psychophysical sets MetricSpace was never trained on
+          (same protocol: Bradford CAT to D65, CAM16-UCS via colour-science with a
+          gray-ramp sanity check). One of these we lose — published anyway.
+        </p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-[#52525b]">
+                <th class="text-left font-normal py-1 pr-2">Dataset</th>
+                <th class="text-right font-normal py-1 px-2">MetricSpace</th>
+                <th class="text-right font-normal py-1 px-2">CIEDE2000</th>
+                <th class="text-right font-normal py-1 px-2">CAM16-UCS</th>
+                <th class="text-right font-normal py-1 px-2">CIE Lab</th>
+                <th class="text-right font-normal py-1 pl-2">OKLab</th>
+              </tr>
+            </thead>
+            <tbody class="font-mono">
+              {claims.heldOutStress.map((r) => (
+                <tr class="border-t border-white/[0.04]">
+                  <td class="py-1.5 pr-2 font-sans text-[#a1a1aa]">{r.name} <span class="text-[#3f3f46]">n={r.n}</span><br /><span class="text-[10px] text-[#3f3f46]">{r.note}</span></td>
+                  <td class={`text-right py-1.5 px-2 ${r.winner === 'metricSpace' ? 'text-[#34d399] font-medium' : 'text-[#a1a1aa]'}`}>{r.metricSpace.toFixed(2)}</td>
+                  <td class={`text-right py-1.5 px-2 ${r.winner === 'ciede2000' ? 'text-[#60a5fa] font-medium' : 'text-[#52525b]'}`}>{r.ciede2000.toFixed(2)}</td>
+                  <td class={`text-right py-1.5 px-2 ${r.winner === 'cam16ucs' ? 'text-[#60a5fa] font-medium' : 'text-[#52525b]'}`}>{r.cam16ucs.toFixed(2)}</td>
+                  <td class={`text-right py-1.5 px-2 ${r.winner === 'cielab' ? 'text-[#60a5fa] font-medium' : 'text-[#52525b]'}`}>{r.cielab.toFixed(2)}</td>
+                  <td class={`text-right py-1.5 pl-2 ${r.winner === 'oklab' ? 'text-[#60a5fa] font-medium' : 'text-[#52525b]'}`}>{r.oklab.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -397,7 +468,7 @@ import {
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">A/B Testing</h3>
-          <p class="text-xs text-[#a1a1aa]">Human Feedback STRESS = {claims.stress.metricSpace.humanFeedback} vs CIEDE2000's {claims.stress.ciede2000.humanFeedback}. {humanFeedbackImprovementPct()}% better at predicting real user preferences.</p>
+          <p class="text-xs text-[#a1a1aa]">Ranks real user judgments better than CIEDE2000 (Spearman {claims.humanFbRank.spearman.metricSpace} vs {claims.humanFbRank.spearman.ciede2000}) on our own {claims.humanFbRank.pairs}-pair human-feedback set — rank-order only, see note below.</p>
         </div>
         <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
           <h3 class="text-sm font-medium text-[#fafafa] mb-1">Accessibility Checking</h3>
@@ -423,8 +494,9 @@ import {
         <div class="rounded-2xl border border-[#34d399]/20 bg-[#34d399]/[0.04] p-6">
           <h3 class="text-lg font-bold text-[#34d399] mb-2">Color difference measurement: Yes.</h3>
           <p class="text-sm text-[#a1a1aa]">
-            MetricSpace v21 achieves the lowest published STRESS on COMBVD and Human Feedback,
-            and is within 0.8 of the best (CAM16-UCS) on the {claims.datasets.macadamPairs}-pair MacAdam set.
+            MetricSpace v21 achieves the lowest published STRESS on COMBVD,
+            is within 0.8 of the best (CAM16-UCS) on the held-out {claims.datasets.macadamPairs}-pair MacAdam set,
+            and ranks our own human-feedback set better than CIEDE2000 (Spearman {claims.humanFbRank.spearman.metricSpace} vs {claims.humanFbRank.spearman.ciede2000}).
             No other metric matches human perception this accurately across this range of datasets.
             <span class="text-[#52525b]">Caveat: cross-validated estimate is ~{claims.overfit.crossValidated} (not the published {claims.stress.metricSpace.combvd}), and CIEDE2000 wins on 3 of 6 COMBVD sub-datasets.</span>
           </p>

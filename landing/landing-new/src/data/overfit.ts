@@ -6,7 +6,6 @@ export interface OverfitEntry {
   readonly testStress: number;
   readonly gap: number;
   readonly macadam: number;
-  readonly humanFeedback: number;
 }
 
 export const overfitAnalysis = [
@@ -18,7 +17,6 @@ export const overfitAnalysis = [
     testStress: 27.57,
     gap: -0.15,
     macadam: 20.09,
-    humanFeedback: 33.68,
   },
   {
     model: "v21 (full-data)",
@@ -28,7 +26,6 @@ export const overfitAnalysis = [
     testStress: 23.91,
     gap: 1.77,
     macadam: 19.51,
-    humanFeedback: 23.26,
   },
   {
     model: "Phase 1 train-only",
@@ -38,7 +35,6 @@ export const overfitAnalysis = [
     testStress: 25.65,
     gap: 0.30,
     macadam: 18.85,
-    humanFeedback: 24.76,
   },
   {
     model: "Phase 1+2 train-only",
@@ -48,7 +44,6 @@ export const overfitAnalysis = [
     testStress: 24.59,
     gap: 1.82,
     macadam: 19.12,
-    humanFeedback: 23.73,
   },
 ] as const satisfies readonly OverfitEntry[];
 

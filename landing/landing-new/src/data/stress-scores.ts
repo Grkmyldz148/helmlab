@@ -3,7 +3,6 @@ export interface StressScore {
   readonly shortName: string;
   readonly combvd: number;
   readonly macadam: number;
-  readonly humanFeedback: number;
   readonly average: number;
   readonly isHelmlab: boolean;
 }
@@ -14,7 +13,6 @@ export const stressScores = [
     shortName: "MetricSpace",
     combvd: 22.48,
     macadam: 19.51,
-    humanFeedback: 23.26,
     average: 21.75,
     isHelmlab: true,
   },
@@ -23,7 +21,6 @@ export const stressScores = [
     shortName: "CIE94",
     combvd: 33.37,
     macadam: 19.78,
-    humanFeedback: 59.75,
     average: 37.63,
     isHelmlab: false,
   },
@@ -32,7 +29,6 @@ export const stressScores = [
     shortName: "CIEDE2000",
     combvd: 29.20,
     macadam: 22.13,
-    humanFeedback: 62.54,
     average: 37.96,
     isHelmlab: false,
   },
@@ -41,7 +37,6 @@ export const stressScores = [
     shortName: "DIN99",
     combvd: 35.57,
     macadam: 23.31,
-    humanFeedback: 56.44,
     average: 38.44,
     isHelmlab: false,
   },
@@ -50,7 +45,6 @@ export const stressScores = [
     shortName: "Jzazbz",
     combvd: 41.92,
     macadam: 24.14,
-    humanFeedback: 61.74,
     average: 42.60,
     isHelmlab: false,
   },
@@ -59,7 +53,6 @@ export const stressScores = [
     shortName: "CIE Lab",
     combvd: 42.86,
     macadam: 24.53,
-    humanFeedback: 62.32,
     average: 43.24,
     isHelmlab: false,
   },
@@ -68,7 +61,6 @@ export const stressScores = [
     shortName: "OKLab",
     combvd: 47.35,
     macadam: 32.72,
-    humanFeedback: 57.27,
     average: 45.78,
     isHelmlab: false,
   },
@@ -77,7 +69,6 @@ export const stressScores = [
     shortName: "CAM16",
     combvd: 33.47,
     macadam: 18.71,
-    humanFeedback: 58.02,
     average: 36.73,
     isHelmlab: false,
   },
@@ -86,18 +77,16 @@ export const stressScores = [
     shortName: "CIECAM02",
     combvd: 30.90,
     macadam: 19.21,
-    humanFeedback: 57.83,
     average: 35.98,
     isHelmlab: false,
   },
 ] as const satisfies readonly StressScore[];
 
-export type StressDataset = "combvd" | "macadam" | "humanFeedback";
+export type StressDataset = "combvd" | "macadam";
 
 export const datasetLabels: Record<StressDataset, string> = {
   combvd: "COMBVD (3813 pairs)",
   macadam: "MacAdam 1974 (128 pairs)",
-  humanFeedback: "Human Feedback (3552 judgements)",
 } as const;
 
 export interface SubDatasetScore {

@@ -20,9 +20,9 @@ export const metricSpaceUseCases = [
   },
   {
     useCase: "A/B testing",
-    why: "Human Feedback STRESS=23.26",
-    alternative: "CIEDE2000 (62.54)",
-    advantage: "63% better on real user feedback data",
+    why: "Ranks real user judgments better (Spearman 0.95 vs 0.91)",
+    alternative: "CIEDE2000",
+    advantage: "Rank-validated on our own 47-pair human set",
   },
   {
     useCase: "Accessibility checking",

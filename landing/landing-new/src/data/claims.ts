@@ -66,23 +66,53 @@ export const claims = {
   darkGradientCV:  { genspace: 33.68, oklab: 46.53 },   // genspace better
   frameToFrameCV:  { genspace: 53.4, oklab: 55.3 },
 
-  // ── Measurement: STRESS on COMBVD / MacAdam / Human Feedback ──
+  // ── Measurement: STRESS on COMBVD / MacAdam ──
   // (with Bradford CAT; lower is better)
+  // HumanFB is deliberately NOT here: its 5-level categorical ratings break
+  // interval-scale STRESS (audit 2026-06-10) — see humanFbRank below.
   stress: {
-    metricSpace: { combvd: 22.48, macadam: 19.51, humanFeedback: 23.26, average: 21.75 },
-    ciede2000:   { combvd: 29.20, macadam: 22.13, humanFeedback: 62.54, average: 37.96 },
-    cie94:       { combvd: 33.37, macadam: 19.78, humanFeedback: 59.75, average: 37.63 },
-    cam16ucs:    { combvd: 33.47, macadam: 18.71, humanFeedback: 58.02, average: 36.73 },
-    ciecam02ucs: { combvd: 30.90, macadam: 19.21, humanFeedback: 57.83, average: 35.98 },
-    oklab:       { combvd: 47.35, macadam: 32.72, humanFeedback: 57.27, average: 45.78 },
+    metricSpace: { combvd: 22.48, macadam: 19.51, average: 21.00 },
+    ciede2000:   { combvd: 29.20, macadam: 22.13, average: 25.67 },
+    cie94:       { combvd: 33.37, macadam: 19.78, average: 26.58 },
+    cam16ucs:    { combvd: 33.47, macadam: 18.71, average: 26.09 },
+    ciecam02ucs: { combvd: 30.90, macadam: 19.21, average: 25.06 },
+    oklab:       { combvd: 47.35, macadam: 32.72, average: 40.04 },
   },
+  // Our own human-feedback set — rank-order ONLY. 47 unique pairs, 3,477
+  // judgements (catch trials excluded), 71 observers, 5-level ratings,
+  // pairs sampled from helmlab's own zones (not independent sampling).
+  // Spearman vs per-pair consensus; ΔρCI = MetricSpace − CIEDE2000,
+  // paired bootstrap 10k (measured 2026-07-05, shipped v21).
+  humanFbRank: {
+    pairs: 47, judgements: 3477, observers: 71,
+    spearman: { metricSpace: 0.954, ciede2000: 0.907, cielab: 0.906, oklab: 0.885 },
+    deltaRhoCI95: [0.002, 0.117],
+  },
+  // Additional HELD-OUT sets from the color-perception-datasets pool
+  // (measured 2026-07-05, same protocol: Bradford CAT to D65 where needed,
+  // CAM16-UCS via colour-science 0.4.7 with discount_illuminant, gray-ramp
+  // sanity-checked). Includes a set we LOSE — published anyway.
+  heldOutStress: [
+    {
+      name: 'Munsell renotation (neighbor pairs)', n: 3590,
+      note: 'constant perceptual spacing between adjacent chips; illuminant C, Bradford-adapted',
+      metricSpace: 30.34, ciede2000: 42.94, cam16ucs: 43.70, cielab: 43.99, oklab: 51.95,
+      winner: 'metricSpace',
+    },
+    {
+      name: 'He 2022 (wide-gamut display pairs)', n: 82,
+      note: '10° observer data, DV published in CIELAB-scaled units — we lose this one',
+      metricSpace: 35.89, ciede2000: 32.58, cam16ucs: 34.42, cielab: 30.77, oklab: 49.04,
+      winner: 'cielab',
+    },
+  ],
   // Honest training/overfit facts (MetricSpace trained on COMBVD only;
-  // MacAdam + Human Feedback are HELD-OUT, never trained on).
+  // MacAdam is HELD-OUT, never trained on).
   overfit: { trainStress: 22.14, testStress: 23.91, crossValidated: 24.3, gap: 1.77, trainPairs: 3050, testPairs: 763 },
   bestMacadam: 'cam16ucs',   // CAM16-UCS (18.71) edges MetricSpace (19.51) on MacAdam — NOT a clean sweep
 
   // ── Datasets ──
-  datasets: { combvdPairs: 3813, combvdSubsets: 6, macadamPairs: 128, humanFeedbackPairs: 3552 },
+  datasets: { combvdPairs: 3813, combvdSubsets: 6, macadamPairs: 128 },
 
   // ── Package facts ──
   bundleKB: 17.8,            // minified + gzipped (measured: npm run size, v0.15 — PCHIP NC + LCh helpers)
@@ -126,7 +156,6 @@ export const mult = (a: number, b: number) => Math.round(a / b);
 
 // Named derived figures (one definition each — used across the site):
 export const ciede2000ImprovementPct = () => pctLower(claims.stress.metricSpace.combvd, claims.stress.ciede2000.combvd);          // 23
-export const humanFeedbackImprovementPct = () => pctLower(claims.stress.metricSpace.humanFeedback, claims.stress.ciede2000.humanFeedback); // 63
 export const munsellMult = () => mult(claims.munsellValueCV.oklab, claims.munsellValueCV.genspace);                                // 18
 export const cuspSmoothMult = () => mult(claims.cuspSmoothness.oklab, claims.cuspSmoothness.genspace);                             // 11
 export const yellowChromaPct = () => pctGain(claims.yellowChroma.genspace, claims.yellowChroma.oklab);                            // 58

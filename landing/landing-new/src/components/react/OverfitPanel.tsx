@@ -67,9 +67,6 @@ export default function OverfitPanel() {
               <th className="px-4 py-3 text-right text-xs font-medium text-[#52525b] uppercase tracking-wider hidden sm:table-cell">
                 MacAdam
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-[#52525b] uppercase tracking-wider hidden sm:table-cell">
-                Human FB
-              </th>
             </tr>
           </thead>
           <tbody>
@@ -100,9 +97,6 @@ export default function OverfitPanel() {
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-[#52525b] hidden sm:table-cell">
                   {row.macadam.toFixed(2)}
-                </td>
-                <td className="px-4 py-3 text-right font-mono text-[#52525b] hidden sm:table-cell">
-                  {row.humanFeedback.toFixed(2)}
                 </td>
               </tr>
             ))}

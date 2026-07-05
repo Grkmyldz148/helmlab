@@ -39,7 +39,6 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
       <div className="space-y-0.5 text-[#a1a1aa]">
         <p>COMBVD: {d.combvd}</p>
         <p>MacAdam: {d.macadam}</p>
-        <p>Human FB: {d.humanFeedback}</p>
         <p className="pt-1 border-t border-white/[0.06] text-[#fafafa] font-medium">
           Avg: {d.average}
         </p>
@@ -55,7 +54,7 @@ function DatasetTabs({
   active: StressDataset;
   onChange: (d: StressDataset) => void;
 }) {
-  const datasets: StressDataset[] = ["combvd", "macadam", "humanFeedback"];
+  const datasets: StressDataset[] = ["combvd", "macadam"];
   return (
     <div className="flex gap-1 rounded-lg border border-white/[0.06] bg-white/[0.02] p-1">
       {datasets.map((d) => (
@@ -68,7 +67,7 @@ function DatasetTabs({
               : "text-[#52525b] hover:text-[#a1a1aa]"
           }`}
         >
-          {d === "combvd" ? "COMBVD" : d === "macadam" ? "MacAdam" : "Human FB"}
+          {d === "combvd" ? "COMBVD" : "MacAdam"}
         </button>
       ))}
     </div>

@@ -276,7 +276,7 @@ export default function DistanceCalculator() {
       <p className="text-sm text-[#a1a1aa] mb-6">
         Measure how different two colors look. Helmlab ΔE is Euclidean distance
         in MetricSpace Lab —{' '}
-        <span className="text-[#fafafa]">a space trained on COMBVD and validated held-out on MacAdam and Human Feedback</span>{' '}
+        <span className="text-[#fafafa]">a space trained on COMBVD, validated held-out on MacAdam and rank-validated on our own human-feedback set</span>{' '}
         — the other metrics are shown for comparison.
       </p>
 
