@@ -75,6 +75,7 @@ jobs:
           CHROME_BIN="$(command -v google-chrome || command -v chromium-browser)" \
             node scripts/generate-og.mjs
           cp public/og-card.png dist/og-card.png
+          cp public/twitter-card-v*.png dist/
 
       - name: Claims consistency guard
         # Every site number derives from src/data/claims.ts. This blocks deploy

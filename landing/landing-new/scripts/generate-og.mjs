@@ -2,7 +2,7 @@
 // The page (src/pages/og-card.astro) derives every number from claims.ts, so the
 // PNG always matches the site. Run AFTER `npm run build`:  npm run og
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -31,11 +31,23 @@ if (!chrome) {
   process.exit(1);
 }
 
-execFileSync(chrome, [
-  '--headless=new', '--disable-gpu', '--hide-scrollbars',
-  '--force-device-scale-factor=2', '--window-size=1200,630',
-  `--screenshot=${tmp}`, `file://${builtPage}`,
-], { stdio: 'ignore' });
+function shoot(width, height, dest) {
+  execFileSync(chrome, [
+    '--headless=new', '--disable-gpu', '--hide-scrollbars',
+    '--force-device-scale-factor=2', `--window-size=${width},${height}`,
+    `--screenshot=${tmp}`, `file://${builtPage}`,
+  ], { stdio: 'ignore' });
+  return sharp(tmp).resize(width, height).png().toFile(dest);
+}
 
-await sharp(tmp).resize(1200, 630).png().toFile(out);
+// 1) OG/social preview card (1.91:1)
+await shoot(1200, 630, out);
 console.log(`wrote ${out} (1200×630) from claims-driven /og-card`);
+
+// 2) Tweet attachment (X in-feed optimal 16:9), version-stamped filename so
+//    every release gets a fresh, cache-proof visual ready to attach.
+const versionTs = readFileSync(resolve(root, 'src/data/version.ts'), 'utf8');
+const version = versionTs.match(/["']([0-9]+\.[0-9]+\.[0-9]+)["']/)[1];
+const tw = resolve(root, `public/twitter-card-v${version}.png`);
+await shoot(1200, 675, tw);
+console.log(`wrote ${tw} (1200×675, X in-feed 16:9)`);

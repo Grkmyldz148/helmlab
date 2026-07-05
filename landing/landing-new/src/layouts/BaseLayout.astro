@@ -18,7 +18,9 @@ const {
 
 const siteURL = Astro.site ?? new URL("https://helmlab.space");
 const canonicalURL = new URL(Astro.url.pathname, siteURL);
-const ogImageURL = new URL(ogImage, siteURL).href;
+// Version-stamped OG URL: social platforms (X, Slack, ...) cache og:image
+// per-URL for days — bumping the query string on each release busts it.
+const ogImageURL = new URL(`${ogImage}?v=${VERSION}`, siteURL).href;
 ---
 
 <!doctype html>
