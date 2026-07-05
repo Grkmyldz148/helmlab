@@ -26,6 +26,30 @@ A space optimized for one is routinely mediocre at the other. Never use one spac
 | Legacy hue-angle interop (Munsell naming, print) | CIELAB LCh | — | — |
 | Wide gamut (P3 / Rec.2020) generation | Helmlab GenSpace | OKLab | — |
 | "Is this difference noticeable to people?" | Helmlab `differenceWithConfidence()` (pNoticeable) | ΔE00 > 2.3 rule of thumb | — |
+| Physical light ops: blur, resize, alpha compositing, mixing paints of light | **linear sRGB** (undo gamma first) | — | any perceptual space, gamma sRGB |
+| Color picker UI (bounded, HSL-shaped) | okhsl / okhsv | OKLCH with per-hue max-C | HSL |
+| Video pipeline / codecs / broadcast HDR | ICtCp (BT.2100) | Jzazbz for analysis | YCbCr for perceptual edits |
+
+One-liners: **DIN99o** only if a tolerancing contract demands it (COMBVD STRESS 35.6 — CIEDE2000 at 29.2 is better) · **XYZ** is an interchange hub, never a working space · **HSLuv** is largely superseded by OKLCH/okhsl.
+
+Evidence tags: rows involving Helmlab/OKLab/CIELAB/CIEDE2000/CAM16 are **[measured]** (our benchmark data below); HDR/video rows (Jzazbz, ICtCp) are **[literature]** — standard practice we have not independently benchmarked.
+
+## Same space, two forms: Lab vs LCh
+
+Most perceptual spaces come in a rectangular form (L, a, b) and a cylindrical one (L, C, h). They are the same space — but operations route differently, and picking the wrong FORM is its own bug class:
+
+| Operation | Form | Why |
+|---|---|---|
+| Mixing / gradients between distant hues | rectangular (`oklab`, `helmgen`) | straight line, no hue detours; midpoint may desaturate slightly |
+| Vivid gradient between NEARBY hues | cylindrical (`oklch`, `helmgenlch`) | holds chroma through the ramp; mind the hue arc |
+| Hue rotation, harmonies, saturate/desaturate | cylindrical | that's what h and C are for |
+| Chroma clipping / gamut mapping | cylindrical | reduce C at constant L and h |
+| Distance / ΔE | rectangular ONLY | h is an angle — Euclidean distance on (L, C, h) is meaningless |
+| Sorting by lightness, L ramps | either | L is identical in both |
+
+CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `genFromHex`/`genToHex` (rectangular) vs `genToLch`/`genFromLch` (cylindrical).
+
+Two cylindrical traps: (1) hue is UNDEFINED at the achromatic axis — gradients from gray in LCh need a hue policy (CSS carries the other endpoint's hue; libraries differ); (2) interpolate hue along the intended arc — naive lerp breaks at the 360°→0° wrap.
 
 ## Why (the numbers)
 
@@ -107,6 +131,8 @@ hl.toHexP3(hl.fromHex('#ff0000'));  // 'color(display-p3 0.9176 0.2003 0.1386)' 
 7. **Ellipse/JND (threshold) data ≠ suprathreshold ΔE data**: they validate different things; don't mix them in one benchmark table.
 8. **Gray axis**: after any custom transform, verify grays map to C*≈0 and white→L=1, black→L=0 exactly. Endpoint bugs cheat visible metrics.
 9. **HSL for anything perceptual**: HSL lightness is not perceptual lightness (yellow vs blue at same HSL-L differ wildly). Display-only.
+10. **Physical vs perceptual confusion**: blurring, resizing, compositing and light mixing are ENERGY operations — do them in linear RGB (decode gamma first, re-encode after). Doing them in gamma sRGB darkens edges; doing them in OKLab/Lab is physically wrong. Reserve perceptual spaces for how things LOOK, linear for how light ADDS.
+11. **Euclidean distance in LCh**: (L, C, h) has an angular coordinate; treating it as a vector for distance or averaging silently corrupts results. Convert to the rectangular form first.
 
 ## Provenance
 
