@@ -31,11 +31,11 @@ if (!chrome) {
   process.exit(1);
 }
 
-function shoot(width, height, dest) {
+function shoot(width, height, dest, page = builtPage) {
   execFileSync(chrome, [
     '--headless=new', '--disable-gpu', '--hide-scrollbars',
     '--force-device-scale-factor=2', `--window-size=${width},${height}`,
-    `--screenshot=${tmp}`, `file://${builtPage}`,
+    `--screenshot=${tmp}`, `file://${page}`,
   ], { stdio: 'ignore' });
   return sharp(tmp).resize(width, height).png().toFile(dest);
 }
@@ -48,6 +48,7 @@ console.log(`wrote ${out} (1200×630) from claims-driven /og-card`);
 //    every release gets a fresh, cache-proof visual ready to attach.
 const versionTs = readFileSync(resolve(root, 'src/data/version.ts'), 'utf8');
 const version = versionTs.match(/["']([0-9]+\.[0-9]+\.[0-9]+)["']/)[1];
+const releasePage = resolve(root, 'dist/release-card/index.html');
 const tw = resolve(root, `public/twitter-card-v${version}.png`);
-await shoot(1200, 675, tw);
+await shoot(1200, 675, tw, releasePage);
 console.log(`wrote ${tw} (1200×675, X in-feed 16:9)`);

@@ -1,0 +1,59 @@
+---
+// Auto-generated Twitter release card (1200×675, X in-feed 16:9).
+// Screenshotted by scripts/generate-og.mjs on every deploy.
+import { VERSION } from "../data/version";
+import { currentHighlights } from "../data/release-notes";
+import { claims, winShort } from "../data/claims";
+---
+<html><head><meta charset="utf-8" /><style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1200px; height: 675px; overflow: hidden; background: #09090b;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fafafa; position: relative; }
+  .glow { position: absolute; width: 900px; height: 900px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(249,115,22,.14), transparent 65%);
+    top: -350px; right: -250px; }
+  .wrap { position: relative; height: 100%; padding: 64px 72px; display: flex;
+    flex-direction: column; justify-content: space-between; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .brand { font-size: 34px; font-weight: 800; }
+  .brand span { color: #f97316; }
+  .tag { font-size: 15px; letter-spacing: .18em; text-transform: uppercase;
+    color: #f97316; font-weight: 600; }
+  .ver { font-size: 110px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+  .ver .rel { display: block; font-size: 20px; font-weight: 600; color: #52525b;
+    letter-spacing: .25em; text-transform: uppercase; margin-bottom: 14px; }
+  ul { list-style: none; margin-top: 34px; }
+  li { font-size: 27px; color: #d4d4d8; margin-bottom: 14px; display: flex; align-items: center; }
+  li::before { content: ""; width: 9px; height: 9px; border-radius: 50%;
+    background: #34d399; margin-right: 18px; flex: none; }
+  .bottom { display: flex; justify-content: space-between; align-items: flex-end;
+    border-top: 1px solid rgba(255,255,255,.08); padding-top: 26px; }
+  .stats { display: flex; gap: 56px; }
+  .stat b { display: block; font-size: 30px; font-family: ui-monospace, Menlo, monospace; }
+  .stat i { font-style: normal; font-size: 13px; letter-spacing: .14em;
+    text-transform: uppercase; color: #52525b; }
+  .url { font-family: ui-monospace, Menlo, monospace; font-size: 21px; color: #a1a1aa;
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+    padding: 12px 22px; border-radius: 12px; }
+</style></head>
+<body><div class="glow"></div>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Helmlab<span>.</span></div>
+      <div class="tag">New release</div>
+    </div>
+    <div>
+      <div class="ver"><span class="rel">just shipped</span>v{VERSION}</div>
+      <ul>{currentHighlights.map((h) => <li>{h}</li>)}</ul>
+    </div>
+    <div class="bottom">
+      <div class="stats">
+        <div class="stat"><b>{winShort()}</b><i>vs OKLab</i></div>
+        <div class="stat"><b>{claims.stress.metricSpace.combvd}</b><i>STRESS</i></div>
+        <div class="stat"><b>{claims.bundleKB}KB</b><i>zero deps</i></div>
+      </div>
+      <div class="url">npm i helmlab &nbsp;·&nbsp; helmlab.space</div>
+    </div>
+  </div>
+</body></html>
