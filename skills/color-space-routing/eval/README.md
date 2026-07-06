@@ -56,3 +56,8 @@ code tasks most. **Verdict: the published skill stays a single SKILL.md.**
 The testing content will be merged INTO the monolith instead (pending
 re-measure). Split variant kept in color-space-routing-split/ as the
 negative-finding artifact.
+
+
+**Skill v1.2** (testing section merged into the monolith): on-arm re-run
+3x2 — haiku 96.7% (58/60), sonnet 96.7% (58/60). Best numbers yet; the
+testing content improved rather than diluted. Published to the mirror.

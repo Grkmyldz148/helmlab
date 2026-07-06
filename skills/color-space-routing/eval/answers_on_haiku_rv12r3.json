@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "hl.gradient('#0000ff', '#ffffff', 16)",
+ "T2-delta-e": "function f(hex1, hex2) { return hl.difference(hex1, hex2); }",
+ "T3-gray-axis": "(hex) => hl.genFromHex(hex)",
+ "T4-physical-mix": "(a,b)=>{const p=h=>{const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255].map(x=>x/255)},d=c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4),e=c=>c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055,x=p(a).map(d),y=p(b).map(d),z=[(x[0]+y[0])/2,(x[1]+y[1])/2,(x[2]+y[2])/2];return'#'+z.map(e).map(c=>Math.round(c*255).toString(16).padStart(2,'0')).join('')}",
+ "T5-hue-wrap": "(h1, h2, t) => ((h1 + ((h2 - h1 + 540) % 360 - 180) * t) % 360 + 360) % 360",
+ "T6-lch-distance": "([L1,C1,h1],[L2,C2,h2])=>Math.hypot(L1-L2,C1*Math.cos(h1*Math.PI/180)-C2*Math.cos(h2*Math.PI/180),C1*Math.sin(h1*Math.PI/180)-C2*Math.sin(h2*Math.PI/180))",
+ "T7-cvd": "OKLab",
+ "T8-picker": "okhsl",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 on low-chroma grays is below perceptual threshold (~2.3) and unreliable in the near-achromatic band anyway; don't fail.",
+ "T11-css-nearby": "oklch",
+ "T12-css-distant": "`oklab`",
+ "T13-wcag": "function f(fg,bg){const l=h=>{const n=parseInt(h.slice(1),16);const[r,g,b]=[(n>>16)&255,(n>>8)&255,n&255].map(v=>(v/=255)<=0.03928?v/12.92:((v+0.055)/1.055)**2.4);return 0.2126*r+0.7152*g+0.0722*b};const[a,b]=[l(fg),l(bg)].sort((x,y)=>y-x);return(a+0.05)/(b+0.05)}",
+ "T14-darken": "(hex) => ((lab) => hl.genToHex([Math.max(0, lab[0] - 0.15), ...lab.slice(1)]))(hl.genFromHex(hex))",
+ "T15-lightness-sort": "(hexArray) => hexArray.sort((a, b) => hl.genToLch(hl.genFromHex(a))[0] - hl.genToLch(hl.genFromHex(b))[0])",
+ "T16-circular-mean": "(a, b) => Math.atan2(Math.sin(a * Math.PI / 180) + Math.sin(b * Math.PI / 180), Math.cos(a * Math.PI / 180) + Math.cos(b * Math.PI / 180)) * 180 / Math.PI",
+ "T17-equal-gray": "hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0, 0]))",
+ "T18-angular-dist": "Math.min(Math.abs(340 - 20), 360 - Math.abs(340 - 20))",
+ "T19-cat": "Chromatic adaptation.",
+ "T20-hsv-contrast": "No. HSV Value is not perceptually uniform (yellow vs. blue at the same V have wildly different perceived brightness); use WCAG relative luminance–based contrast ratio instead."
+}

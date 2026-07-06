@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "hl.gradient('#0000ff', '#ffffff', 16)",
+ "T2-delta-e": "const f = (hex1, hex2) => hl.difference(hex1, hex2);",
+ "T3-gray-axis": "(hex) => hl.genFromHex(hex)",
+ "T4-physical-mix": "function f(hexA,hexB){const p=h=>[parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];const lin=c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4;const gam=c=>c<=0.0031308?12.92*c:1.055*c**(1/2.4)-0.055;const a=p(hexA).map(lin),b=p(hexB).map(lin);return'#'+a.map((v,i)=>Math.round(gam((v+b[i])/2)*255).toString(16).padStart(2,'0')).join('')}",
+ "T5-hue-wrap": "function f(h1,h2,t){let d=((h2-h1)%360+540)%360-180;return((h1+d*t)%360+360)%360;}",
+ "T6-lch-distance": "((c1,c2)=>Math.sqrt((c1[0]-c2[0])**2+(c1[1]*Math.cos(c1[2]*Math.PI/180)-c2[1]*Math.cos(c2[2]*Math.PI/180))**2+(c1[1]*Math.sin(c1[2]*Math.PI/180)-c2[1]*Math.sin(c2[2]*Math.PI/180))**2))([0.5,0.1,10],[0.5,0.1,350])",
+ "T7-cvd": "OKLab",
+ "T8-picker": "okhsl",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 is below the ~2.3 just-noticeable-difference threshold; observers won't reliably detect it.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklab`",
+ "T13-wcag": "function f(fg,bg){const l=h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(c=>c<=.04045?c/12.92:((c+.055)/1.055)**2.4);return.2126*r+.7152*g+.0722*b};const[L1,L2]=[l(fg),l(bg)].sort((a,b)=>b-a);return(L1+.05)/(L2+.05)}",
+ "T14-darken": "f = hex => { const [L, C, h] = hl.genToLch(hl.genFromHex(hex)); return hl.genToHex(hl.genFromLch([Math.max(0, L - 0.15), C, h])); }",
+ "T15-lightness-sort": "(hexArray) => [...hexArray].sort((a, b) => hl.genFromHex(a)[0] - hl.genFromHex(b)[0])",
+ "T16-circular-mean": "(Math.atan2(Math.sin(350*Math.PI/180)+Math.sin(10*Math.PI/180),Math.cos(350*Math.PI/180)+Math.cos(10*Math.PI/180))*180/Math.PI+360)%360",
+ "T17-equal-gray": "hl.genToHex([hl.genFromHex('#3b82f6')[0], 0, 0])",
+ "T18-angular-dist": "(d => d > 180 ? 360 - d : d)(Math.abs(20 - 340) % 360)",
+ "T19-cat": "Chromatic adaptation",
+ "T20-hsv-contrast": "No — HSV Value is not perceptual lightness; yellow and blue at the same V have wildly different perceived brightness, so contrast checks will be wrong."
+}

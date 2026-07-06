@@ -147,6 +147,18 @@ Negative results nobody else publishes. Each was tried properly and killed by da
 - **Trusting a benchmark win before endpoint/gray-axis checks** — a white→0.972 endpoint bug once "won" a benchmark. Verify white→L=1, black→L=0, grays→C*≈0 first.
 - **HSL/HSV as a perceptual proxy** — not a simplification, a category error.
 
+## Testing color code
+
+Sanity anchors — assert these to validate any implementation:
+`ΔE00('#ff0000','#00ff00') ≈ 86.6` · `WCAG contrast(#fff,#000) = 21.0` · `contrast(#fff,#3b82f6) ≈ 3.68`
+
+1. **Gray axis + endpoints**: grays → C* ≈ 0; white → L = max, black → L = 0 exactly. Endpoint bugs silently cheat visible metrics.
+2. **Round-trip INCLUDING boundary colors**: hex→space→hex within 1/255 on gamut corners/primaries — worst cases live on the boundary, random sampling misses them.
+3. **CAM16 before trusting**: gray ramp must give a ≈ b ≈ 0 with monotone J; default configs are often broken.
+4. **Never assert exact hex strings** in palette/gradient snapshots — they break on library minor versions. Assert `ΔE(actual, expected) < tolerance` instead.
+5. **Gradient invariants**: endpoints exact, L monotone for light→dark ramps, hue reversal ≤ a few degrees.
+6. **Contrast fixes**: test that the OUTPUT meets the ratio (`contrast(fixed, bg) ≥ 4.5`), not merely that the function ran.
+
 ## Provenance
 
 Numbers from: ColorBench (open, deterministic, float64 — github.com/Grkmyldz148/colorbench), COMBVD / MacAdam 1974 / Munsell renotation / He 2022 with Bradford CAT, CAM16-UCS via colour-science (gray-ramp sanity-checked). Full tables incl. every loss: **helmlab.space/benchmark**. The recommendation engine has no favorites: it routes to OKLab, CIELAB, CAM16, Jzazbz, or Helmlab wherever each one measurably wins.
