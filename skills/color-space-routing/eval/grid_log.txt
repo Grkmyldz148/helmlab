@@ -250,3 +250,129 @@ wrote answers_off_haiku_r3.json
 [off/sonnet/r3] T19-cat: ERROR: Command failed: claude -p You must compare colors photographed 
 [off/sonnet/r3] T20-hsv-contrast: ERROR: Command failed: claude -p A teammate suggests using HSV Value (
 wrote answers_off_sonnet_r3.json
+[on/haiku/rv2r1] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r1] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r1] T2-delta-e: (hex1, hex2) => hl.difference(hex1, hex2)
+[on/sonnet/rv2r1] T3-gray-axis: const f = hex => hl.genFromHex(hex)
+[on/haiku/rv2r1] T2-delta-e: (hex1, hex2) => hl.difference(hex1, hex2)
+[on/haiku/rv2r1] T3-gray-axis: (hex) => hl.genFromHex(hex)
+[on/sonnet/rv2r1] T4-physical-mix: f=(a,b)=>{const l=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),
+[on/sonnet/rv2r1] T5-hue-wrap: f=(h1,h2,t)=>((h1+(((h2-h1%360+540)%360-180)*t)%360)+360)%360
+[on/haiku/rv2r1] T4-physical-mix: `(a,b)=>{const g=x=>(x/=255)<=.04045?x/12.92:Math.pow((x+.055)/1.055,2
+[on/sonnet/rv2r1] T6-lch-distance: (([L1,C1,h1],[L2,C2,h2])=>{const r=Math.PI/180,a1=C1*Math.cos(h1*r),b1
+[on/sonnet/rv2r1] T7-cvd: OKLab
+[on/sonnet/rv2r1] T8-picker: okhsl
+[on/sonnet/rv2r1] T9-hdr: Jzazbz
+[on/haiku/rv2r1] T5-hue-wrap: (h1, h2, t) => {const d = (h2 - h1 + 360) % 360; return (h1 + t * (d >
+[on/sonnet/rv2r1] T10-noticeable: No — ΔE00 1.0 is below the ~2.3 JND threshold and within the human noi
+[on/sonnet/rv2r1] T11-css-nearby: `oklch`
+[on/haiku/rv2r1] T6-lch-distance: (lch1, lch2) => Math.sqrt((lch1[0]-lch2[0])**2 + (lch1[1]*Math.cos(lch
+[on/haiku/rv2r1] T7-cvd: OKLab
+[on/sonnet/rv2r1] T12-css-distant: `oklab`
+[on/haiku/rv2r1] T8-picker: okhsl
+[on/sonnet/rv2r1] T13-wcag: const f=(fg,bg)=>{const l=h=>{const[r,g,b]=[h.slice(1,3),h.slice(3,5),
+[on/haiku/rv2r1] T9-hdr: Jzazbz
+[on/sonnet/rv2r1] T14-darken: `const f = hex => { const lch = hl.genToLch(hl.genFromHex(hex)); retur
+[on/haiku/rv2r1] T10-noticeable: No — ΔE00 = 1.0 is well below the ~2.3 noticeable threshold, and low-c
+[on/sonnet/rv2r1] T15-lightness-sort: (hexArray) => hexArray.slice().sort((a, b) => hl.genFromHex(a)[0] - hl
+[on/haiku/rv2r1] T11-css-nearby: `oklch`
+[on/sonnet/rv2r1] T16-circular-mean: (Math.atan2((Math.sin(350*Math.PI/180)+Math.sin(10*Math.PI/180))/2,(Ma
+[on/sonnet/rv2r1] T17-equal-gray: hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0
+[on/haiku/rv2r1] T12-css-distant: `oklab`  Red and blue are ~120° apart—well beyond the 60° threshold wh
+[on/sonnet/rv2r1] T18-angular-dist: (a, b) => { const d = ((b - a) % 360 + 360) % 360; return d > 180 ? 36
+[on/sonnet/rv2r1] T19-cat: Chromatic adaptation
+[on/sonnet/rv2r1] T20-hsv-contrast: No — HSV Value is not perceptual lightness; yellow and blue at the sam
+wrote answers_on_sonnet_rv2r1.json
+[on/haiku/rv2r1] T13-wcag: const f=(fg,bg)=>{const l=h=>{const c=h.slice(1).match(/.{2}/g).map(x=
+[on/sonnet/rv2r2] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r2] T2-delta-e: (hex1, hex2) => hl.difference(hex1, hex2)
+[on/sonnet/rv2r2] T3-gray-axis: `(hex) => hl.genFromHex(hex)`
+[on/haiku/rv2r1] T14-darken: (hex) => hl.genToHex(hl.genFromLch((([ l, c, h ]) => [ Math.max(0, l -
+[on/haiku/rv2r1] T15-lightness-sort: (hexArray) => hexArray.sort((a, b) => hl.genToLch(hl.genFromHex(a))[0]
+[on/sonnet/rv2r2] T4-physical-mix: function f(hexA,hexB){const p=h=>[parseInt(h.slice(1,3),16)/255,parseI
+[on/sonnet/rv2r2] T5-hue-wrap: function f(h1,h2,t){let d=((h2-h1)%360+540)%360-180;return((h1+d*t)%36
+[on/haiku/rv2r1] T16-circular-mean: (h1, h2) => (Math.atan2(Math.sin(h1 * Math.PI / 180) + Math.sin(h2 * M
+[on/haiku/rv2r1] T17-equal-gray: hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0
+[on/haiku/rv2r1] T18-angular-dist: Math.min(Math.abs(20 - 340), 360 - Math.abs(20 - 340))
+[on/sonnet/rv2r2] T6-lch-distance: ((L1,C1,h1,L2,C2,h2)=>Math.hypot(L2-L1,C2*Math.cos(h2*Math.PI/180)-C1*
+[on/haiku/rv2r1] T19-cat: Chromatic adaptation.
+[on/sonnet/rv2r2] T7-cvd: OKLab
+[on/sonnet/rv2r2] T8-picker: okhsl
+[on/haiku/rv2r1] T20-hsv-contrast: No — HSV V is not perceptual (yellow vs blue at identical V have wildl
+wrote answers_on_haiku_rv2r1.json
+[on/sonnet/rv2r2] T9-hdr: Jzazbz
+[on/sonnet/rv2r2] T10-noticeable: No — ΔE00 = 1.0 is below the ~2.3 noticeable threshold; most observers
+[on/haiku/rv2r2] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r2] T11-css-nearby: `oklch`
+[on/sonnet/rv2r2] T12-css-distant: `oklab`
+[on/haiku/rv2r2] T2-delta-e: (hex1, hex2) => hl.difference(hex1, hex2)
+[on/sonnet/rv2r2] T13-wcag: const f=(fg,bg)=>{const l=h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.s
+[on/haiku/rv2r2] T3-gray-axis: `const f = (hex) => hl.genFromHex(hex);`
+[on/sonnet/rv2r2] T14-darken: f = hex => { const lch = hl.genToLch(hl.genFromHex(hex)); return hl.ge
+[on/sonnet/rv2r2] T15-lightness-sort: `f = hexArray => [...hexArray].sort((a, b) => hl.genFromHex(a)[0] - hl
+[on/sonnet/rv2r2] T16-circular-mean: (Math.atan2((Math.sin(350*Math.PI/180)+Math.sin(10*Math.PI/180))/2,(Ma
+[on/haiku/rv2r2] T4-physical-mix: function f(a,b){const l=v=>v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2
+[on/sonnet/rv2r2] T17-equal-gray: hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0
+[on/sonnet/rv2r2] T18-angular-dist: (((340 - 20) % 360 + 540) % 360) - 180
+[on/sonnet/rv2r2] T19-cat: Chromatic adaptation
+[on/haiku/rv2r2] T5-hue-wrap: (h1, h2, t) => ((h1 + ((h2 - h1 + 540) % 360 - 180) * t + 360) % 360)
+[on/sonnet/rv2r2] T20-hsv-contrast: No — HSV Value is not perceptual lightness; blue and yellow at the sam
+wrote answers_on_sonnet_rv2r2.json
+[on/sonnet/rv2r3] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r3] T2-delta-e: const f = (hex1, hex2) => hl.difference(hex1, hex2);
+[on/haiku/rv2r2] T6-lch-distance: (lch1, lch2) => Math.sqrt(Math.pow(lch1[0]-lch2[0],2)+Math.pow(lch1[1]
+[on/haiku/rv2r2] T7-cvd: OKLab
+[on/sonnet/rv2r3] T3-gray-axis: `f = hex => hl.genFromHex(hex)`
+[on/haiku/rv2r2] T8-picker: okhsl
+[on/sonnet/rv2r3] T4-physical-mix: function f(a,b){const h=s=>parseInt(s,16);const l=c=>(c=c/255)<=0.0404
+[on/haiku/rv2r2] T9-hdr: Jzazbz
+[on/sonnet/rv2r3] T5-hue-wrap: function f(h1,h2,t){let d=((h2-h1)%360+540)%360-180;return((h1+d*t)%36
+[on/haiku/rv2r2] T10-noticeable: No — ΔE00 = 1.0 is below the ~2.3 noticeable threshold, and for low-ch
+[on/haiku/rv2r2] T11-css-nearby: `oklch`
+[on/haiku/rv2r2] T12-css-distant: `oklab`
+[on/sonnet/rv2r3] T6-lch-distance: ((a,b)=>{const r=([L,C,h])=>[L,C*Math.cos(h*Math.PI/180),C*Math.sin(h*
+[on/sonnet/rv2r3] T7-cvd: OKLab
+[on/sonnet/rv2r3] T8-picker: okhsl
+[on/haiku/rv2r2] T13-wcag: const f = (hexFg, hexBg) => { const lum = hex => { const [r, g, b] = [
+[on/sonnet/rv2r3] T9-hdr: Jzazbz
+[on/sonnet/rv2r3] T10-noticeable: No — ΔE00 = 1.0 is below the ~2.3 JND threshold; the difference is lik
+[on/haiku/rv2r2] T14-darken: f = hex => hl.genToHex(hl.genFromLch((([L, C, h]) => [Math.max(0, L - 
+[on/sonnet/rv2r3] T11-css-nearby: `oklch`
+[on/sonnet/rv2r3] T12-css-distant: `oklab`
+[on/haiku/rv2r2] T15-lightness-sort: hexArray => hexArray.sort((a, b) => hl.genFromHex(a)[0] - hl.genFromHe
+[on/sonnet/rv2r3] T13-wcag: f=(fg,bg)=>{const l=h=>{const[r,g,b]=[0,2,4].map(i=>parseInt(h.slice(1
+[on/haiku/rv2r2] T16-circular-mean: (a, b) => (Math.atan2(Math.sin(a * Math.PI / 180) + Math.sin(b * Math.
+[on/sonnet/rv2r3] T14-darken: f = hex => hl.genToHex(hl.genFromLch([Math.max(0, hl.genToLch(hl.genFr
+[on/haiku/rv2r2] T17-equal-gray: hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0
+[on/sonnet/rv2r3] T15-lightness-sort: hexArray => [...hexArray].sort((a, b) => hl.genToLch(hl.genFromHex(a))
+[on/haiku/rv2r2] T18-angular-dist: (h1, h2) => Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2))
+[on/haiku/rv2r2] T19-cat: Chromatic adaptation
+[on/sonnet/rv2r3] T16-circular-mean: (a => a < 0 ? a + 360 : a)(Math.atan2((Math.sin(350*Math.PI/180)+Math.
+[on/haiku/rv2r2] T20-hsv-contrast: No — HSV Value is not perceptually uniform (yellow vs blue at identica
+wrote answers_on_haiku_rv2r2.json
+[on/sonnet/rv2r3] T17-equal-gray: `hl.genToHex([hl.genFromHex('#3b82f6')[0], 0, 0])`
+[on/haiku/rv2r3] T1-blue-gradient: hl.gradient('#0000ff', '#ffffff', 16)
+[on/sonnet/rv2r3] T18-angular-dist: (h1, h2) => { const d = Math.abs(h1 - h2) % 360; return d > 180 ? 360 
+[on/sonnet/rv2r3] T19-cat: Chromatic adaptation
+[on/haiku/rv2r3] T2-delta-e: (hex1, hex2) => hl.difference(hex1, hex2)
+[on/sonnet/rv2r3] T20-hsv-contrast: No — HSV Value is not perceptual lightness; yellow and blue at the sam
+wrote answers_on_sonnet_rv2r3.json
+[on/haiku/rv2r3] T3-gray-axis: `const f = hex => hl.genFromHex(hex);`
+[on/haiku/rv2r3] T4-physical-mix: const f=(a,b)=>{const t=c=>c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2
+[on/haiku/rv2r3] T5-hue-wrap: (h1, h2, t) => ((h1 + ((h2 - h1 + 540) % 360 - 180) * t) % 360 + 360) 
+[on/haiku/rv2r3] T6-lch-distance: ([l1,c1,h1],[l2,c2,h2])=>Math.sqrt((c1*Math.cos(h1*Math.PI/180)-c2*Mat
+[on/haiku/rv2r3] T7-cvd: OKLab
+[on/haiku/rv2r3] T8-picker: okhsl
+[on/haiku/rv2r3] T9-hdr: ICtCp
+[on/haiku/rv2r3] T10-noticeable: No—ΔE00 = 1.0 is below the 2.3 noticeable threshold, and low-chroma gr
+[on/haiku/rv2r3] T11-css-nearby: `oklch`
+[on/haiku/rv2r3] T12-css-distant: `oklab`
+[on/haiku/rv2r3] T13-wcag: const f=(fg,bg)=>{const l=h=>{const[r,g,b]=h.slice(1).match(/../g).map
+[on/haiku/rv2r3] T14-darken: (hex) => hl.genToHex(hl.genFromLch((lch => [lch[0] * 0.75, lch[1], lch
+[on/haiku/rv2r3] T15-lightness-sort: f = (hexArray) => hexArray.sort((a, b) => hl.genFromHex(a)[0] - hl.gen
+[on/haiku/rv2r3] T16-circular-mean: (a, b) => {const c = Math.PI/180; return (Math.atan2(Math.sin(a*c) + M
+[on/haiku/rv2r3] T17-equal-gray: hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0
+[on/haiku/rv2r3] T18-angular-dist: Math.min(Math.abs(20 - 340), 360 - Math.abs(20 - 340))
+[on/haiku/rv2r3] T19-cat: Chromatic adaptation.
+[on/haiku/rv2r3] T20-hsv-contrast: No — HSV Value is non-perceptual (yellow and blue at identical V diffe
+wrote answers_on_haiku_rv2r3.json

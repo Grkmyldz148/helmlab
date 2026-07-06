@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "hl.gradient('#0000ff', '#ffffff', 16)",
+ "T2-delta-e": "(hex1, hex2) => hl.difference(hex1, hex2)",
+ "T3-gray-axis": "(hex) => hl.genFromHex(hex)",
+ "T4-physical-mix": "`(a,b)=>{const g=x=>(x/=255)<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4);return'#'+[0,1,2].map(i=>{const m=(g(parseInt(a.slice(i*2+1,i*2+3),16))+g(parseInt(b.slice(i*2+1,i*2+3),16)))/2;return Math.round((m<=.0031308?12.92*m:1.055*Math.pow(m,1/2.4)-.055)*255).toString(16).padStart(2,'0')}).join('')}`",
+ "T5-hue-wrap": "(h1, h2, t) => {const d = (h2 - h1 + 360) % 360; return (h1 + t * (d > 180 ? d - 360 : d) + 360) % 360}",
+ "T6-lch-distance": "(lch1, lch2) => Math.sqrt((lch1[0]-lch2[0])**2 + (lch1[1]*Math.cos(lch1[2]*Math.PI/180)-lch2[1]*Math.cos(lch2[2]*Math.PI/180))**2 + (lch1[1]*Math.sin(lch1[2]*Math.PI/180)-lch2[1]*Math.sin(lch2[2]*Math.PI/180))**2)",
+ "T7-cvd": "OKLab",
+ "T8-picker": "okhsl",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 is well below the ~2.3 noticeable threshold, and low-chroma differences have the highest human disagreement.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklab`\n\nRed and blue are ~120° apart—well beyond the 60° threshold where cylindrical forms (oklch) sweep through intermediate hues. The rectangular form (oklab) takes a straighter path through perceptual space.",
+ "T13-wcag": "const f=(fg,bg)=>{const l=h=>{const c=h.slice(1).match(/.{2}/g).map(x=>parseInt(x,16)/255).map(x=>x<.03928?x/12.92:((x+.055)/1.055)**2.4);return.2126*c[0]+.7152*c[1]+.0722*c[2]},a=l(fg),b=l(bg);return(Math.max(a,b)+.05)/(Math.min(a,b)+.05)};",
+ "T14-darken": "(hex) => hl.genToHex(hl.genFromLch((([ l, c, h ]) => [ Math.max(0, l - 0.2), c, h ])(hl.genToLch(hl.genFromHex(hex)))))",
+ "T15-lightness-sort": "(hexArray) => hexArray.sort((a, b) => hl.genToLch(hl.genFromHex(a))[0] - hl.genToLch(hl.genFromHex(b))[0])",
+ "T16-circular-mean": "(h1, h2) => (Math.atan2(Math.sin(h1 * Math.PI / 180) + Math.sin(h2 * Math.PI / 180), Math.cos(h1 * Math.PI / 180) + Math.cos(h2 * Math.PI / 180)) * 180 / Math.PI + 360) % 360",
+ "T17-equal-gray": "hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0, 0]))",
+ "T18-angular-dist": "Math.min(Math.abs(20 - 340), 360 - Math.abs(20 - 340))",
+ "T19-cat": "Chromatic adaptation.",
+ "T20-hsv-contrast": "No — HSV V is not perceptual (yellow vs blue at identical V have wildly different perceived brightness); accessibility contrast must measure perceptual lightness."
+}

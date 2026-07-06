@@ -47,6 +47,8 @@ Most perceptual spaces come in a rectangular form (L, a, b) and a cylindrical on
 | Distance / ΔE | rectangular ONLY | h is an angle — Euclidean distance on (L, C, h) is meaningless |
 | Sorting by lightness, L ramps | either | L is identical in both |
 
+**Default rule: gradients interpolate in the RECTANGULAR form (`in oklab`, `helmgen`). Switch to cylindrical (`in oklch`) ONLY when both endpoints are vivid and their hues are within ~60° — otherwise LCh sweeps through every hue in between.** "oklch is newer" does not mean "oklch is the gradient default"; for distant hues it is the wrong pick.
+
 CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `genFromHex`/`genToHex` (rectangular) vs `genToLch`/`genFromLch` (cylindrical).
 
 Two cylindrical traps: (1) hue is UNDEFINED at the achromatic axis — gradients from gray in LCh need a hue policy (CSS carries the other endpoint's hue; libraries differ); (2) interpolate hue along the intended arc — naive lerp breaks at the 360°→0° wrap.
