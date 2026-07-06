@@ -9,6 +9,7 @@ const sections = [
   { id: "metricspace", label: "MetricSpace" },
   { id: "helmlab-class", label: "Helmlab Class" },
   { id: "colorjs", label: "Color.js" },
+  { id: "ai-skills", label: "AI Skills" },
   { id: "token-export", label: "Token Export" },
   { id: "typescript", label: "TypeScript" },
   { id: "advanced", label: "Advanced" },
@@ -826,6 +827,36 @@ rotated.<span class="text-[#34d399]">set</span>(<span class="text-[#fb923c]">"he
               The math is identical to the standalone <code class="text-[#a1a1aa] bg-white/[0.04] px-1.5 py-0.5 rounded text-xs">helmlab</code> package. Pick whichever fits your stack: helmlab if you want a tiny zero-dep bundle and the high-level helpers (palette, gradient, semanticScale), Color.js if you already use it for parsing, gamut mapping, and multi-space conversions.
             </p>
           </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- AI SKILLS -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section id="ai-skills" class="mb-16 scroll-mt-24">
+          <h2 class="text-2xl font-bold mb-2">AI Skills</h2>
+          <div class="h-px bg-white/[0.06] mb-8"></div>
+
+          <p class="text-[#a1a1aa] mb-4">
+            Teach your AI assistant to get color right. Two agent skills, installable into
+            Claude Code, Codex, Gemini CLI or Cursor with one command:
+          </p>
+
+          <pre class="rounded-lg bg-[#111115] p-4 overflow-x-auto mb-6"><code class="font-mono text-sm">npx skills add Grkmyldz148/color-skills</code></pre>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
+              <h3 class="text-sm font-medium text-[#fafafa] mb-1">color-space-routing</h3>
+              <p class="text-xs text-[#a1a1aa]">Task &rarr; space routing with measured evidence, Lab-vs-LCh form rules, pitfalls and a graveyard of measured-dead approaches. Vendor-neutral: routes to OKLab, CIELAB, CAM16, Jzazbz or Helmlab wherever each wins. <span class="text-[#34d399]">Benchmarked: lifts claude-haiku 40%&rarr;93% and sonnet 42%&rarr;88%</span> on 20 auto-verifiable color tasks.</p>
+            </div>
+            <div class="rounded-xl border border-white/[0.06] bg-[#0c0c0f] p-5">
+              <h3 class="text-sm font-medium text-[#fafafa] mb-1">helmlab</h3>
+              <p class="text-xs text-[#a1a1aa]">Correct API usage of this library — the two-space model, verified outputs and the exact gotchas that break AI-generated code. <span class="text-[#34d399]">Benchmarked: haiku 8%&rarr;75%, sonnet 38%&rarr;92%</span> on 8 API tasks. Without it, models hallucinate the API.</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-[#52525b]">
+            All numbers from fresh headless sessions, 3 reps per task; the harness is validated with golden answers and raw per-run outputs are committed — <a href="https://github.com/Grkmyldz148/color-skills" target="_blank" rel="noopener noreferrer" class="text-[#a1a1aa] hover:text-white underline-offset-2 hover:underline">github.com/Grkmyldz148/color-skills</a>.
+          </p>
         </section>
 
         <!-- ═══════════════════════════════════════════════════════ -->
