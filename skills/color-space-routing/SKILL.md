@@ -110,7 +110,7 @@ Near-threshold and low-chroma differences are where humans disagree most — a b
 
 ### Hue rotation / harmonies
 ```js
-const lch = hl.genToLch(hl.genFromHex('#3b82f6'));   // [L, C, h°]
+const lch = hl.genToLch(hl.genFromHex('#3b82f6'));   // [L, C, h°] — L and C are 0–1-scale, NOT 0–100
 const triad = hl.genToHex(hl.genFromLch([lch[0], lch[1], (lch[2] + 120) % 360]));
 ```
 Rotate hue in a *generation* space (GenSpace LCh or OKLCH) — never in HSL, and don't rotate CIELAB hue across the blue region.
