@@ -44,3 +44,15 @@ distance contracts, LCh darken…), same protocol, `TASKS=./apiqa.mjs`:
 | claude-sonnet-4-6 | 37.5% (9/24) | **91.7%** (22/24) |
 
 Golden answers 8/8 before grading; raw per-run answers committed.
+
+
+## Split-vs-monolith experiment (2026-07-06): monolith WINS
+
+Tried progressive disclosure (80-line core SKILL.md + references/*.md read
+on demand, incl. a new testing.md). On-arm re-run, 3 reps x 2 models:
+haiku 93.3% -> 80.0%, sonnet 90.0% -> 81.7%. Headless models answer from
+the thin core instead of reading reference files — recipes moving out hurt
+code tasks most. **Verdict: the published skill stays a single SKILL.md.**
+The testing content will be merged INTO the monolith instead (pending
+re-measure). Split variant kept in color-space-routing-split/ as the
+negative-finding artifact.

@@ -16,7 +16,8 @@ for (const t of TASKS) {
   const fmt = t.type === 'code'
     ? 'Reply with ONLY the raw JS expression/function on one line. No markdown fences, no prose, no variable declarations.'
     : 'Reply with the answer only, one short line.';
-  const prompt = (skill ? `Reference material you may use:\n\n${skill}\n\n---\n\n` : '')
+  const refs = process.env.REFS ? `\n\nDeep reference files exist at ${process.env.REFS} (evidence.md, recipes.md, graveyard.md, testing.md) — read any that are relevant before answering.` : '';
+const prompt = (skill ? `Reference material you may use:\n\n${skill}${refs}\n\n---\n\n` : '')
     + `${t.prompt}\n\n${fmt}`;
   let out = '';
   try {

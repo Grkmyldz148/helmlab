@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "[...Array(16)].map((_, i) => hl.genToHex(hl.genFromHex('#0000ff').map((v, j) => v*(1-i/15)+hl.genFromHex('#ffffff')[j]*i/15)))",
+ "T2-delta-e": "(hex1, hex2) => hl.difference(hex1, hex2)",
+ "T3-gray-axis": "(hex) => hl.genFromHex(hex)",
+ "T4-physical-mix": "const f=(a,b)=>{const L=c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4),G=c=>c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055,h2r=h=>[h.slice(1,3),h.slice(3,5),h.slice(5,7)].map(x=>L(parseInt(x,16)/255)),r2h=r=>'#'+r.map(c=>Math.round(G(c)*255).toString(16).padStart(2,'0')).join(''),r1=h2r(a),r2=h2r(b);return r2h([(r1[0]+r2[0])/2,(r1[1]+r2[1])/2,(r1[2]+r2[2])/2]);};",
+ "T5-hue-wrap": "(h1, h2, t) => (h1 + ((h2 - h1 + 540) % 360 - 180) * t + 360) % 360",
+ "T6-lch-distance": "([L1,C1,h1],[L2,C2,h2])=>Math.sqrt((L1-L2)**2+(C1*Math.cos(h1*Math.PI/180)-C2*Math.cos(h2*Math.PI/180))**2+(C1*Math.sin(h1*Math.PI/180)-C2*Math.sin(h2*Math.PI/180))**2)",
+ "T7-cvd": "OKLab",
+ "T8-picker": "okhsl",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 is well below the 2.3 human-noticeability threshold; imperceptible in UI grays.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklab`",
+ "T13-wcag": "const f = (a, b) => { const L = h => { const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i+2), 16) / 255); const [r2, g2, b2] = [r, g, b].map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4); return 0.2126 * r2 + 0.7152 * g2 + 0.0722 * b2; }; const [l1, l2] = [L(a), L(b)]; return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); }",
+ "T14-darken": "f = (hex) => (lch => hl.genToHex(hl.genFromLch({ ...lch, L: lch.L * 0.75 })))(hl.genToLch(hl.genFromHex(hex)))",
+ "T15-lightness-sort": "(hexArray) => hexArray.sort((a, b) => hl(a).L - hl(b).L)",
+ "T16-circular-mean": "(a, b) => Math.atan2(Math.sin(a * Math.PI / 180) + Math.sin(b * Math.PI / 180), Math.cos(a * Math.PI / 180) + Math.cos(b * Math.PI / 180)) * 180 / Math.PI",
+ "T17-equal-gray": "hl('oklab', [hl('#3b82f6').to('oklab').l, 0, 0]).to('srgb').toString({format: 'hex'})",
+ "T18-angular-dist": "(h1, h2) => Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2))",
+ "T19-cat": "Chromatic adaptation transform (CAT)",
+ "T20-hsv-contrast": "No — HSV V is display-only, not perceptually uniform (yellow and blue at the same V differ wildly in perceived brightness); use relative luminance (WCAG standard) or perceptual lightness (OKLab L, CIELAB L*)."
+}
