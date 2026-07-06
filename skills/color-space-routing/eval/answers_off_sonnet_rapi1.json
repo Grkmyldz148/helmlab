@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "Now I have what I need. `TokenExporter.toCssOklch(t)` takes an internal Helmlab color (result of `fromHex`), and `TokenExporter` is constructed with a `Helmlab` instance.\n\n(h => new hl.TokenExporter(h).toCssOklch(h.fromHex('#3b82f6')))(new hl.Helmlab())",
+ "A2-palette-dir": "I don't have access to the helmlab source outside the current working directory. I can't verify the return order without reading the actual source — do you have a path to the helmlab package I can check?",
+ "A3-exact-500": "I don't have access to the helmlab codebase from this working directory (`/private/tmp`). Could you share the relevant file or run `grep -r \"500\" /Volumes/harici_ssd/color-space --include=\"*.py\" -l` in your terminal so I can identify the method?",
+ "A4-darken-scale": "Since I can't access the helmlab source directly from `/private/tmp`, I'll write this using the most natural GenSpace conversion pattern — please adjust method names if your `hl` API differs:\n\n`hex => (([L,C,H]) => hl.from('lch',[L*0.55,C,H]).hex())(hl.parse(hex).lch())`",
+ "A5-trained-metric": "The API is confirmed. Line 356 shows `difference(color1: Hex, color2: Hex): number` is the recommended trained perceptual distance entry point.\n\nhl.difference('#ff0000', '#00ff00')",
+ "A6-noticeable-field": "`reliability`",
+ "A7-py-distance": "I don't have access to run Python or find the helmlab codebase in this directory. Based on color science conventions, `MetricSpace.distance` typically expects coordinates in the space's native (encoded) representation.\n\nXYZ",
+ "A8-gradient": "I don't have access to the helmlab CLI, its source, or web search to look up its API. Could you share:\n\n1. The helmlab version or a link to its docs/repo\n2. Or paste a short example of a helmlab expression you've already used\n\nThat way I can write the correct expression without guessing the API shape."
+}

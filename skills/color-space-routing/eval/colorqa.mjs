@@ -87,12 +87,14 @@ export const TASKS = [
     verify: (s) => /^no/i.test(String(s).trim()) },
 ];
 
+let GTASKS = TASKS;
+if (process.env.TASKS) { GTASKS = (await import(process.env.TASKS)).TASKS; }
 const mode = process.argv[2];
-if (mode === 'list') for (const t of TASKS) console.log(`\n[${t.id}] (${t.type})\n${t.prompt}`);
+if (mode === 'list') for (const t of GTASKS) console.log(`\n[${t.id}] (${t.type})\n${t.prompt}`);
 if (mode === 'verify') {
   const answers = JSON.parse(await import('node:fs').then(fs=>fs.readFileSync(process.argv[3],'utf8')));
   let pass=0;
-  for (const t of TASKS) {
+  for (const t of GTASKS) {
     let ok=false, val=answers[t.id];
     if (t.type==='code') {
       const attempts = [
@@ -106,5 +108,5 @@ if (mode === 'verify') {
     if (t.type==='choice') { try { ok = !!t.verify(answers[t.id]); } catch(e){ ok=false; } }
     console.log(`${ok?'PASS':'FAIL'}  ${t.id}`); if(ok) pass++;
   }
-  console.log(`\n${pass}/${TASKS.length} passed`);
+  console.log(`\n${pass}/${GTASKS.length} passed`);
 }

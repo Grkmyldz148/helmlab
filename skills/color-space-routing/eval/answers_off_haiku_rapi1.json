@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "new Helmlab().export().toCssOklch(new Helmlab().fromHex('#3b82f6'))",
+ "A2-palette-dir": "I don't have access to helmlab's documentation or code to verify the direction of `hl.palette()`. Could you point me to the relevant file or library source?",
+ "A3-exact-500": "I don't have access to the helmlab codebase. Could you provide the file path or repository location so I can search for the method?",
+ "A4-darken-scale": "f = hex => (([l, c, h]) => hl.lch2hex([l * 0.6, c, h]))(hl.hex2lch(hex))",
+ "A5-trained-metric": "I don't have the helmlab (`hl`) API documentation to provide an accurate expression. Could you share the correct function signature or documentation for calculating trained perceptual difference, or point me to where helmlab is documented in your project?",
+ "A6-noticeable-field": "I need to see the `differenceWithConfidence()` method to answer accurately. Can you point me to the helmlab code location, or would you like me to search for it?",
+ "A7-py-distance": "I don't have access to helmlab's code or documentation to answer this reliably. Could you provide the helmlab repo path or documentation link?",
+ "A8-gradient": "hl.gradient('#ef4444', '#3b82f6', 12)"
+}

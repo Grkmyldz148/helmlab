@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "hl.export().toCssOklch(hl.fromHex('#3b82f6'))",
+ "A2-palette-dir": "Light-to-dark.",
+ "A3-exact-500": "`semanticScale()`",
+ "A4-darken-scale": "hex => ((l, c, h) => hl.genToHex(hl.genFromLch([Math.max(0, l - 0.25), c, h])))(...hl.genToLch(hl.genFromHex(hex)))",
+ "A5-trained-metric": "hl.difference('#ff0000', '#00ff00')",
+ "A6-noticeable-field": "`pNoticeable`",
+ "A7-py-distance": "XYZ.",
+ "A8-gradient": "hl.gradient('#ef4444', '#3b82f6', 12)"
+}

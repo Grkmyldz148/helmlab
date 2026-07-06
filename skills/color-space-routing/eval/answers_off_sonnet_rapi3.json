@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "hl.export().toCssOklch(hl.fromHex('#3b82f6'))",
+ "A2-palette-dir": "Light-to-dark.",
+ "A3-exact-500": "`semanticScale`",
+ "A4-darken-scale": "I can't access the external volume to read the helmlab source. Based on the GenSpace LCh API pattern common in color research libraries, here's the most likely correct form — but please verify against your actual `hl` API:\n\n(hex) => { const [L,C,h] = hl.GenSpace.lch.fromHex(hex); return hl.GenSpace.lch.toHex([L * 0.55, C, h]); }\n\nIf your `hl` uses a different call shape, run `console.log(Object.keys(hl), Object.keys(hl.GenSpace))` to confirm the exact method names and adjust accordingly.",
+ "A5-trained-metric": "hl.difference('#ff0000', '#00ff00')",
+ "A6-noticeable-field": "Without access to that external volume, I can't verify the exact field name from the source. From color-science psychophysics convention, the field is typically:\n\n`probability`",
+ "A7-py-distance": "ERROR: Command failed: claude -p helmlab Python: MetricSpace.distance(x1, x2) expects w",
+ "A8-gradient": "ERROR: Command failed: claude -p Using helmlab (`hl`), write a JS expression for a perc"
+}

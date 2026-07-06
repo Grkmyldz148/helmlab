@@ -1,7 +1,8 @@
 // ColorQA A/B runner: solves each task via `claude -p` in a FRESH headless
 // session (cwd=/tmp so no project context leaks), with and without SKILL.md.
 // Usage: node ab_runner.mjs off|on [model]
-import { TASKS } from './colorqa.mjs';
+const taskFile = process.env.TASKS || './colorqa.mjs';
+const { TASKS } = await import(taskFile);
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -9,7 +10,7 @@ const arm = process.argv[2];                 // 'off' | 'on'
 const model = process.argv[3] || 'claude-haiku-4-5-20251001';
 const rep = process.argv[4] || '1';
 const short = model.includes('haiku') ? 'haiku' : model.includes('sonnet') ? 'sonnet' : model;
-const skill = arm === 'on' ? readFileSync('../SKILL.md', 'utf8') : '';
+const skill = arm === 'on' ? readFileSync(process.env.SKILL || '../SKILL.md', 'utf8') : '';
 const answers = {};
 for (const t of TASKS) {
   const fmt = t.type === 'code'

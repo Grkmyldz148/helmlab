@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "new TokenExporter('#3b82f6').oklch()",
+ "A2-palette-dir": "I don't have immediate access to helmlab's documentation or code. Could you point me to where I can check (a local project, package docs, or code file)? That way I can give you the accurate two-word answer.",
+ "A3-exact-500": "Could you tell me where the helmlab code is located? Or would you like me to search within a specific directory?",
+ "A4-darken-scale": "(hex) => hl.genToHex(hl.genFromLch(((lch) => [lch[0] - 0.3, lch[1], lch[2]])(hl.genToLch(hl.genFromHex(hex)))))",
+ "A5-trained-metric": "I don't have reliable knowledge of the helmlab (`hl`) API syntax for trained perceptual difference calculations. Rather than guess at the function name or parameter format, I should ask: can you point me to the helmlab documentation or show me an example of how trained perceptual distance is computed in your codebase? That way I can give you the correct expression.",
+ "A6-noticeable-field": "I need to locate the helmlab code. Where is the helmlab repository or file that contains `differenceWithConfidence()`?",
+ "A7-py-distance": "I need to check the helmlab documentation or code. Can you provide the helmlab repository path or documentation, or is this code in the current project?",
+ "A8-gradient": "I need to search for helmlab's API documentation to give you the correct syntax. Could you grant WebSearch permission so I can find the exact API?\n\nAlternatively, if you have helmlab docs handy or know the function name, I can write it directly."
+}

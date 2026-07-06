@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "I need to check helmlab documentation to give you the exact syntax. Can you approve these commands, or do you have the helmlab TokenExporter API reference?\n\nAlternatively, if you can run `hl --help` or `hl token --help` locally, that would show me the exact method signature needed.",
+ "A2-palette-dir": "I don't have access to the helmlab documentation or code to verify this. Can you point me to the source or docs?",
+ "A3-exact-500": "I don't have access to the helmlab codebase from my current directory (`/private/tmp`, which isn't a git repo). Could you navigate to the helmlab project or provide the file path so I can search for this method?",
+ "A4-darken-scale": "I need WebSearch permission to look up helmlab's JavaScript API. Could you approve it, or let me know if helmlab is installed locally where I can check its documentation?",
+ "A5-trained-metric": "I don't have access to helmlab documentation or its API. Without knowing helmlab's specific method signatures for computing perceptual distance, I can't provide an accurate expression.\n\nCould you clarify the helmlab API call? For example, is it `hl.perceptualDistance()`, `hl.deltaE()`, or something else?",
+ "A6-noticeable-field": "reliability",
+ "A7-py-distance": "I need to check the helmlab code to answer accurately. Which directory should I search, or would you like me to look at a specific file?",
+ "A8-gradient": "I don't have access to helmlab's API documentation. Could you provide an example of how to create a gradient with helmlab, or point me to the API reference? That way I can write the correct expression."
+}

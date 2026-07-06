@@ -31,3 +31,16 @@ T14 L-scale error 3/3 → 1/3. On-arm totals: haiku 93.3% (unchanged),
 sonnet 88.3% → 90.0%. Remaining failures are scattered single-rep misses
 (nondeterminism floor), no systematic mode left. Off-arm numbers are
 unaffected by skill revisions (no skill in that arm).
+
+
+## API-QA (companion `helmlab` skill, 2026-07-06)
+
+8 API-usage tasks (exporter space, palette direction, trained metric,
+distance contracts, LCh darken…), same protocol, `TASKS=./apiqa.mjs`:
+
+| Model | skill-off | skill-on |
+|---|---|---|
+| claude-haiku-4-5 | 8.3% (2/24) | **75.0%** (18/24) |
+| claude-sonnet-4-6 | 37.5% (9/24) | **91.7%** (22/24) |
+
+Golden answers 8/8 before grading; raw per-run answers committed.

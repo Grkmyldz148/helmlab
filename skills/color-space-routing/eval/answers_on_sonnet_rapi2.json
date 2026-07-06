@@ -1,0 +1,10 @@
+{
+ "A1-export-space": "hl.export().toCssOklch(hl.fromHex('#3b82f6'))",
+ "A2-palette-dir": "Light-to-dark.",
+ "A3-exact-500": "`semanticScale`",
+ "A4-darken-scale": "const f = hex => { const lch = hl.genToLch(hl.genFromHex(hex)); return hl.genToHex(hl.genFromLch([Math.max(0, lch[0] - 0.15), lch[1], lch[2]])); };",
+ "A5-trained-metric": "hl.difference('#ff0000', '#00ff00')",
+ "A6-noticeable-field": "pNoticeable",
+ "A7-py-distance": "XYZ",
+ "A8-gradient": "hl.gradient('#ef4444', '#3b82f6', 12)"
+}
