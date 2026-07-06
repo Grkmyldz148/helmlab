@@ -36,7 +36,8 @@ export const TASKS = [
     verify: (f) => Math.abs(f(350,10,0.5))<1e-6 || Math.abs(f(350,10,0.5)-360)<1e-6 },
   { id:'T6-lch-distance', type:'code',
     prompt:'Two colors are given in LCh form: [0.5,0.1,10] and [0.5,0.1,350]. Write a JS expression computing a CORRECT perceptual-space distance between them.',
-    verify: (d) => typeof d==='number' && d>0.01 && d<0.08 }, // rectangular-form chord ≈ 2*C*sin(10°)≈0.035; naive LCh gives 340
+    verify: (d) => { if (typeof d==='function') d = d([0.5,0.1,10],[0.5,0.1,350]);
+      return typeof d==='number' && d>0.01 && d<0.08; } }, // rectangular-form chord ≈ 2*C*sin(10°)≈0.035; naive LCh gives 340
   { id:'T7-cvd', type:'choice',
     prompt:'You must generate a categorical palette safe for deuteranopia. Which color space do you generate candidates in? One word.',
     verify: (s) => /oklab/i.test(String(s)) },
@@ -58,7 +59,15 @@ if (mode === 'verify') {
   let pass=0;
   for (const t of TASKS) {
     let ok=false, val=answers[t.id];
-    try { if (t.type==='code') val = eval(val); ok = !!t.verify(val); } catch(e){ ok=false; }
+    if (t.type==='code') {
+      const attempts = [
+        c => new Function('hl', `return (${c})`)(hl),
+        c => new Function('hl', `${c}; return typeof f!=='undefined' ? f : undefined`)(hl),
+      ];
+      val = undefined;
+      for (const a of attempts) { try { const v = a(answers[t.id]); if (v!==undefined) { val=v; break; } } catch(e){} }
+    }
+    try { ok = !!t.verify(val); } catch(e){ ok=false; }
     if (t.type==='choice') { try { ok = !!t.verify(answers[t.id]); } catch(e){ ok=false; } }
     console.log(`${ok?'PASS':'FAIL'}  ${t.id}`); if(ok) pass++;
   }
