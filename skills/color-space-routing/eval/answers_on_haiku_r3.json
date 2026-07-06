@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "hl.gradient('#0000ff', '#ffffff', 16)",
+ "T2-delta-e": "(hex1, hex2) => hl.difference(hex1, hex2)",
+ "T3-gray-axis": "function f(hex) { return hl.genFromHex(hex); }",
+ "T4-physical-mix": "(hexA,hexB)=>{const toLinear=x=>x<=.04045?x/12.92:Math.pow((x+.055)/1.055,2.4),toGamma=x=>x<=.0031308?12.92*x:1.055*Math.pow(x,1/2.4)-.055,parse=h=>h.slice(1).match(/.{2}/g).map(x=>parseInt(x,16)/255),[r1,g1,b1]=parse(hexA).map(toLinear),[r2,g2,b2]=parse(hexB).map(toLinear);return'#'+[toGamma((r1+r2)/2),toGamma((g1+g2)/2),toGamma((b1+b2)/2)].map(c=>Math.round(c*255).toString(16).padStart(2,'0')).join('')}",
+ "T5-hue-wrap": "const f=(h1,h2,t)=>((h1+((h2-h1+540)%360-180)*t)%360+360)%360",
+ "T6-lch-distance": "Math.hypot(0.1 * Math.cos(10 * Math.PI / 180) - 0.1 * Math.cos(350 * Math.PI / 180), 0.1 * Math.sin(10 * Math.PI / 180) - 0.1 * Math.sin(350 * Math.PI / 180))",
+ "T7-cvd": "OKLab",
+ "T8-picker": "**okhsl** (or okhsv)",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 is well below the ~2.3 perceptual threshold, and near-achromatic differences are imperceptible to most observers.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklab`",
+ "T13-wcag": "const f=(fg,bg)=>{const lum=h=>{const[r,g,b]=h.match(/\\w\\w/g).map(x=>parseInt(x,16)/255);const[a,c,d]=[r,g,b].map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*a+0.7152*c+0.0722*d};const[l1,l2]=[lum(fg),lum(bg)];return(Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05)};",
+ "T14-darken": "(hex) => hl.genToHex(hl.genFromLch(hl.genToLch(hl.genFromHex(hex)).map((v, i) => i === 0 ? v * 0.7 : v)))",
+ "T15-lightness-sort": "hexArray.sort((a, b) => hl.genFromHex(a)[0] - hl.genFromHex(b)[0])",
+ "T16-circular-mean": "(a, b) => (Math.atan2(Math.sin(a*Math.PI/180) + Math.sin(b*Math.PI/180), Math.cos(a*Math.PI/180) + Math.cos(b*Math.PI/180)) * 180 / Math.PI + 360) % 360",
+ "T17-equal-gray": "hl.genToHex(hl.genFromLch([hl.genToLch(hl.genFromHex('#3b82f6'))[0], 0, 0]))",
+ "T18-angular-dist": "(a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b))",
+ "T19-cat": "Chromatic adaptation",
+ "T20-hsv-contrast": "No — HSV Value is not perceptually uniform; yellow and blue at the same V appear vastly different in brightness to observers."
+}

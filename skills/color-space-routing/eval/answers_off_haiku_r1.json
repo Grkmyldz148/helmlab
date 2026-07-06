@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "Array.from({length: 16}, (_, i) => hl.mix('#0000ff', '#ffffff', i/15, 'oklab'))",
+ "T2-delta-e": "(hex1, hex2) => {const [l1,a1,b1]=hl.hex2lab(hex1),[l2,a2,b2]=hl.hex2lab(hex2);return Math.sqrt((l1-l2)**2+(a1-a2)**2+(b1-b2)**2)}",
+ "T3-gray-axis": "(hex) => hl.hex(hex).lab()",
+ "T4-physical-mix": "(hexA,hexB)=>'#'+[0,1,2].map(i=>Math.round((parseInt(hexA.slice(1+i*2,3+i*2),16)+parseInt(hexB.slice(1+i*2,3+i*2),16))/2).toString(16).padStart(2,'0')).join('')",
+ "T5-hue-wrap": "const f = (h1, h2, t) => ((h1 + t * ((h2 - h1 + 540) % 360 - 180)) % 360 + 360) % 360",
+ "T6-lch-distance": "((L1,C1,h1,L2,C2,h2)=>{const h2r=h=>h*Math.PI/180,a1=C1*Math.cos(h2r(h1)),b1=C1*Math.sin(h2r(h1)),a2=C2*Math.cos(h2r(h2)),b2=C2*Math.sin(h2r(h2)),Cab=(Math.sqrt(a1*a1+b1*b1)+Math.sqrt(a2*a2+b2*b2))/2,G=0.5*(1-Math.sqrt(Math.pow(Cab,7)/(Math.pow(Cab,7)+6103515625))),a1p=a1*(1+G),a2p=a2*(1+G),C1p=Math.sqrt(a1p*a1p+b1*b1),C2p=Math.sqrt(a2p*a2p+b2*b2);let h1p=Math.atan2(b1,a1p)*180/Math.PI,h2p=Math.atan2(b2,a2p)*180/Math.PI;h1p<0&&(h1p+=360),h2p<0&&(h2p+=360);let dh=h2p-h1p;dh>180?dh-=360:dh<-180&&(dh+=360);const dHp=2*Math.sqrt(C1p*C2p)*Math.sin(dh*Math.PI/360),Hbar=Math.abs(h1p-h2p)>180?(h1p+h2p+360)/2:(h1p+h2p)/2,T=1-0.17*Math.cos((Hbar-30)*Math.PI/180)+0.24*Math.cos(2*Hbar*Math.PI/180)+0.32*Math.cos((3*Hbar+6)*Math.PI/180)-0.20*Math.cos((4*Hbar-63)*Math.PI/180),Lbar=(L1+L2)/2,dLp=(L2-L1)/(1+0.015*Math.pow(Lbar-50,2)/Math.sqrt(20+Math.pow(Lbar-50,2))),dCp=(C2p-C1p)/(1+0.045*(C1p+C2p)/2),dHpn=dHp/(1+0.015*(C1p+C2p)/2*T);return Math.sqrt(dLp*dLp+dCp*dCp+dHpn*dHpn);})(0.5,0.1,10,0.5,0.1,350)",
+ "T7-cvd": "OKLCH",
+ "T8-picker": "OKLch",
+ "T9-hdr": "ICTCP",
+ "T10-noticeable": "No — ΔE00 = 1.0 on low-chroma grays is below perceptibility threshold; investigate root cause but don't fail.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`hsl`",
+ "T13-wcag": "function f(h1,h2){const L=h=>{const n=parseInt(h.slice(1),16),[r,g,b]=[(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];return[r,g,b].map(c=>c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)).reduce((s,c,i)=>s+[.2126,.7152,.0722][i]*c,0)};const l1=L(h1),l2=L(h2);return(Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05)}",
+ "T14-darken": "(hex) => (l => hl.lab2hex({...l, L: l.L * 0.7}))(hl.hex2lab(hex))",
+ "T15-lightness-sort": "f = hexArray => hexArray.sort((a, b) => hl(a)[0] - hl(b)[0])",
+ "T16-circular-mean": "(a, b) => (Math.atan2(Math.sin(a*Math.PI/180) + Math.sin(b*Math.PI/180), Math.cos(a*Math.PI/180) + Math.cos(b*Math.PI/180)) * 180 / Math.PI + 360) % 360",
+ "T17-equal-gray": "hl({L: hl('#3b82f6').lab()[0], a: 0, b: 0}).hex()",
+ "T18-angular-dist": "(h1, h2) => Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2))",
+ "T19-cat": "Chromatic adaptation.",
+ "T20-hsv-contrast": "No. HSV Value treats all hues equally and ignores human perception; WCAG requires relative luminance based on sRGB with hue-dependent weighting."
+}

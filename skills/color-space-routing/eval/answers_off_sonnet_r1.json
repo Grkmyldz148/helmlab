@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "Array.from({length:16},(_,i)=>{const t=i/15,g=c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4,u=c=>c<=0.0031308?c*12.92:1.055*c**(1/2.4)-0.055,cl=c=>Math.max(0,Math.min(1,c)),b=g(1),l=0.0514459929*b,m=0.1073969566*b,s=0.6299787005*b,L0=0.2104542553*l**(1/3)+0.7936177850*m**(1/3)-0.0040720468*s**(1/3),A0=1.9779984951*l**(1/3)-2.4285922050*m**(1/3)+0.4505937099*s**(1/3),B0=0.0259040371*l**(1/3)+0.7827717662*m**(1/3)-0.8086757660*s**(1/3),C0=Math.sqrt(A0**2+B0**2),H0=Math.atan2(B0,A0),Lt=L0*(1-t)+t,Ct=C0*(1-t),At=Ct*Math.cos(H0),Bt=Ct*Math.sin(H0),l_=Lt+0.3963377774*At+0.2158037573*Bt,m_=Lt-0.1055613458*At-0.0638541728*Bt,s_=Lt-0.0894841775*At-1.2914855480*Bt,lr=l_**3,mr=m_**3,sr=s_**3,R=cl(u(4.0767416621*lr-3.3077115913*mr+0.2309699292*sr)),G=cl(u(-1.2684380046*lr+2.6097574011*mr-0.3413193965*sr)),B=cl(u(-0.0041960863*lr-0.7034186147*mr+1.7076147010*sr));return'#'+[R,G,B].map(c=>Math.round(c*255).toString(16).padStart(2,'0')).join('')})",
+ "T2-delta-e": "(hex1,hex2)=>{const[L1,a1,b1]=hl(hex1).lab(),[L2,a2,b2]=hl(hex2).lab();return Math.sqrt((L2-L1)**2+(a2-a1)**2+(b2-b1)**2)}",
+ "T3-gray-axis": "`hex => hl(hex).lab()`",
+ "T4-physical-mix": "const f=(a,b)=>{const s=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)].map(c=>(c/=255)<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);const t=v=>v<=0.0031308?12.92*v:1.055*v**(1/2.4)-0.055;return'#'+s(a).map((c,i)=>Math.round(t((c+s(b)[i])/2)*255).toString(16).padStart(2,'0')).join('');}",
+ "T5-hue-wrap": "f=(h1,h2,t)=>{let d=((h2-h1)%360+540)%360-180;return((h1+d*t)%360+360)%360}",
+ "T6-lch-distance": "Math.sqrt(Math.pow(0.5-0.5,2)+Math.pow(0.1*Math.cos(10*Math.PI/180)-0.1*Math.cos(350*Math.PI/180),2)+Math.pow(0.1*Math.sin(10*Math.PI/180)-0.1*Math.sin(350*Math.PI/180),2))",
+ "T7-cvd": "OKLCH",
+ "T8-picker": "OKLCh",
+ "T9-hdr": "ICtCp",
+ "T10-noticeable": "No — ΔE00 = 1.0 is at the threshold of just-noticeable difference; low-chroma grays at that level are perceptually borderline, not a clear regression.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklch`",
+ "T13-wcag": "function f(h,b){const c=s=>({r:parseInt(s.slice(1,3),16)/255,g:parseInt(s.slice(3,5),16)/255,b:parseInt(s.slice(5,7),16)/255});const l=({r,g,b})=>[r,g,b].reduce((a,v)=>{v=v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4;return a+v*[0.2126,0.7152,0.0722].shift()},0);const L1=l(c(h)),L2=l(c(b));return(Math.max(L1,L2)+0.05)/(Math.min(L1,L2)+0.05);}",
+ "T14-darken": "f = hex => { const [l,c,h] = hl.hexToLCH(hex); return hl.LCHToHex(l * 0.65, c, h); }",
+ "T15-lightness-sort": "f = hexArray => [...hexArray].sort((a, b) => hl(a) - hl(b))",
+ "T16-circular-mean": "(angles => { const toRad = d => d * Math.PI / 180; const meanSin = angles.reduce((s, a) => s + Math.sin(toRad(a)), 0) / angles.length; const meanCos = angles.reduce((s, a) => s + Math.cos(toRad(a)), 0) / angles.length; return (Math.atan2(meanSin, meanCos) * 180 / Math.PI + 360) % 360; })([350, 10])",
+ "T17-equal-gray": "(()=>{const t=hl('#3b82f6');let lo=0,hi=255;while(lo<hi){const m=lo+hi>>1;hl('#'+m.toString(16).padStart(2,'0').repeat(3))<t?lo=m+1:hi=m}const h=lo.toString(16).padStart(2,'0');return'#'+h+h+h})()",
+ "T18-angular-dist": "(a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b))",
+ "T19-cat": "Chromatic adaptation",
+ "T20-hsv-contrast": "No — HSV Value is not perceptually uniform; use WCAG's relative luminance formula instead."
+}

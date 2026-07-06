@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "hl.gradient('#0000ff', '#ffffff', 16)",
+ "T2-delta-e": "(hex1, hex2) => hl.difference(hex1, hex2)",
+ "T3-gray-axis": "(hex) => hl.genFromHex(hex)",
+ "T4-physical-mix": "function f(hexA,hexB){const toL=c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4;const toS=c=>c<=0.0031308?12.92*c:1.055*c**(1/2.4)-0.055;const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255);const[ra,ga,ba]=p(hexA);const[rb,gb,bb]=p(hexB);return'#'+[toS((toL(ra)+toL(rb))/2),toS((toL(ga)+toL(gb))/2),toS((toL(ba)+toL(bb))/2)].map(c=>Math.round(c*255).toString(16).padStart(2,'0')).join('');}",
+ "T5-hue-wrap": "function f(h1,h2,t){let d=((h2-h1)%360+540)%360-180;return((h1+t*d)%360+360)%360;}",
+ "T6-lch-distance": "((L1,C1,h1,L2,C2,h2)=>{const r=Math.PI/180;return Math.sqrt((L1-L2)**2+(C1*Math.cos(h1*r)-C2*Math.cos(h2*r))**2+(C1*Math.sin(h1*r)-C2*Math.sin(h2*r))**2)})(...[0.5,0.1,10],...[0.5,0.1,350])",
+ "T7-cvd": "OKLab",
+ "T8-picker": "okhsl",
+ "T9-hdr": "Jzazbz",
+ "T10-noticeable": "No — ΔE00 = 1.0 at low chroma is within the human noise band; near-threshold differences are least trustworthy exactly there.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklch`",
+ "T13-wcag": "function f(hexFg,hexBg){const lum=h=>{const[r,g,b]=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);return 0.2126*r+0.7152*g+0.0722*b};const[L1,L2]=[lum(hexFg),lum(hexBg)].sort((a,b)=>b-a);return(L1+0.05)/(L2+0.05)}",
+ "T14-darken": "`const f = hex => { const [L, C, h] = hl.genToLch(hl.genFromHex(hex)); return hl.genToHex(hl.genFromLch([Math.max(0, L - 15), C, h])); };`",
+ "T15-lightness-sort": "(hexArray) => [...hexArray].sort((a, b) => hl.genToLch(hl.genFromHex(a))[0] - hl.genToLch(hl.genFromHex(b))[0])",
+ "T16-circular-mean": "(a, b) => ((Math.atan2((Math.sin(a*Math.PI/180)+Math.sin(b*Math.PI/180))/2,(Math.cos(a*Math.PI/180)+Math.cos(b*Math.PI/180))/2)*180/Math.PI)+360)%360",
+ "T17-equal-gray": "(([L]) => hl.genToHex([L, 0, 0]))(hl.genFromHex('#3b82f6'))",
+ "T18-angular-dist": "(h1, h2) => { const d = Math.abs(h2 - h1) % 360; return d > 180 ? 360 - d : d; }",
+ "T19-cat": "Chromatic adaptation",
+ "T20-hsv-contrast": "No — HSV Value is not perceptual lightness; yellow and blue at the same V differ wildly in actual perceived brightness."
+}

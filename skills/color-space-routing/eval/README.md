@@ -10,5 +10,17 @@ A/B protocol:
 2. Collect answers as `{taskId: answer}` JSON (code tasks: JS expression string).
 3. `node colorqa.mjs verify answers.json` → pass rate per arm.
 
-Report both arms + per-task diffs. Expand the set before publishing numbers
-(target: 20+ tasks, multiple models).
+## Results (2026-07-06, 20 tasks × 3 reps, fresh `claude -p` sessions)
+
+| Model | skill-off | skill-on | pkg-independent off → on |
+|---|---|---|---|
+| claude-haiku-4-5 | 40.0% (24/60) | **93.3%** (56/60) | 54.8% → **97.6%** |
+| claude-sonnet-4-6 | 41.7% (25/60) | **88.3%** (53/60) | 52.4% → **92.9%** |
+
+Off-arm failure modes: hallucinated APIs, gamma-space physical mixing,
+HSL-as-perceptual, wrong space routing. Remaining on-arm failures are
+themselves actionable: sonnet insists on `in oklch` for distant-hue CSS
+gradients (form-rule not landing) and once assumed L∈0–100 on GenSpace's
+0–1 scale — both now noted for the next skill revision. Raw per-run
+answers are committed (`answers_{arm}_{model}_r{rep}.json`); the harness
+is validated by golden answers (20/20) before any grading.

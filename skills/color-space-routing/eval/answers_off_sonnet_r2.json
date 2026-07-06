@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "Array.from({length:16},(_,i)=>{const t=i/15,{l,c,h}=hl.toOklch('#0000ff');return hl.toHex({mode:'oklch',l:l+t*(1-l),c:c*(1-t),h})})",
+ "T2-delta-e": "(hex1, hex2) => hl.deltaE(hex1, hex2)",
+ "T3-gray-axis": "hex=>{const[r,g,b]=hl(hex),l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);return[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s]}",
+ "T4-physical-mix": "const f=(a,b)=>{const r=s=>[1,3,5].map(i=>parseInt(s.slice(i,i+2),16));const l=v=>(v/255)**2.2;return'#'+r(a).map((c,i)=>Math.round(((l(c)+l(r(b)[i]))/2)**(1/2.2)*255).toString(16).padStart(2,'0')).join('')};",
+ "T5-hue-wrap": "function f(h1,h2,t){var d=((h2-h1)%360+540)%360-180;return((h1+d*t)%360+360)%360;}",
+ "T6-lch-distance": "((a,b)=>Math.sqrt((a[0]-b[0])**2+(a[1]*Math.cos(a[2]*Math.PI/180)-b[1]*Math.cos(b[2]*Math.PI/180))**2+(a[1]*Math.sin(a[2]*Math.PI/180)-b[1]*Math.sin(b[2]*Math.PI/180))**2))([0.5,0.1,10],[0.5,0.1,350])",
+ "T7-cvd": "Oklab",
+ "T8-picker": "OKLCh",
+ "T9-hdr": "ICtCp",
+ "T10-noticeable": "No — ΔE00 = 1.0 is at the just-noticeable-difference threshold; for low-chroma UI grays this is perceptually borderline and not a clear regression.",
+ "T11-css-nearby": "`oklch`",
+ "T12-css-distant": "`oklch`",
+ "T13-wcag": "function f(h,b){const r=s=>parseInt(s.slice(1),16),c=n=>n/255<=0.04045?n/255/12.92:((n/255+0.055)/1.055)**2.4,l=s=>{const n=r(s);const[R,G,B]=[n>>16&255,n>>8&255,n&255];return 0.2126*c(R)+0.7152*c(G)+0.0722*c(B)};const[L1,L2]=[l(h),l(b)].sort((a,b)=>b-a);return(L1+0.05)/(L2+0.05);}",
+ "T14-darken": "f = hex => { const [L, a, b] = hl.fromHex(hex); return hl.toHex([Math.max(0, L - 0.15), a, b]); }",
+ "T15-lightness-sort": "f = hexArray => [...hexArray].sort((a, b) => hl(a) - hl(b))",
+ "T16-circular-mean": "(Math.atan2(Math.sin(350*Math.PI/180)+Math.sin(10*Math.PI/180),Math.cos(350*Math.PI/180)+Math.cos(10*Math.PI/180))*180/Math.PI+360)%360",
+ "T17-equal-gray": "(()=>{const t=hl('#3b82f6');let lo=0,hi=255;while(lo<hi){const m=lo+hi>>1;const g=m.toString(16).padStart(2,'0');hl('#'+g+g+g)<t?lo=m+1:hi=m}const c=lo.toString(16).padStart(2,'0');return'#'+c+c+c})()",
+ "T18-angular-dist": "(h1, h2) => Math.min(Math.abs(h1 - h2), 360 - Math.abs(h1 - h2))",
+ "T19-cat": "Chromatic adaptation",
+ "T20-hsv-contrast": "No — HSV Value doesn't account for human luminance perception; use relative luminance (WCAG formula) instead."
+}

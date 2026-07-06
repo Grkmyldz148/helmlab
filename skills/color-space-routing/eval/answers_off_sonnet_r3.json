@@ -1,0 +1,22 @@
+{
+ "T1-blue-gradient": "ERROR: spawnSync claude ETIMEDOUT",
+ "T2-delta-e": "(hex1,hex2)=>hl.deltaE(hl(hex1),hl(hex2))",
+ "T3-gray-axis": "f=hex=>{const[r,g,b]=hl(hex),l=(.4121656120*r+.5362752080*g+.0514575653*b)**(1/3),m=(.2118591070*r+.6807189584*g+.1074065790*b)**(1/3),n=(.0883097947*r+.2818474174*g+.6302613616*b)**(1/3);return[.2104542553*l+.7936177850*m-.0040720468*n,1.9779984951*l-2.4285922050*m+.4505937099*n,.0259040371*l+.7827717662*m-.8086757660*n]}",
+ "T4-physical-mix": "ERROR: Command failed: claude -p Write a JS function f(hexA,hexB) returning the hex of",
+ "T5-hue-wrap": "ERROR: Command failed: claude -p Write a JS function f(h1,h2,t) interpolating two hue a",
+ "T6-lch-distance": "ERROR: spawnSync claude ETIMEDOUT",
+ "T7-cvd": "ERROR: Command failed: claude -p You must generate a categorical palette safe for deute",
+ "T8-picker": "ERROR: Command failed: claude -p You are building a color picker UI needing bounded, HS",
+ "T9-hdr": "ERROR: spawnSync claude ETIMEDOUT",
+ "T10-noticeable": "ERROR: Command failed: claude -p A regression test reports ΔE00 = 1.0 between two low-c",
+ "T11-css-nearby": "ERROR: Command failed: claude -p CSS-only gradient between two vivid nearby hues (#0088",
+ "T12-css-distant": "ERROR: Command failed: claude -p CSS-only gradient between two DISTANT vivid hues (#ff0",
+ "T13-wcag": "ERROR: Command failed: claude -p Write a JS function f(hexFg,hexBg) returning the WCAG",
+ "T14-darken": "ERROR: Command failed: claude -p Write a JS function f(hex) returning the hex of the co",
+ "T15-lightness-sort": "ERROR: Command failed: claude -p Write a JS function f(hexArray) sorting colors by PERC",
+ "T16-circular-mean": "ERROR: Command failed: claude -p Write a JS expression or function computing the circul",
+ "T17-equal-gray": "ERROR: Command failed: claude -p Write a JS expression or function returning the hex of",
+ "T18-angular-dist": "ERROR: Command failed: claude -p Write a JS expression or function computing the shorte",
+ "T19-cat": "ERROR: Command failed: claude -p You must compare colors photographed under illuminant",
+ "T20-hsv-contrast": "ERROR: Command failed: claude -p A teammate suggests using HSV Value (V) to check text"
+}

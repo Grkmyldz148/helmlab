@@ -7,6 +7,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const arm = process.argv[2];                 // 'off' | 'on'
 const model = process.argv[3] || 'claude-haiku-4-5-20251001';
+const rep = process.argv[4] || '1';
+const short = model.includes('haiku') ? 'haiku' : model.includes('sonnet') ? 'sonnet' : model;
 const skill = arm === 'on' ? readFileSync('../SKILL.md', 'utf8') : '';
 const answers = {};
 for (const t of TASKS) {
@@ -22,7 +24,7 @@ for (const t of TASKS) {
   } catch (e) { out = 'ERROR: ' + String(e.message).slice(0, 80); }
   out = out.replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'').trim();
   answers[t.id] = out;
-  console.log(`[${arm}] ${t.id}: ${out.slice(0, 70).replace(/\n/g,' ')}`);
+  console.log(`[${arm}/${short}/r${rep}] ${t.id}: ${out.slice(0, 70).replace(/\n/g,' ')}`);
 }
-writeFileSync(`answers_${arm}.json`, JSON.stringify(answers, null, 1));
-console.log(`wrote answers_${arm}.json`);
+writeFileSync(`answers_${arm}_${short}_r${rep}.json`, JSON.stringify(answers, null, 1));
+console.log(`wrote answers_${arm}_${short}_r${rep}.json`);

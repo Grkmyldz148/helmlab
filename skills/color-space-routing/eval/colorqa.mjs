@@ -50,6 +50,41 @@ export const TASKS = [
   { id:'T10-noticeable', type:'choice',
     prompt:'A regression test reports ΔE00 = 1.0 between two low-chroma UI grays. Do you fail the build? Answer yes/no with one-line reason.',
     verify: (s) => /no/i.test(String(s).slice(0,20)) },
+  { id:'T11-css-nearby', type:'choice',
+    prompt:'CSS-only gradient between two vivid nearby hues (#0088ff to #00ff88) that must stay vivid throughout. Which interpolation color space do you write after "in"? One token.',
+    verify: (s) => /oklch/i.test(String(s)) && !/oklab\b/i.test(String(s).replace(/oklch/ig,'')) },
+  { id:'T12-css-distant', type:'choice',
+    prompt:'CSS-only gradient between two DISTANT vivid hues (#ff0000 to #0000ff) avoiding weird intermediate hues. Which interpolation space after "in"? One token.',
+    verify: (s) => /oklab/i.test(String(s)) && !/oklch/i.test(String(s)) },
+  { id:'T13-wcag', type:'code',
+    prompt:'Write a JS function f(hexFg,hexBg) returning the WCAG 2.1 contrast ratio.',
+    verify: (f) => Math.abs(f('#ffffff','#000000')-21)<0.1 && Math.abs(f('#ffffff','#3b82f6')-3.68)<0.08 },
+  { id:'T14-darken', type:'code',
+    prompt:'Write a JS function f(hex) returning the hex of the color perceptually darkened (noticeably lower lightness) WITHOUT changing its hue. `hl` (helmlab) is available.',
+    verify: (f) => { const out=f('#3b82f6'); const a=hl.genToLch(hl.genFromHex('#3b82f6')), b=hl.genToLch(hl.genFromHex(out));
+      let dh=Math.abs(a[2]-b[2]); dh=Math.min(dh,360-dh);
+      return b[0] < a[0]-0.05 && dh < 10; } },
+  { id:'T15-lightness-sort', type:'code',
+    prompt:'Write a JS function f(hexArray) sorting colors by PERCEIVED lightness, darkest first. `hl` is available.',
+    verify: (f) => { const out=f(['#ffff00','#0000ff','#808080']);
+      return out[0]==='#0000ff' && out[2]==='#ffff00'; } },
+  { id:'T16-circular-mean', type:'code',
+    prompt:'Write a JS expression or function computing the circular mean of the hue angles 350 and 10 (degrees).',
+    verify: (d) => { if (typeof d==='function') d=d(350,10); d=((d%360)+360)%360;
+      return d<1e-6 || Math.abs(d-360)<1e-6; } },
+  { id:'T17-equal-gray', type:'code',
+    prompt:'Write a JS expression or function returning the hex of the NEUTRAL GRAY that has the same perceived lightness as #3b82f6. `hl` is available.',
+    verify: (g) => { if (typeof g==='function') g=g('#3b82f6'); const lch=hl.genToLch(hl.genFromHex(g));
+      return Math.abs(lch[0]-0.5586)<0.04 && lch[1]<0.03; } },
+  { id:'T18-angular-dist', type:'code',
+    prompt:'Write a JS expression or function computing the shortest angular distance in degrees between hue 20 and hue 340.',
+    verify: (d) => { if (typeof d==='function') d=d(20,340); return Math.abs(d-40)<1e-6; } },
+  { id:'T19-cat', type:'choice',
+    prompt:'You must compare colors photographed under illuminant A against references measured under D65. What must you apply before computing any ΔE? One or two words.',
+    verify: (s) => /adapt|bradford|cat\b|chromatic/i.test(String(s)) },
+  { id:'T20-hsv-contrast', type:'choice',
+    prompt:'A teammate suggests using HSV Value (V) to check text contrast for accessibility. Is that acceptable? Answer yes/no with one-line reason.',
+    verify: (s) => /^no/i.test(String(s).trim()) },
 ];
 
 const mode = process.argv[2];
