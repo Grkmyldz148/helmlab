@@ -65,15 +65,23 @@ export class TokenExporter {
     this.hl = helmlab;
   }
 
+  /** Accept a hex string anywhere a Metric Lab is expected — hex is
+   *  unambiguous, so the Gen-Lab-into-the-exporter footgun can't happen. */
+  private coerce(c: Lab | Hex): Lab {
+    return typeof c === 'string' ? this.hl.fromHex(c) : c;
+  }
+
   // ── Single color formats ──────────────────────────────────────
 
   /** Helmlab Lab → '#rrggbb'. */
-  toCssHex(lab: Lab): string {
+  toCssHex(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     return this.hl.toHex(lab);
   }
 
   /** Helmlab Lab → 'rgb(r, g, b)'. */
-  toCssRgb(lab: Lab): string {
+  toCssRgb(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     const srgb = this.hl.toSrgb(lab);
     const r = round(min(max(srgb[0] * 255, 0), 255));
     const g = round(min(max(srgb[1] * 255, 0), 255));
@@ -82,7 +90,8 @@ export class TokenExporter {
   }
 
   /** Helmlab Lab → 'oklch(L% C H)' via XYZ → Oklab → oklch. */
-  toCssOklch(lab: Lab): string {
+  toCssOklch(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     const xyz = this.hl.toXYZ(lab);
     const oklab = xyzToOklab(xyz);
     const [L, C, H] = oklabToOklch(oklab);
@@ -90,12 +99,14 @@ export class TokenExporter {
   }
 
   /** Helmlab Lab → 'color(display-p3 r g b)'. */
-  toCssDisplayP3(lab: Lab): string {
+  toCssDisplayP3(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     return this.hl.toHexP3(lab);
   }
 
   /** Helmlab Lab → 'hsl(H, S%, L%)'. */
-  toCssHsl(lab: Lab): string {
+  toCssHsl(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     const srgb = this.hl.toSrgb(lab);
     const r = srgb[0], g = srgb[1], b = srgb[2];
     const cmax = max(r, g, b);
@@ -120,7 +131,8 @@ export class TokenExporter {
   // ── Platform-specific ─────────────────────────────────────────
 
   /** Helmlab Lab → '0xFFrrggbb' (Android ARGB int). */
-  toAndroidArgb(lab: Lab): string {
+  toAndroidArgb(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     const srgb = this.hl.toSrgb(lab);
     const r = round(min(max(srgb[0] * 255, 0), 255));
     const g = round(min(max(srgb[1] * 255, 0), 255));
@@ -129,7 +141,8 @@ export class TokenExporter {
   }
 
   /** Helmlab Lab → {r, g, b} (UIColor Display P3). */
-  toIosP3(lab: Lab): { r: number; g: number; b: number } {
+  toIosP3(color: Lab | Hex): { r: number; g: number; b: number } {
+    const lab = this.coerce(color);
     const p3 = this.hl.toDisplayP3(lab);
     return {
       r: parseFloat(p3[0].toFixed(4)),
@@ -139,7 +152,8 @@ export class TokenExporter {
   }
 
   /** Helmlab Lab → Swift Color literal with Display P3. */
-  toSwiftLiteral(lab: Lab): string {
+  toSwiftLiteral(color: Lab | Hex): string {
+    const lab = this.coerce(color);
     const p3 = this.hl.toDisplayP3(lab);
     return `Color(.displayP3, red: ${p3[0].toFixed(4)}, green: ${p3[1].toFixed(4)}, blue: ${p3[2].toFixed(4)})`;
   }

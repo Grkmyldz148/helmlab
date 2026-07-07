@@ -57,6 +57,13 @@ class TokenExporter:
     def __init__(self, helmlab):
         self._helmlab = helmlab
 
+    def _coerce(self, color):
+        """Accept a hex string anywhere Metric Lab is expected — hex is
+        unambiguous, so the Gen-Lab-into-the-exporter footgun can't happen."""
+        if isinstance(color, str):
+            return self._helmlab.from_hex(color)
+        return np.asarray(color, dtype=np.float64)
+
     def _to_XYZ(self, lab: np.ndarray) -> np.ndarray:
         return self._helmlab._space.to_XYZ(np.asarray(lab, dtype=np.float64))
 
@@ -64,16 +71,19 @@ class TokenExporter:
 
     def to_css_hex(self, lab: np.ndarray) -> str:
         """Helmlab Lab → '#rrggbb'."""
+        lab = self._coerce(lab)
         return self._helmlab.to_hex(lab)
 
     def to_css_rgb(self, lab: np.ndarray) -> str:
         """Helmlab Lab → 'rgb(r, g, b)'."""
+        lab = self._coerce(lab)
         srgb = self._helmlab.to_srgb(lab)
         r, g, b = (int(round(v * 255)) for v in srgb)
         return f"rgb({r}, {g}, {b})"
 
     def to_css_oklch(self, lab: np.ndarray) -> str:
         """Helmlab Lab → 'oklch(L% C H)' via XYZ → Oklab → oklch."""
+        lab = self._coerce(lab)
         XYZ = self._to_XYZ(lab)
         oklab = _XYZ_to_oklab(XYZ)
         L, C, H = _oklab_to_oklch(oklab)
@@ -81,10 +91,12 @@ class TokenExporter:
 
     def to_css_displayp3(self, lab: np.ndarray) -> str:
         """Helmlab Lab → 'color(display-p3 r g b)'."""
+        lab = self._coerce(lab)
         return self._helmlab.to_hex_p3(lab)
 
     def to_css_hsl(self, lab: np.ndarray) -> str:
         """Helmlab Lab → 'hsl(H, S%, L%)'."""
+        lab = self._coerce(lab)
         srgb = self._helmlab.to_srgb(lab)
         r, g, b = float(srgb[0]), float(srgb[1]), float(srgb[2])
         cmax = max(r, g, b)
@@ -109,17 +121,20 @@ class TokenExporter:
 
     def to_android_argb(self, lab: np.ndarray) -> str:
         """Helmlab Lab → '0xFFrrggbb' (Android ARGB int)."""
+        lab = self._coerce(lab)
         srgb = self._helmlab.to_srgb(lab)
         r, g, b = (int(round(v * 255)) for v in srgb)
         return f"0xFF{r:02x}{g:02x}{b:02x}"
 
     def to_ios_p3(self, lab: np.ndarray) -> dict:
+        lab = self._coerce(lab)
         """Helmlab Lab → {"r": float, "g": float, "b": float} (UIColor Display P3)."""
         p3 = self._helmlab.to_displayp3(lab)
         return {"r": round(float(p3[0]), 4), "g": round(float(p3[1]), 4), "b": round(float(p3[2]), 4)}
 
     def to_swift_literal(self, lab: np.ndarray) -> str:
         """Helmlab Lab → Swift Color literal with Display P3."""
+        lab = self._coerce(lab)
         p3 = self._helmlab.to_displayp3(lab)
         return f"Color(.displayP3, red: {p3[0]:.4f}, green: {p3[1]:.4f}, blue: {p3[2]:.4f})"
 

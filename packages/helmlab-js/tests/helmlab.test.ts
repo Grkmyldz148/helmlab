@@ -596,6 +596,27 @@ describe('deltaE vs perceptualDistance (distinct metrics)', () => {
     expect(h).toBeCloseTo(expected, 12);
   });
 
+  it('deltaE2000 hits the sanity anchors', () => {
+    const hl = new Helmlab();
+    expect(hl.deltaE2000('#ff0000', '#00ff00')).toBeCloseTo(86.61, 1);
+    expect(hl.deltaE2000('#000000', '#ffffff')).toBeCloseTo(100.0, 1);
+    expect(hl.deltaE2000('#3b82f6', '#3b82f6')).toBeCloseTo(0, 10);
+  });
+
+  it('nearestColor: default ciede2000, margin + runner-up, guards', () => {
+    const hl = new Helmlab();
+    const n = hl.nearestColor('#3b82f6', ['#3b7ff0', '#ff0000', '#00ff00']);
+    expect(n.hex).toBe('#3b7ff0');
+    expect(n.metric).toBe('ciede2000');
+    expect(n.margin).toBeGreaterThan(1);
+    expect(n.runnerUp).not.toBe(n.hex);
+    expect(hl.nearestColor('#3b82f6', ['#3b7ff0'], {metric:'difference'}).hex).toBe('#3b7ff0');
+    expect(hl.nearestColor('#3b82f6', ['#3b7ff0'], {metric:'euclidean'}).hex).toBe('#3b7ff0');
+    expect(() => hl.nearestColor('#fff', [])).toThrow('empty');
+    // @ts-expect-error bogus metric
+    expect(() => hl.nearestColor('#ffffff', ['#000000'], {metric:'bogus'})).toThrow('unknown metric');
+  });
+
   it('euclideanDistance is an exact alias of deltaE (Python parity)', () => {
     const hl = new Helmlab();
     expect(hl.euclideanDistance('#ff0000', '#00ff00')).toBe(hl.deltaE('#ff0000', '#00ff00'));

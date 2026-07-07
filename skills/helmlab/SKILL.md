@@ -40,13 +40,15 @@ hl.genToHex(hl.genFromLch([lch[0], lch[1], (lch[2] + 120) % 360]));
 hl.difference('#ff0000', '#00ff00');        // 0.148 — trained metric (COMBVD-fit), saturates ~0.15
 hl.euclideanDistance('#000000', '#ffffff'); // 1.12 — fast ΔE76-style (alias of deltaE)
 hl.contrastRatio('#ffffff', '#3b82f6');     // 3.68 (WCAG 2.1)
+hl.deltaE2000('#ff0000', '#00ff00');        // 86.61 — industry-standard CIEDE2000 (CIELAB scale 0-100)
+hl.nearestColor('#fbf0d0', palette);        // catalog matching: {hex, index, distance, runnerUp, margin}
 hl.differenceWithConfidence('#808080', '#828282');
 // { de:0.0117, latent, disagreement, reliability:0.41, pNoticeable:0.077, reliable:false, extrapolated:false }
 
 // Wide gamut + tokens (METRIC Lab in!)
 const lab = hl.fromHex('#ff0000');
 hl.toHexP3(lab);                            // 'color(display-p3 0.9176 0.2003 0.1386)'
-const ex = hl.export();                     // TokenExporter — takes METRIC Lab
+const ex = hl.export();                     // TokenExporter — takes METRIC Lab, or (v0.17+) a hex string
 ex.toCssOklch(lab);                         // 'oklch(62.8% 0.2576 29.2)'
 ex.exportTailwind(hl.semanticScale('#3b82f6'), 'primary');
 ex.exportCssCustomProperties(hl.semanticScale('#3b82f6'), '--primary');
@@ -54,8 +56,8 @@ ex.exportCssCustomProperties(hl.semanticScale('#3b82f6'), '--primary');
 
 ## Gotchas (every one observed breaking real AI-generated code)
 
-1. **TokenExporter takes METRIC Lab** (`hl.fromHex`). Passing `genFromHex` output silently yields a different color (#3b82f6 → #4d2268).
-2. **`distance()` input contract differs by language**: Python `MetricSpace.distance(XYZ1, XYZ2)` takes CIE XYZ (Lab input silently saturates ≈0.15); JS `distance(lab1, lab2)` takes Lab. Cross-language-safe: `distance_from_lab` / `distanceFromLab`, or the hex-in `difference()`.
+1. **TokenExporter takes METRIC Lab** (`hl.fromHex`). Passing `genFromHex` output silently yields a different color (#3b82f6 → #4d2268). Since v0.17 every exporter method also accepts a hex string directly — prefer that, it's unambiguous.
+2. **`distance()` input contract differs by language**: Python `MetricSpace.distance(XYZ1, XYZ2)` takes CIE XYZ (Lab input saturates ≈0.15 — since v0.17 Python warns when inputs look like Lab); JS `distance(lab1, lab2)` takes Lab. Cross-language-safe: `distance_from_lab` / `distanceFromLab`, or the hex-in `difference()`.
 3. **GenSpace L and C are 0–1-scale.** `L - 15` gives black; darken with e.g. `L - 0.15`.
 4. **`difference()` saturates near ~0.15** for very dissimilar pairs — rank is preserved, absolute values plateau. For an unbounded number use `euclideanDistance` (range 0–1.6+).
 5. **`palette()` runs light→dark** and the base color is only approximate inside it; `semanticScale()` is the Tailwind-style API where level 500 is your exact input.
@@ -68,6 +70,14 @@ ex.exportCssCustomProperties(hl.semanticScale('#3b82f6'), '--primary');
 - **Color.js** (master, pending release): spaces `helmgen`, `helmgenlch`, `helmlab-metric` + deltaE method `"Helmlab"`. Until released: `npm i github:color-js/color.js` or use this package.
 - **PostCSS**: `npm i postcss-helmlab` → `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` CSS functions with P3/Rec2020 `@supports` fallbacks.
 - Python extras: `pip install 'helmlab[datasets]'` for benchmark data loaders; `py.typed` shipped (mypy/pyright OK).
+
+## Catalog matching (the #1 real-world distance job)
+
+Picking the nearest color from a fixed palette (dye/brand/token lookup) is a
+suprathreshold ranking job — NOT what the trained `difference()` was fit for.
+Use `nearestColor()` (default ciede2000, measurably the most perturbation-stable
+choice: 7 vs 16 selection flips per 100 targets at ±2/255) and check `margin`:
+a small margin means the pick is fragile — show both candidates.
 
 ## When NOT to use helmlab
 

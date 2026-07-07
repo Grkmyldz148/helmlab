@@ -391,6 +391,16 @@ dist = hl.<span class="text-[#34d399]">difference</span>(<span class="text-[#fb9
 r = hl.<span class="text-[#34d399]">difference_with_confidence</span>(<span class="text-[#fb923c]">"#808080"</span>, <span class="text-[#fb923c]">"#828282"</span>)
 <span class="text-[#52525b]"># &rarr; de=0.012, p_noticeable=0.08, reliability=0.41, reliable=False</span>
 
+<span class="text-[#52525b]"># CIEDE2000 (industry standard, CIELAB scale ~0-100) — v0.17+</span>
+de = hl.<span class="text-[#34d399]">delta_e_2000</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
+<span class="text-[#52525b]"># &rarr; 86.61</span>
+
+<span class="text-[#52525b]"># Catalog matching: nearest color from a fixed palette — v0.17+</span>
+<span class="text-[#52525b]"># default metric is ciede2000: measurably the most perturbation-stable</span>
+<span class="text-[#52525b]"># choice for suprathreshold argmax (7 vs 16 flips/100 at &plusmn;2/255 in our tests)</span>
+pick = hl.<span class="text-[#34d399]">nearest_color</span>(<span class="text-[#fb923c]">"#fbf0d0"</span>, palette)
+<span class="text-[#52525b]"># &rarr; {"{"}hex, index, distance, runner_up, margin{"}"} — small margin = fragile pick</span>
+
 <span class="text-[#52525b]"># Uncompressed Euclidean Lab (fast, for quick UI checks)</span>
 dist = hl.<span class="text-[#34d399]">euclidean_distance</span>(<span class="text-[#fb923c]">"#ff0000"</span>, <span class="text-[#fb923c]">"#00ff00"</span>)
 <span class="text-[#52525b]"># &rarr; 1.62 — black/white &rarr; 1.12; range 0–1.6+</span>
@@ -1008,7 +1018,7 @@ metric = MetricSpace(neutral_correction=<span class="text-[#f97316]">False</span
 
           <div class="for-dev mb-6">
             <p class="text-[#a1a1aa] mb-4">
-              <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">hl.export()</code> returns a <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">TokenExporter</code> instance bound to the Helmlab's MetricSpace. Pass Metric Lab values (from <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">from_hex</code> / <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">from_XYZ</code>) &mdash; Gen Lab values will silently produce the wrong color. Conversions go through Metric Lab &rarr; XYZ &rarr; sRGB/P3/OKLab internally.
+              <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">hl.export()</code> returns a <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">TokenExporter</code> instance bound to the Helmlab's MetricSpace. Every method also accepts a hex string directly (v0.17+) — the unambiguous path. For Lab inputs, pass Metric Lab values (from <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">from_hex</code> / <code class="text-[#fafafa] bg-white/[0.04] px-1.5 py-0.5 rounded text-sm">from_XYZ</code>) &mdash; Gen Lab values will silently produce the wrong color. Conversions go through Metric Lab &rarr; XYZ &rarr; sRGB/P3/OKLab internally.
             </p>
           </div>
 

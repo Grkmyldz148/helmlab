@@ -598,6 +598,22 @@ class MetricSpace(ColorSpace):
         helmlab.Helmlab.delta_e : Euclidean Lab distance (uncompressed) on hex inputs.
         helmlab.Helmlab.perceptual_distance : Convenience wrapper from Lab inputs.
         """
+        # Footgun guard: this method takes CIE XYZ. Lab passed here silently
+        # saturates near 0.15 (compression collapses corrupt inputs). Real
+        # colors have all-non-negative XYZ; Helmlab Lab routinely has negative
+        # a/b — warn on that signature instead of failing silently.
+        import warnings
+        for name, arr in (("XYZ_1", XYZ_1), ("XYZ_2", XYZ_2)):
+            a = np.asarray(arr, dtype=np.float64)
+            comps = a.reshape(-1, 3) if a.size % 3 == 0 and a.size else a
+            if comps.ndim == 2 and comps.shape[1] == 3 and np.any(comps[:, 1:] < -1e-9):
+                warnings.warn(
+                    f"MetricSpace.distance() expects CIE XYZ, but {name} has negative "
+                    "2nd/3rd components — that looks like Lab. Did you mean "
+                    "distance_from_lab()? (Lab input here silently saturates ≈0.15.)",
+                    stacklevel=2,
+                )
+                break
         # apply_neutral=False: the neutral-axis correction is display-only and
         # distorts the trained metric (~+5 STRESS on COMBVD). See from_XYZ.
         c1 = self.from_XYZ(XYZ_1, apply_neutral=False)

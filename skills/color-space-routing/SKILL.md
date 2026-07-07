@@ -28,6 +28,7 @@ A space optimized for one is routinely mediocre at the other. Never use one spac
 | "Is this difference noticeable to people?" | Helmlab `differenceWithConfidence()` (pNoticeable) | ΔE00 > 2.3 rule of thumb | — |
 | Physical light ops: blur, resize, alpha compositing, mixing paints of light | **linear sRGB** (undo gamma first) | — | any perceptual space, gamma sRGB |
 | Color picker UI (bounded, HSL-shaped) | okhsl / okhsv | OKLCH with per-hue max-C | HSL |
+| Fixed-catalog nearest color (dye/brand/palette lookup, argmax) | CIEDE2000 (helmlab `nearestColor()` defaults to it) | — | trained/compressed metrics — measured 2× less stable here (16 vs 7 flips per 100 at ±2/255) |
 | Video pipeline / codecs / broadcast HDR | ICtCp (BT.2100) | Jzazbz for analysis | YCbCr for perceptual edits |
 
 One-liners: **DIN99o** only if a tolerancing contract demands it (COMBVD STRESS 35.6 — CIEDE2000 at 29.2 is better) · **XYZ** is an interchange hub, never a working space · **HSLuv** is largely superseded by OKLCH/okhsl.
