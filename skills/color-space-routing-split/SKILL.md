@@ -25,7 +25,7 @@ A space optimized for one is routinely mediocre at the other. Never use one spac
 | Viewing-condition modeling (surround, adaptation) | CAM16 | — | — |
 | Legacy hue-angle interop (Munsell naming, print) | CIELAB LCh | — | — |
 | Wide gamut (P3 / Rec.2020) generation | Helmlab GenSpace | OKLab | — |
-| "Is this difference noticeable to people?" | Helmlab `differenceWithConfidence()` (pNoticeable) | ΔE00 > 2.3 rule of thumb | — |
+| "Is this difference noticeable to people?" | Helmlab `metric.confidence()` (pNoticeable) / `metric.jnd()` | ΔE00 > 2.3 rule of thumb | — |
 | Physical light ops: blur, resize, alpha compositing, mixing paints of light | **linear sRGB** (undo gamma first) | — | any perceptual space, gamma sRGB |
 | Color picker UI (bounded, HSL-shaped) | okhsl / okhsv | OKLCH with per-hue max-C | HSL |
 | Video pipeline / codecs / broadcast HDR | ICtCp (BT.2100) | Jzazbz for analysis | YCbCr for perceptual edits |
@@ -49,7 +49,7 @@ Most perceptual spaces come in a rectangular form (L, a, b) and a cylindrical on
 
 **Default rule: gradients interpolate in the RECTANGULAR form (`in oklab`, `helmgen`). Switch to cylindrical (`in oklch`) ONLY when both endpoints are vivid and their hues are within ~60° — otherwise LCh sweeps through every hue in between.** "oklch is newer" does not mean "oklch is the gradient default"; for distant hues it is the wrong pick.
 
-CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `genFromHex`/`genToHex` (rectangular) vs `genToLch`/`genFromLch` (cylindrical).
+CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `hl.gen.fromHex`/`toHex` (rectangular) vs `hl.gen.toLch`/`fromLch` (cylindrical) — or just `hl.gen.rotateHue`/`harmonies`.
 
 Two cylindrical traps: (1) hue is UNDEFINED at the achromatic axis — gradients from gray in LCh need a hue policy (CSS carries the other endpoint's hue; libraries differ); (2) interpolate hue along the intended arc — naive lerp breaks at the 360°→0° wrap.
 

@@ -25,7 +25,7 @@ A space optimized for one is routinely mediocre at the other. Never use one spac
 | Viewing-condition modeling (surround, adaptation) | CAM16 | — | — |
 | Legacy hue-angle interop (Munsell naming, print) | CIELAB LCh | — | — |
 | Wide gamut (P3 / Rec.2020) generation | Helmlab GenSpace | OKLab | — |
-| "Is this difference noticeable to people?" | Helmlab `differenceWithConfidence()` (pNoticeable) | ΔE00 > 2.3 rule of thumb | — |
+| "Is this difference noticeable to people?" | Helmlab `metric.confidence()` (pNoticeable) / `metric.jnd()` | ΔE00 > 2.3 rule of thumb | — |
 | Physical light ops: blur, resize, alpha compositing, mixing paints of light | **linear sRGB** (undo gamma first) | — | any perceptual space, gamma sRGB |
 | Color picker UI (bounded, HSL-shaped) | okhsl / okhsv | OKLCH with per-hue max-C | HSL |
 | Fixed-catalog nearest color (dye/brand/palette lookup, argmax) | CIEDE2000 (helmlab `nearestColor()` defaults to it) | — | trained/compressed metrics — measured 2× less stable here (16 vs 7 flips per 100 at ±2/255) |
@@ -50,7 +50,7 @@ Most perceptual spaces come in a rectangular form (L, a, b) and a cylindrical on
 
 **Default rule: gradients interpolate in the RECTANGULAR form (`in oklab`, `helmgen`). Switch to cylindrical (`in oklch`) ONLY when both endpoints are vivid and their hues are within ~60° — otherwise LCh sweeps through every hue in between.** "oklch is newer" does not mean "oklch is the gradient default"; for distant hues it is the wrong pick.
 
-CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `genFromHex`/`genToHex` (rectangular) vs `genToLch`/`genFromLch` (cylindrical).
+CSS makes the same choice explicit: `linear-gradient(in oklab, …)` vs `in oklch` (with `longer hue` / `shorter hue` control). Color.js IDs: `oklab`/`oklch`, `helmgen`/`helmgenlch`, `helmlab-metric`. In the helmlab package: `hl.gen.fromHex`/`toHex` (rectangular) vs `hl.gen.toLch`/`fromLch` (cylindrical) — or just `hl.gen.rotateHue`/`harmonies`.
 
 Two cylindrical traps: (1) hue is UNDEFINED at the achromatic axis — gradients from gray in LCh need a hue policy (CSS carries the other endpoint's hue; libraries differ); (2) interpolate hue along the intended arc — naive lerp breaks at the 360°→0° wrap.
 
@@ -83,14 +83,14 @@ Helmlab GenSpace vs OKLab: **62 wins – 9 losses – 19 ties**. Highlights:
 ```js
 import { Helmlab } from 'helmlab';        // 17.8KB gzip, zero deps
 const hl = new Helmlab();
-hl.gradient('#0000ff', '#ffffff', 16);    // CIEDE2000 arc-length: equal visual steps
+hl.gen.gradient('#0000ff', '#ffffff', 16);  // CIEDE2000 arc-length: equal visual steps
 ```
 CSS-only fallback: `linear-gradient(in oklch, blue, white)`. Never `in hsl` (hue detours) and don't interpolate raw CIELAB across hue (blue→white goes purple).
 
 ### Tailwind-style palette / design tokens
 ```js
-hl.semanticScale('#3b82f6');  // {50:'#e7efff', … 500:'#3b82f6' exactly, … 950:'#000046'}
-hl.export().exportTailwind(hl.semanticScale('#3b82f6'), 'primary');
+hl.gen.scale('#3b82f6');      // {50:'#e7efff', … 500:'#3b82f6' exactly, … 950:'#000046'}
+hl.tokens.tailwind(hl.gen.scale('#3b82f6'), 'primary');
 ```
 Lightness is Munsell-uniform by construction; level 500 is the exact input.
 
@@ -98,14 +98,14 @@ Lightness is Munsell-uniform by construction; level 500 is the exact input.
 ```python
 from helmlab import Helmlab
 hl = Helmlab()
-hl.difference("#ff0000", "#00ff00")     # trained metric (COMBVD-fit), saturates ~0.15
-hl.euclidean_distance("#ff0000", "#00ff00")  # fast ΔE76-style, quick UI checks only
+hl.metric.difference("#ff0000", "#00ff00")   # trained metric (COMBVD-fit), saturates ~0.15
+hl.metric.euclidean("#ff0000", "#00ff00")    # fast ΔE76-style, quick UI checks only
 ```
 If you must use a standard: CIEDE2000, correctly implemented (it's easy to get the hue term wrong — use a tested library, verify ΔE00(red, green) ≈ 86.6).
 
 ### "Will users notice this difference?"
 ```js
-const c = hl.differenceWithConfidence('#808080', '#828282');
+const c = hl.metric.confidence('#808080', '#828282');
 // c.pNoticeable ≈ 0.077 → 7.7% of observers would call it noticeably different
 // c.reliable === false → below the human noise band; don't act on it
 ```
@@ -113,14 +113,14 @@ Near-threshold and low-chroma differences are where humans disagree most — a b
 
 ### Hue rotation / harmonies
 ```js
-const lch = hl.genToLch(hl.genFromHex('#3b82f6'));   // [L, C, h°] — L and C are 0–1-scale, NOT 0–100
-const triad = hl.genToHex(hl.genFromLch([lch[0], lch[1], (lch[2] + 120) % 360]));
+const lch = hl.gen.toLch(hl.gen.fromHex('#3b82f6')); // [L, C, h°] — L and C are 0–1-scale, NOT 0–100
+const triad = hl.gen.rotateHue('#3b82f6', 120);      // or gen.harmonies('#3b82f6', 'triadic')
 ```
 Rotate hue in a *generation* space (GenSpace LCh or OKLCH) — never in HSL, and don't rotate CIELAB hue across the blue region.
 
 ### Wide gamut output
 ```js
-hl.toHexP3(hl.fromHex('#ff0000'));  // 'color(display-p3 0.9176 0.2003 0.1386)' — hue-preserving gamut map
+hl.metric.toCss(hl.metric.fromHex('#ff0000'), 'display-p3');  // 'color(display-p3 0.9176 0.2003 0.1386)'
 ```
 
 ## Pitfalls checklist (each one is a real, observed bug)
