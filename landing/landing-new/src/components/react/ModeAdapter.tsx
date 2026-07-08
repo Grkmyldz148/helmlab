@@ -39,14 +39,14 @@ export default function ModeAdapter() {
       }));
     }
     return colors.map((c) => {
-      const light = hl.ensureContrast(c, LIGHT_BG, 4.5);
-      const dark = hl.ensureContrast(c, DARK_BG, 4.5);
+      const light = hl.gen.ensureContrast(c, LIGHT_BG, 4.5);
+      const dark = hl.gen.ensureContrast(c, DARK_BG, 4.5);
       return {
         base: c,
         light,
         dark,
-        lightRatio: hl.contrastRatio(light, LIGHT_BG),
-        darkRatio: hl.contrastRatio(dark, DARK_BG),
+        lightRatio: hl.gen.contrastRatio(light, LIGHT_BG),
+        darkRatio: hl.gen.contrastRatio(dark, DARK_BG),
       };
     });
   }, [colors, hl]);
@@ -150,7 +150,7 @@ export default function ModeAdapter() {
       </div>
 
       <p className="text-xs text-[#52525b] mt-6">
-        Adaptation uses <span className="font-mono text-[#a1a1aa]">helmlab.ensureContrast()</span>:
+        Adaptation uses <span className="font-mono text-[#a1a1aa]">hl.gen.ensureContrast()</span>:
         binary-searches GenSpace L along both darken/lighten directions and picks the closest
         candidate that clears the target ratio. Hue and chroma are preserved; only lightness moves.
       </p>

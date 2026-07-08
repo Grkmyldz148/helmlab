@@ -61,35 +61,35 @@ function rotateHueInGen(
   baseLab: [number, number, number],
   deltaDeg: number
 ): string {
-  // genToLch/genFromLch = the package's own LCh helpers (same coordinates
+  // gen.toLch/gen.fromLch = the package's own LCh helpers (same coordinates
   // as Color.js `helmgenlch`) — no manual atan2/cos/sin here anymore.
-  const [L, C, hBase] = hl.genToLch(baseLab);
+  const [L, C, hBase] = hl.gen.toLch(baseLab);
   const hNew = (hBase + deltaDeg) % 360;
-  const atC = (c: number): [number, number, number] => hl.genFromLch([L, c, hNew]);
+  const atC = (c: number): [number, number, number] => hl.gen.fromLch([L, c, hNew]);
 
   // Try full chroma first
-  const tryHex = hl.genToHex(atC(C));
+  const tryHex = hl.gen.toHex(atC(C));
   const [tr, tg, tb] = hexToRgb(tryHex);
-  // genToHex already gamut-maps, but we prefer a chroma-only reduction to preserve hue/L
+  // gen.toHex already gamut-maps, but we prefer a chroma-only reduction to preserve hue/L
   // Binary search for max in-gamut chroma at this (L, hNew)
   let lo = 0;
   let hi = C;
   for (let i = 0; i < 22; i++) {
     const mid = (lo + hi) / 2;
-    const hex = hl.genToHex(atC(mid));
-    // genToHex already gamut-maps; if clipping happened, the round-tripped
+    const hex = hl.gen.toHex(atC(mid));
+    // gen.toHex already gamut-maps; if clipping happened, the round-tripped
     // chroma will be less than `mid`. This isolates chroma reduction only.
-    const labRt = hl.genFromHex(hex);
+    const labRt = hl.gen.fromHex(hex);
     const cRt = Math.sqrt(labRt[1] * labRt[1] + labRt[2] * labRt[2]);
     if (cRt >= mid - 1e-3) lo = mid;
     else hi = mid;
   }
   const cUse = lo;
   // Prefer exact full-chroma hex if it round-trips well (no clipping needed)
-  const fullLabRt = hl.genFromHex(tryHex);
+  const fullLabRt = hl.gen.fromHex(tryHex);
   const fullC = Math.sqrt(fullLabRt[1] * fullLabRt[1] + fullLabRt[2] * fullLabRt[2]);
   if (fullC >= C - 1e-3 && isInSrgb(tr, tg, tb)) return tryHex;
-  return hl.genToHex(atC(cUse));
+  return hl.gen.toHex(atC(cUse));
 }
 
 interface HarmonyResult {
@@ -116,7 +116,7 @@ export default function ColorHarmony() {
       return;
     }
     const hl = new mod.Helmlab();
-    const baseLab = hl.genFromHex(hex);
+    const baseLab = hl.gen.fromHex(hex);
     const baseAngle =
       ((Math.atan2(baseLab[2], baseLab[1]) * 180) / Math.PI + 360) % 360;
 

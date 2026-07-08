@@ -40,9 +40,9 @@ export default function MiniPlayground() {
 
       if (mod) {
         const hl = new mod.Helmlab();
-        const helmlabColors = hl.gradient(s, e, STEPS);
+        const helmlabColors = hl.gen.gradient(s, e, STEPS);
         // Beta: how different the two endpoints are, and how reliable that is.
-        const c = hl.differenceWithConfidence(s, e);
+        const c = hl.metric.confidence(s, e);
         setConf({ de: c.de, reliability: c.reliability, reliable: c.reliable });
         setRows([
           { label: 'Helmlab', colors: helmlabColors, cv: gradientCV(helmlabColors) },

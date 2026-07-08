@@ -105,7 +105,68 @@ function gamutMapSingle(lab: Lab, space: SpaceLike, gamut: Gamut): Lab {
   return [L, Cn * cos(H), Cn * sin(H)];
 }
 
-/** Gamut-map Lab coordinates. Handles single or batch. */
-export function gamutMap(lab: Lab, space: SpaceLike, gamut: Gamut = 'srgb'): Lab {
+/** Adaptive gamut clipping (Ottosson-style) — mirrors the Python sibling's
+ * `_gamut_clip_adaptive_single`. Instead of only reducing chroma, shifts
+ * both L and C toward a cusp-derived projection target: important for
+ * hues like yellow whose cusp sits at very high L, where pure chroma
+ * reduction collapses to near-gray (the cliff problem). */
+function gamutClipAdaptiveSingle(lab: Lab, space: SpaceLike, gamut: Gamut, alpha: number): Lab {
+  if (isInGamut(lab, space, gamut)) return [...lab];
+
+  const [L, a, b] = lab;
+  const C = sqrt(a * a + b * b);
+  const H = atan2(b, a);
+
+  if (C < 1e-10) return [L, 0, 0];
+
+  const [Lcusp] = findCusp(H, space, gamut);
+
+  const Ld = L - Lcusp;
+  let k = Ld >= 0 ? 2 * (1 - Lcusp) : 2 * Lcusp;
+  k = Math.max(k, 1e-6);
+
+  const e1 = k / 2 + Math.abs(Ld) + (alpha * C) / k;
+  const discriminant = e1 * e1 - 2 * k * Math.abs(Ld);
+
+  let L0: number;
+  if (discriminant < 0) {
+    L0 = Lcusp;
+  } else {
+    const sgn = Ld >= 0 ? 1 : -1;
+    L0 = Lcusp + (sgn * (e1 - sqrt(discriminant))) / 2;
+  }
+  L0 = min(Math.max(L0, 0), 1);
+
+  const cosH = cos(H);
+  const sinH = sin(H);
+
+  let loT = 0;
+  let hiT = 1;
+  for (let i = 0; i < 50; i++) {
+    const t = (loT + hiT) * 0.5;
+    const Ltest = L0 * (1 - t) + t * L;
+    const Ctest = t * C;
+    if (isInGamut([Ltest, Ctest * cosH, Ctest * sinH], space, gamut)) {
+      loT = t;
+    } else {
+      hiT = t;
+    }
+    if (hiT - loT < 1e-6) break;
+  }
+
+  const t = loT;
+  const Lclip = L0 * (1 - t) + t * L;
+  const Cclip = t * C;
+  return [Lclip, Cclip * cosH, Cclip * sinH];
+}
+
+export type GamutMapMethod = 'chroma' | 'adaptive';
+
+/** Gamut-map Lab coordinates.
+ * `method='chroma'` (default) reduces chroma at constant L and hue;
+ * `method='adaptive'` is the Ottosson-style cusp projection. */
+export function gamutMap(lab: Lab, space: SpaceLike, gamut: Gamut = 'srgb',
+                         method: GamutMapMethod = 'chroma', alpha = 0.05): Lab {
+  if (method === 'adaptive') return gamutClipAdaptiveSingle(lab, space, gamut, alpha);
   return gamutMapSingle(lab, space, gamut);
 }

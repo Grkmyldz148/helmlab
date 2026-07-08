@@ -9,10 +9,12 @@ from importlib.metadata import version as _pkg_version, PackageNotFoundError as 
 try:
     __version__ = _pkg_version("helmlab")
 except _PNF:  # not installed (e.g. running straight from a source tree)
-    __version__ = "0.17.0"  # bump-version-fallback
+    __version__ = "1.0.0"  # bump-version-fallback
 
-from helmlab.helmlab import Helmlab
+from helmlab.helmlab import Helmlab, GenLab, MetricLab, ContrastError, parse_color
+from helmlab.tokens import Tokens
 from helmlab.spaces.metric import MetricSpace, MetricParams
 from helmlab.spaces.gen import GenSpace, GenParams
 
-__all__ = ["Helmlab", "MetricSpace", "MetricParams", "GenSpace", "GenParams"]
+__all__ = ["Helmlab", "GenLab", "MetricLab", "ContrastError", "parse_color",
+           "Tokens", "MetricSpace", "MetricParams", "GenSpace", "GenParams"]

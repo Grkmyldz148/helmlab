@@ -1,14 +1,24 @@
-"""Helmlab — UI design system utility layer.
+"""Helmlab 1.0 — two-space color API.
 
-Composes two purpose-built color spaces:
-    MetricSpace — full 72-param enriched pipeline (distance, deltaE)
-    GenSpace    — generation-optimized pipeline (palette, gradient, gamut map)
+One `Helmlab` instance exposes three namespaces:
 
-Public API routing:
-    Distance/measurement → MetricSpace: delta_e(), from_hex(), to_hex(), info()
-    Generation/creation  → GenSpace:    palette(), gradient(), semantic_scale(),
-                                        palette_hues(), ensure_contrast(), adapt_to_mode()
+    hl.gen     — CREATE colors (GenSpace): gradient, palette, scale,
+                 harmonies, contrast, dark mode. Wide-gamut output via the
+                 `gamut` option on every generation function.
+    hl.metric  — MEASURE colors (MetricSpace): difference (trained metric),
+                 euclidean, ciede2000, jnd, confidence, nearest, info.
+    hl.tokens  — EXPORT design tokens (hex/CSS strings in, strings out).
+
+The two spaces have branded Lab types (`GenLab` / `MetricLab`); passing one
+space's Lab into the other's API raises `TypeError`. Color-string parameters
+accept '#rrggbb', '#rgb', 'color(display-p3 r g b)' and
+'color(rec2020 r g b)' everywhere.
+
+See API.md for the full specification.
 """
+
+import re
+import warnings
 
 import numpy as np
 
@@ -20,224 +30,480 @@ from helmlab.utils.srgb_convert import (
     sRGB_to_XYZ,
     XYZ_to_sRGB,
     XYZ_to_DisplayP3,
+    DisplayP3_to_XYZ,
     linear_to_displayp3,
+    displayp3_to_linear,
     XYZ_to_Rec2020,
+    Rec2020_to_XYZ,
     linear_to_rec2020,
+    rec2020_to_linear,
     clamp_srgb,
     relative_luminance,
     contrast_ratio as _wcag_cr,
 )
-from helmlab.utils.gamut import gamut_map, is_in_gamut
+from helmlab.utils.gamut import gamut_map, is_in_gamut, max_chroma as _max_chroma, find_cusp as _find_cusp
 
 
-class Helmlab:
-    """UI design system utility layer built on Helmlab color space family.
+# ═══════════════════════════════════════════════════════════════════════
+# Branded Lab types + errors
+# ═══════════════════════════════════════════════════════════════════════
 
-    Composes MetricSpace (distance) + GenSpace (generation).
+class GenLab(np.ndarray):
+    """Lab coordinates in the GENERATION space (`hl.gen`).
+
+    A plain ``np.ndarray`` subclass — indexing, ``.copy()``, arithmetic all
+    work — that carries its space identity so it cannot be silently fed to
+    the measurement API. Construct via ``hl.gen.from_hex`` / ``hl.gen.lab``.
+    """
+    __slots__ = ()
+
+
+class MetricLab(np.ndarray):
+    """Lab coordinates in the MEASUREMENT space (`hl.metric`).
+
+    See :class:`GenLab`; construct via ``hl.metric.from_hex`` /
+    ``hl.metric.lab``.
+    """
+    __slots__ = ()
+
+
+class ContrastError(ValueError):
+    """Raised by ``ensure_contrast(strict=True)`` when the requested ratio is
+    unreachable against the given background (even with pure black/white)."""
+
+
+def _brand(arr, cls):
+    return np.asarray(arr, dtype=np.float64).view(cls)
+
+
+def _accept_lab(lab, forbidden_cls, this_ns, that_ns):
+    """Runtime space check: reject the OTHER space's branded Lab, accept the
+    own brand and plain arrays/lists (interop escape hatch)."""
+    if isinstance(lab, forbidden_cls):
+        raise TypeError(
+            f"hl.{this_ns} got a {forbidden_cls.__name__} — that Lab belongs "
+            f"to hl.{that_ns}. The two spaces have different coordinates; "
+            f"convert the original color with hl.{this_ns}.from_hex() instead."
+        )
+    return np.asarray(lab, dtype=np.float64).view(np.ndarray)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Color-string parsing (shared boundary)
+# ═══════════════════════════════════════════════════════════════════════
+
+_CSS_COLOR_RE = re.compile(
+    r"^\s*color\(\s*(display-p3|rec2020)\s+"
+    r"([+-]?[\d.]+(?:[eE][+-]?\d+)?)\s+"
+    r"([+-]?[\d.]+(?:[eE][+-]?\d+)?)\s+"
+    r"([+-]?[\d.]+(?:[eE][+-]?\d+)?)\s*\)\s*$"
+)
+
+_VALID_GAMUTS = ("srgb", "display-p3", "rec2020")
+
+
+def parse_color(color: str) -> np.ndarray:
+    """Any supported color string → CIE XYZ (D65).
+
+    Accepts '#rrggbb', '#rgb', 'color(display-p3 r g b)',
+    'color(rec2020 r g b)'. Raises ``ValueError`` on anything else.
+    """
+    if not isinstance(color, str):
+        raise TypeError(
+            f"expected a color string, got {type(color).__name__} — Lab "
+            "arrays go to the lab-typed methods (to_hex, distance, ...)"
+        )
+    s = color.strip()
+    if s.startswith("color("):
+        m = _CSS_COLOR_RE.match(s)
+        if not m:
+            raise ValueError(
+                f"unparseable CSS color() string: {color!r} — supported: "
+                "'color(display-p3 r g b)', 'color(rec2020 r g b)'"
+            )
+        comps = np.array([float(m.group(2)), float(m.group(3)), float(m.group(4))])
+        if m.group(1) == "display-p3":
+            return DisplayP3_to_XYZ(displayp3_to_linear(comps))
+        return Rec2020_to_XYZ(rec2020_to_linear(comps))
+    return sRGB_to_XYZ(hex_to_srgb(s))
+
+
+def _color_to_srgb(color: str) -> np.ndarray:
+    """Color string → sRGB [0,1] (wide-gamut inputs are clipped — used only
+    for sRGB-defined operations like WCAG luminance)."""
+    s = color.strip()
+    if s.startswith("color("):
+        return clamp_srgb(XYZ_to_sRGB(parse_color(s)))
+    return hex_to_srgb(s)
+
+
+def _check_gamut(gamut: str) -> None:
+    if gamut not in _VALID_GAMUTS:
+        raise ValueError(f"unknown gamut {gamut!r}; use one of {_VALID_GAMUTS}")
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# CIELAB / CIEDE2000 (reference formulas, module-level)
+# ═══════════════════════════════════════════════════════════════════════
+
+def _srgb_to_cielab(rgb):
+    """sRGB [0,1] → CIE Lab."""
+    r, g, b = float(rgb[0]), float(rgb[1]), float(rgb[2])
+    lr = r / 12.92 if r <= 0.04045 else ((r + 0.055) / 1.055) ** 2.4
+    lg = g / 12.92 if g <= 0.04045 else ((g + 0.055) / 1.055) ** 2.4
+    lb = b / 12.92 if b <= 0.04045 else ((b + 0.055) / 1.055) ** 2.4
+    x = (0.4124564 * lr + 0.3575761 * lg + 0.1804375 * lb) / 0.95047
+    y = 0.2126729 * lr + 0.7151522 * lg + 0.0721750 * lb
+    z = (0.0193339 * lr + 0.1191920 * lg + 0.9503041 * lb) / 1.08883
+
+    def f(t):
+        return t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
+
+    fx, fy, fz = f(x), f(y), f(z)
+    return np.array([116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)])
+
+
+def _xyz_to_cielab(XYZ):
+    """CIE XYZ (D65) → CIE Lab. Same white constants as :func:`_srgb_to_cielab`."""
+    x = float(XYZ[0]) / 0.95047
+    y = float(XYZ[1])
+    z = float(XYZ[2]) / 1.08883
+
+    def f(t):
+        return t ** (1 / 3) if t > 0.008856 else 7.787 * t + 16 / 116
+
+    fx, fy, fz = f(x), f(y), f(z)
+    return np.array([116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)])
+
+
+def _ciede2000(lab1, lab2):
+    """CIEDE2000 color difference (full CIE 224:2017 formula)."""
+    L1, a1, b1 = float(lab1[0]), float(lab1[1]), float(lab1[2])
+    L2, a2, b2 = float(lab2[0]), float(lab2[1]), float(lab2[2])
+    C1 = np.sqrt(a1 * a1 + b1 * b1)
+    C2 = np.sqrt(a2 * a2 + b2 * b2)
+    Cab = (C1 + C2) / 2
+    Cab7 = Cab ** 7
+    p257 = 25.0 ** 7
+    G = 0.5 * (1 - np.sqrt(Cab7 / (Cab7 + p257)))
+    ap1 = (1 + G) * a1
+    ap2 = (1 + G) * a2
+    Cp1 = np.sqrt(ap1 * ap1 + b1 * b1)
+    Cp2 = np.sqrt(ap2 * ap2 + b2 * b2)
+    hp1 = np.arctan2(b1, ap1)
+    hp2 = np.arctan2(b2, ap2)
+    if hp1 < 0:
+        hp1 += 2 * np.pi
+    if hp2 < 0:
+        hp2 += 2 * np.pi
+    dLp = L2 - L1
+    dCp = Cp2 - Cp1
+    if Cp1 * Cp2 == 0:
+        dhp = 0.0
+    else:
+        dhp = hp2 - hp1
+        if dhp > np.pi:
+            dhp -= 2 * np.pi
+        if dhp < -np.pi:
+            dhp += 2 * np.pi
+    dHp = 2 * np.sqrt(Cp1 * Cp2) * np.sin(dhp / 2)
+    Lp = (L1 + L2) / 2
+    Cp = (Cp1 + Cp2) / 2
+    if Cp1 * Cp2 == 0:
+        hp = hp1 + hp2
+    else:
+        hp = (hp1 + hp2) / 2
+        if abs(hp1 - hp2) > np.pi:
+            hp += np.pi if hp < np.pi else -np.pi
+    T = (1 - 0.17 * np.cos(hp - np.pi / 6) + 0.24 * np.cos(2 * hp)
+         + 0.32 * np.cos(3 * hp + np.pi / 30) - 0.20 * np.cos(4 * hp - 63 * np.pi / 180))
+    Lp50 = Lp - 50
+    SL = 1 + 0.015 * Lp50 * Lp50 / np.sqrt(20 + Lp50 * Lp50)
+    SC = 1 + 0.045 * Cp
+    SH = 1 + 0.015 * Cp * T
+    Cp7 = Cp ** 7
+    RC = 2 * np.sqrt(Cp7 / (Cp7 + p257))
+    hpDeg = hp * 180 / np.pi
+    dth = 30 * np.exp(-((hpDeg - 275) / 25) ** 2)
+    RT = -np.sin(2 * dth * np.pi / 180) * RC
+    return np.sqrt((dLp / SL) ** 2 + (dCp / SC) ** 2 + (dHp / SH) ** 2
+                   + RT * (dCp / SC) * (dHp / SH))
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# hl.gen — generation namespace
+# ═══════════════════════════════════════════════════════════════════════
+
+_HARMONY_OFFSETS = {
+    "complementary": (0, 180),
+    "analogous": (0, -30, 30),
+    "triadic": (0, 120, 240),
+    "tetradic": (0, 90, 180, 270),
+    "split_complementary": (0, 150, 210),
+}
+
+_DEFAULT_SCALE_LEVELS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
+
+
+class Gen:
+    """Generation namespace — everything that CREATES colors (GenSpace).
+
+    All generation functions take ``gamut='srgb' | 'display-p3' | 'rec2020'``
+    and return '#rrggbb' for sRGB or 'color(<gamut> r g b)' CSS strings for
+    the wide gamuts. Color-string inputs accept the same forms everywhere.
     """
 
-    def __init__(self, params_path: str | None = None, surround: float = 0.5,
-                 neutral_correction: bool = True, ab_rotate_deg: float = -28.2,
-                 gen_params_path: str | None = None):
-        self._surround = float(np.clip(surround, 0.0, 1.0))
+    def __init__(self, space: GenSpace, metric_space: MetricSpace, owner: "Helmlab"):
+        self.space = space          # raw GenSpace (advanced access)
+        self._metric = metric_space  # used by adapt_to_mode surround path
+        self._owner = owner
+        self._white_L = float(space.from_XYZ(np.array([0.95047, 1.0, 1.08883]))[0])
 
-        # MetricSpace for distance/measurement
-        if params_path is not None:
-            params = MetricParams.load(params_path)
-            self._metric = MetricSpace(params, surround=self._surround,
-                                       neutral_correction=neutral_correction,
-                                       ab_rotate_deg=ab_rotate_deg)
-        else:
-            self._metric = MetricSpace(surround=self._surround,
-                                       neutral_correction=neutral_correction,
-                                       ab_rotate_deg=ab_rotate_deg)
+    # ── Conversions ─────────────────────────────────────────────────
 
-        # GenSpace for generation (palette, gradient, gamut map)
-        if gen_params_path is not None:
-            gen_p = GenParams.load(gen_params_path)
-            self._gen = GenSpace(gen_p)
-        else:
-            self._gen = GenSpace()
+    def from_hex(self, color: str) -> GenLab:
+        """Color string → GenLab. Accepts '#rrggbb', '#rgb', 'color(display-p3 …)', 'color(rec2020 …)'."""
+        return _brand(self.space.from_XYZ(parse_color(color)), GenLab)
 
-        # Backward compat: expose _space as metric
-        self._space = self._metric
+    def to_hex(self, lab) -> str:
+        """GenLab → '#rrggbb' (gamut-mapped to sRGB)."""
+        return self._emit(self._accept(lab), "srgb")
 
-        # Cache GenSpace white L for palette/scale range
-        self._gen_white_L = float(self._gen.from_XYZ(np.array([0.95047, 1.0, 1.08883]))[0])
+    def to_css(self, lab, gamut: str = "display-p3") -> str:
+        """GenLab → CSS color string in the requested gamut (gamut-mapped)."""
+        return self._emit(self._accept(lab), gamut)
 
-    def set_surround(self, S: float):
-        """Change viewing context. 0=dark, 0.5=normal, 1=bright."""
-        self._surround = float(np.clip(S, 0.0, 1.0))
-        self._metric._surround = self._surround
+    def from_srgb(self, srgb) -> GenLab:
+        """sRGB [0,1] → GenLab."""
+        return _brand(self.space.from_XYZ(sRGB_to_XYZ(np.asarray(srgb, dtype=np.float64))), GenLab)
 
-    # ── XYZ-level conversions (MetricSpace) ─────────────────────────
+    def to_srgb(self, lab) -> np.ndarray:
+        """GenLab → sRGB [0,1] (gamut-mapped, clamped)."""
+        return self._to_srgb_nd(self._accept(lab))
 
-    def from_XYZ(self, XYZ: np.ndarray) -> np.ndarray:
-        """CIE XYZ → Helmlab Lab [L, a, b] (metric pipeline)."""
-        return self._metric.from_XYZ(np.asarray(XYZ, dtype=np.float64))
+    def lab(self, L: float, a: float, b: float) -> GenLab:
+        """Branded GenLab constructor from raw coordinates."""
+        return _brand([L, a, b], GenLab)
 
-    def to_XYZ(self, lab: np.ndarray) -> np.ndarray:
-        """Helmlab Lab [L, a, b] → CIE XYZ (metric pipeline)."""
-        return self._metric.to_XYZ(np.asarray(lab, dtype=np.float64))
+    def lch(self, L: float, C: float, h_deg: float) -> GenLab:
+        """Cylindrical constructor → GenLab. ⚠ L and C are 0–1-scale, not 0–100."""
+        rad = float(np.radians(h_deg))
+        return _brand([L, C * np.cos(rad), C * np.sin(rad)], GenLab)
 
-    # ── Full-pipeline conversions (MetricSpace — public API) ────────
-
-    def from_hex(self, hex_str: str) -> np.ndarray:
-        """Hex '#rrggbb' → Helmlab Lab [L, a, b] (metric pipeline)."""
-        srgb = hex_to_srgb(hex_str)
-        return self.from_srgb(srgb)
-
-    def to_hex(self, lab: np.ndarray) -> str:
-        """Helmlab Lab [L, a, b] → hex '#rrggbb' (metric pipeline, clamped to sRGB)."""
-        srgb = self.to_srgb(lab)
-        return srgb_to_hex(srgb)
-
-    def from_srgb(self, srgb: np.ndarray) -> np.ndarray:
-        """sRGB [0,1] → Helmlab Lab [L, a, b] (metric pipeline)."""
-        XYZ = sRGB_to_XYZ(np.asarray(srgb, dtype=np.float64))
-        return self._metric.from_XYZ(XYZ)
-
-    def to_srgb(self, lab: np.ndarray) -> np.ndarray:
-        """Helmlab Lab [L, a, b] → sRGB [0,1] (metric pipeline, gamut mapped)."""
-        lab = np.asarray(lab, dtype=np.float64)
-        mapped = gamut_map(lab, self._metric, gamut="srgb")
-        XYZ = self._metric.to_XYZ(mapped)
-        return clamp_srgb(XYZ_to_sRGB(XYZ))
-
-    def to_displayp3(self, lab: np.ndarray) -> np.ndarray:
-        """Helmlab Lab [L, a, b] → Display P3 [0,1] (gamut mapped, gamma-encoded)."""
-        lab = np.asarray(lab, dtype=np.float64)
-        mapped = gamut_map(lab, self._metric, gamut="display-p3")
-        XYZ = self._metric.to_XYZ(mapped)
-        linear = XYZ_to_DisplayP3(XYZ)
-        return clamp_srgb(linear_to_displayp3(linear))
-
-    def to_hex_p3(self, lab: np.ndarray) -> str:
-        """Helmlab Lab → CSS color(display-p3 r g b) string."""
-        p3 = self.to_displayp3(lab)
-        return f"color(display-p3 {p3[0]:.4f} {p3[1]:.4f} {p3[2]:.4f})"
-
-    def to_rec2020(self, lab: np.ndarray) -> np.ndarray:
-        """Helmlab Lab [L, a, b] → Rec2020 / BT.2020 [0,1] (gamut mapped, gamma-encoded)."""
-        lab = np.asarray(lab, dtype=np.float64)
-        mapped = gamut_map(lab, self._metric, gamut="rec2020")
-        XYZ = self._metric.to_XYZ(mapped)
-        linear = XYZ_to_Rec2020(XYZ)
-        return clamp_srgb(linear_to_rec2020(linear))
-
-    def to_hex_rec2020(self, lab: np.ndarray) -> str:
-        """Helmlab Lab → CSS color(rec2020 r g b) string."""
-        rec = self.to_rec2020(lab)
-        return f"color(rec2020 {rec[0]:.4f} {rec[1]:.4f} {rec[2]:.4f})"
-
-    def is_in_srgb(self, lab: np.ndarray) -> bool:
-        """Check if Lab coordinates are within sRGB gamut (metric space)."""
-        return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "srgb"))
-
-    def is_in_p3(self, lab: np.ndarray) -> bool:
-        """Check if Lab coordinates are within Display P3 gamut (metric space)."""
-        return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "display-p3"))
-
-    def is_in_rec2020(self, lab: np.ndarray) -> bool:
-        """Check if Lab coordinates are within Rec2020 / BT.2020 gamut (metric space)."""
-        return bool(is_in_gamut(np.asarray(lab, dtype=np.float64), self._metric, "rec2020"))
-
-    # ── GenSpace conversions (for generation) ──────────────────────
-
-    def gen_from_hex(self, hex_str: str) -> np.ndarray:
-        """Hex '#rrggbb' → Gen Lab [L, a, b] (generation pipeline)."""
-        XYZ = sRGB_to_XYZ(hex_to_srgb(hex_str))
-        return self._gen.from_XYZ(XYZ)
-
-    def gen_to_hex(self, lab: np.ndarray) -> str:
-        """Gen Lab [L, a, b] → hex '#rrggbb' (generation pipeline, gamut mapped)."""
-        srgb = self.gen_to_srgb(lab)
-        return srgb_to_hex(srgb)
-
-    def gen_from_srgb(self, srgb: np.ndarray) -> np.ndarray:
-        """sRGB [0,1] → Gen Lab [L, a, b]."""
-        XYZ = sRGB_to_XYZ(np.asarray(srgb, dtype=np.float64))
-        return self._gen.from_XYZ(XYZ)
-
-    def gen_to_srgb(self, lab: np.ndarray) -> np.ndarray:
-        """Gen Lab [L, a, b] → sRGB [0,1] (gamut mapped, clamped)."""
-        lab = np.asarray(lab, dtype=np.float64)
-        mapped = gamut_map(lab, self._gen, gamut="srgb")
-        XYZ = self._gen.to_XYZ(mapped)
-        return clamp_srgb(XYZ_to_sRGB(XYZ))
-
-    def gen_to_lch(self, lab: np.ndarray) -> np.ndarray:
-        """Gen Lab [L, a, b] → cylindrical [L, C, h_deg]; h ∈ [0, 360).
+    def to_lch(self, lab) -> np.ndarray:
+        """GenLab → [L, C, h°] (plain array); h ∈ [0, 360).
 
         Same coordinates as the ``helmgenlch`` space registered on Color.js.
-        Use for hue rotations / harmonies: rotate h, keep L and C, convert
-        back with :meth:`gen_from_lch`. Mirrors JS ``genToLch()``.
+        For hue rotations prefer :meth:`rotate_hue` / :meth:`harmonies`.
         """
-        lab = np.asarray(lab, dtype=np.float64)
-        C = float(np.hypot(lab[1], lab[2]))
-        h = float(np.degrees(np.arctan2(lab[2], lab[1]))) % 360.0
-        return np.array([lab[0], C, h])
+        nd = self._accept(lab)
+        C = float(np.hypot(nd[1], nd[2]))
+        h = float(np.degrees(np.arctan2(nd[2], nd[1]))) % 360.0
+        return np.array([nd[0], C, h])
 
-    def gen_from_lch(self, lch: np.ndarray) -> np.ndarray:
-        """Cylindrical [L, C, h_deg] → Gen Lab [L, a, b]. Mirrors JS ``genFromLch()``."""
+    def from_lch(self, lch) -> GenLab:
+        """[L, C, h°] → GenLab."""
         lch = np.asarray(lch, dtype=np.float64)
-        rad = float(np.radians(lch[2]))
-        return np.array([lch[0], lch[1] * np.cos(rad), lch[1] * np.sin(rad)])
+        return self.lch(float(lch[0]), float(lch[1]), float(lch[2]))
 
-    # ── Deprecated base_* aliases → gen_* ──────────────────────────
+    def gamut_map(self, lab, gamut: str = "srgb", method: str = "chroma") -> GenLab:
+        """Map a GenLab into the requested gamut.
 
-    @staticmethod
-    def _warn_base_deprecated(old: str, new: str) -> None:
-        import warnings
-        warnings.warn(
-            f"Helmlab.{old}() is deprecated and will be removed in a future release. "
-            f"Use Helmlab.{new}() instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-
-    def base_from_hex(self, hex_str: str) -> np.ndarray:
-        """Deprecated: use :meth:`gen_from_hex`. Hex → Gen Lab."""
-        self._warn_base_deprecated("base_from_hex", "gen_from_hex")
-        return self.gen_from_hex(hex_str)
-
-    def base_to_hex(self, lab: np.ndarray) -> str:
-        """Deprecated: use :meth:`gen_to_hex`. Gen Lab → hex."""
-        self._warn_base_deprecated("base_to_hex", "gen_to_hex")
-        return self.gen_to_hex(lab)
-
-    def base_from_srgb(self, srgb: np.ndarray) -> np.ndarray:
-        """Deprecated: use :meth:`gen_from_srgb`. sRGB → Gen Lab."""
-        self._warn_base_deprecated("base_from_srgb", "gen_from_srgb")
-        return self.gen_from_srgb(srgb)
-
-    def base_to_srgb(self, lab: np.ndarray) -> np.ndarray:
-        """Deprecated: use :meth:`gen_to_srgb`. Gen Lab → sRGB."""
-        self._warn_base_deprecated("base_to_srgb", "gen_to_srgb")
-        return self.gen_to_srgb(lab)
-
-    # ── Contrast ─────────────────────────────────────────────────────
-
-    def contrast_ratio(self, fg_hex: str, bg_hex: str) -> float:
-        """WCAG contrast ratio between two hex colors (1.0 – 21.0)."""
-        return float(_wcag_cr(hex_to_srgb(fg_hex), hex_to_srgb(bg_hex)))
-
-    def ensure_contrast(
-        self, fg_hex: str, bg_hex: str, min_ratio: float = 4.5
-    ) -> str:
-        """Adjust fg lightness to meet min_ratio against bg.
-
-        Binary search on Gen Lab L axis. Hue and chroma are preserved.
-        Returns adjusted fg as hex.
+        ``method='chroma'`` (default) reduces chroma at constant L and hue —
+        predictable, hue-exact. ``method='adaptive'`` is the Ottosson-style
+        projection toward the cusp that trades a little L for more chroma —
+        better for saturated photographic content.
         """
-        current = self.contrast_ratio(fg_hex, bg_hex)
-        if current >= min_ratio:
-            return fg_hex
+        _check_gamut(gamut)
+        return _brand(gamut_map(self._accept(lab), self.space, gamut=gamut, method=method), GenLab)
 
-        fg_lab = self.gen_from_hex(fg_hex)
-        bg_srgb = hex_to_srgb(bg_hex)
+    def max_chroma(self, lightness: float, hue_deg: float, gamut: str = "srgb") -> float:
+        """Maximum in-gamut chroma at fixed lightness and hue.
 
-        best_hex = fg_hex
+        The gamut-boundary query behind :meth:`vivid` — use it to build
+        saturation ramps or to know how much chroma headroom a wide gamut
+        adds (``max_chroma(L, h, 'display-p3') / max_chroma(L, h, 'srgb')``).
+        """
+        _check_gamut(gamut)
+        return float(_max_chroma(float(lightness), float(np.radians(hue_deg)), self.space, gamut))
+
+    def cusp(self, hue_deg: float, gamut: str = "srgb") -> tuple[float, float]:
+        """The (L, C) cusp of a hue — the single most colorful point of that
+        hue leaf in the requested gamut. GenSpace resolves a clean cusp at
+        all 360 hues in sRGB, P3 and Rec2020 (the ColorBench 360/360/360
+        result); this exposes that geometry directly."""
+        _check_gamut(gamut)
+        L, C = _find_cusp(float(np.radians(hue_deg)), self.space, gamut)
+        return float(L), float(C)
+
+    def vivid(self, color: str, *, gamut: str = "srgb") -> str:
+        """The most saturated version of a color: same lightness, same hue,
+        chroma pushed to the gamut boundary. With ``gamut='display-p3'`` this
+        is the honest "P3 makes this color pop" upgrade — hue and lightness
+        stay put, only colorfulness grows."""
+        _check_gamut(gamut)
+        lch = self.to_lch(self.from_hex(color))
+        C_max = self.max_chroma(lch[0], lch[2], gamut)
+        return self._emit(self.lch(float(lch[0]), C_max, float(lch[2])).view(np.ndarray), gamut)
+
+    def in_gamut(self, lab_or_color, gamut: str = "srgb") -> bool:
+        """Whether a GenLab or color string is inside the requested gamut."""
+        _check_gamut(gamut)
+        if isinstance(lab_or_color, str):
+            nd = self.space.from_XYZ(parse_color(lab_or_color)).view(np.ndarray)
+        else:
+            nd = self._accept(lab_or_color)
+        return bool(is_in_gamut(nd, self.space, gamut))
+
+    # ── Generation ──────────────────────────────────────────────────
+
+    def gradient(self, start: str, end: str, steps: int = 16, *, gamut: str = "srgb") -> list[str]:
+        """Perceptually uniform gradient between two colors.
+
+        Equal perceptual step sizes on any color pair (GenSpace Lab path,
+        CIEDE2000 arc-length reparameterization). Step spacing is measured on
+        the sRGB projection of the path; with a wide ``gamut`` the emitted
+        stops keep the extra chroma the target gamut allows.
+
+        Edge cases: ``steps=1`` → ``[start]`` (end not included);
+        ``steps < 1`` → ``[]``.
+        """
+        _check_gamut(gamut)
+        if steps < 1:
+            return []
+        lab1 = self.from_hex(start).view(np.ndarray)
+        if steps == 1:
+            return [self._emit(lab1, gamut)]
+        lab2 = self.from_hex(end).view(np.ndarray)
+        fractions = [s / (steps - 1) for s in range(steps)]
+        return [self._emit(p, gamut) for p in self._path_points(lab1, lab2, fractions)]
+
+    def mix(self, a: str, b: str, t: float = 0.5, *, gamut: str = "srgb") -> str:
+        """The color at fraction ``t`` (0 → a, 1 → b) along the SAME
+        perceptual arc-length path :meth:`gradient` uses — ``mix(a, b, 0.5)``
+        is the visual midpoint, not the coordinate average."""
+        _check_gamut(gamut)
+        t = float(np.clip(t, 0.0, 1.0))
+        lab1 = self.from_hex(a).view(np.ndarray)
+        lab2 = self.from_hex(b).view(np.ndarray)
+        point = self._path_points(lab1, lab2, [t])[0]
+        return self._emit(point, gamut)
+
+    def palette(self, base: str, steps: int = 10, *, gamut: str = "srgb") -> list[str]:
+        """Lightness ramp from a base color, light → dark.
+
+        Evenly spaced GenSpace L; hue and chroma preserved, gamut mapped.
+        The base color is only approximate inside the result (its L is
+        re-spaced) — for a scale where the input is returned exactly at
+        level 500 use :meth:`scale`. ``steps < 1`` returns ``[]``.
+        """
+        _check_gamut(gamut)
+        if steps < 1:
+            return []
+        lab = self.from_hex(base).view(np.ndarray)
+        if steps == 1:
+            return [self._emit(lab, gamut)]
+        L_hi = self._white_L - 0.01
+        L_lo = 0.05
+        result = []
+        for L in np.linspace(L_hi, L_lo, steps):
+            sample = lab.copy()
+            sample[0] = L
+            result.append(self._emit(sample, gamut))
+        return result
+
+    def scale(self, base: str, levels: list[int] | None = None, *, gamut: str = "srgb") -> dict[str, str]:
+        """Tailwind-style semantic scale (50–950). ``base`` maps to level 500
+        EXACTLY; lower levels are lighter, higher levels darker."""
+        _check_gamut(gamut)
+        if levels is None:
+            levels = _DEFAULT_SCALE_LEVELS
+        lab = self.from_hex(base).view(np.ndarray)
+        base_L = float(lab[0])
+        L_light = self._white_L - 0.01
+        L_dark = 0.05
+        result = {}
+        for level in levels:
+            if level <= 500:
+                t = level / 500.0
+                L = L_light + t * (base_L - L_light)
+            else:
+                t = (level - 500) / 450.0
+                L = base_L + t * (L_dark - base_L)
+            sample = lab.copy()
+            sample[0] = L
+            result[str(level)] = self._emit(sample, gamut)
+        return result
+
+    def hue_ring(self, count: int = 12, *, lightness: float = 0.6,
+                 chroma: float = 0.15, gamut: str = "srgb") -> list[str]:
+        """Categorical palette: ``count`` evenly spaced hues at fixed
+        lightness and chroma (equal perceptual weight per category)."""
+        _check_gamut(gamut)
+        result = []
+        for h in np.linspace(0, 2 * np.pi, count, endpoint=False):
+            lab = np.array([lightness, chroma * np.cos(h), chroma * np.sin(h)])
+            result.append(self._emit(lab, gamut))
+        return result
+
+    def harmonies(self, base: str, kind: str = "complementary", *, gamut: str = "srgb") -> list[str]:
+        """Classic hue harmonies with the base color first.
+
+        ``kind`` ∈ complementary [0°, 180°] · analogous [0°, ±30°] ·
+        triadic [0°, 120°, 240°] · tetradic [0°, 90°, 180°, 270°] ·
+        split_complementary [0°, 150°, 210°]. Rotations happen in GenSpace
+        LCh at constant L and C — perceptual lightness and colorfulness stay
+        matched across the set (the property hue harmonies assume but sRGB
+        HSL rotations don't deliver).
+        """
+        _check_gamut(gamut)
+        if kind not in _HARMONY_OFFSETS:
+            raise ValueError(
+                f"unknown harmony kind {kind!r}; use one of {sorted(_HARMONY_OFFSETS)}"
+            )
+        lch = self.to_lch(self.from_hex(base))
+        return [
+            self._emit(self.lch(lch[0], lch[1], (lch[2] + off) % 360.0).view(np.ndarray), gamut)
+            for off in _HARMONY_OFFSETS[kind]
+        ]
+
+    def rotate_hue(self, color: str, degrees: float, *, gamut: str = "srgb") -> str:
+        """Rotate a color's hue by ``degrees`` at constant L and C (GenLCh)."""
+        _check_gamut(gamut)
+        lch = self.to_lch(self.from_hex(color))
+        return self._emit(self.lch(lch[0], lch[1], (lch[2] + degrees) % 360.0).view(np.ndarray), gamut)
+
+    # ── Contrast ────────────────────────────────────────────────────
+
+    def contrast_ratio(self, fg: str, bg: str) -> float:
+        """WCAG 2.1 contrast ratio between two colors (1.0 – 21.0)."""
+        return float(_wcag_cr(_color_to_srgb(fg), _color_to_srgb(bg)))
+
+    def meets_contrast(self, fg: str, bg: str, level: str = "AA") -> bool:
+        """Whether fg/bg meets WCAG level AA (4.5:1) or AAA (7:1)."""
+        thresholds = {"AA": 4.5, "AAA": 7.0}
+        return self.contrast_ratio(fg, bg) >= thresholds.get(level.upper(), 4.5)
+
+    def ensure_contrast(self, fg: str, bg: str, ratio: float = 4.5, *, strict: bool = False) -> str:
+        """Return a variant of ``fg`` meeting ``ratio`` against ``bg``.
+
+        Binary search on the GenSpace L axis — hue and chroma are preserved
+        while a lightness-only adjustment can reach the ratio. If no
+        lightness of this hue reaches it, falls back to pure #000000/#ffffff
+        (hue lost). If even black/white cannot reach the ratio (possible for
+        mid-gray backgrounds with high ratios, e.g. 7:1 vs #808080):
+        ``strict=True`` raises :class:`ContrastError`; ``strict=False``
+        (default) warns and returns the best effort BELOW the requested
+        ratio. Check with :meth:`meets_contrast` for hard requirements.
+        """
+        current = self.contrast_ratio(fg, bg)
+        if current >= ratio:
+            return srgb_to_hex(_color_to_srgb(fg))
+
+        fg_lab = self.from_hex(fg).view(np.ndarray)
+        bg_srgb = _color_to_srgb(bg)
+
+        best_hex = srgb_to_hex(_color_to_srgb(fg))
         best_ratio = current
         best_L = float(fg_lab[0])
         orig_L = float(fg_lab[0])
@@ -252,17 +518,16 @@ class Helmlab:
             for _ in range(40):
                 mid = (lo + hi) / 2.0
                 candidate_lab[0] = mid
-                candidate_srgb = self.gen_to_srgb(candidate_lab)
+                candidate_srgb = self._to_srgb_nd(candidate_lab)
                 hex_quantized = hex_to_srgb(srgb_to_hex(candidate_srgb))
-                ratio = float(_wcag_cr(hex_quantized, bg_srgb))
-
+                r = float(_wcag_cr(hex_quantized, bg_srgb))
                 if direction == "darken":
-                    if ratio >= min_ratio:
+                    if r >= ratio:
                         lo = mid
                     else:
                         hi = mid
                 else:
-                    if ratio >= min_ratio:
+                    if r >= ratio:
                         hi = mid
                     else:
                         lo = mid
@@ -273,258 +538,62 @@ class Helmlab:
             else:
                 safe_L = min(1.5, safe_L + 0.003)
             candidate_lab[0] = safe_L
-            candidate_srgb = self.gen_to_srgb(candidate_lab)
-            candidate_hex = srgb_to_hex(candidate_srgb)
-            hex_quantized = hex_to_srgb(candidate_hex)
-            ratio = float(_wcag_cr(hex_quantized, bg_srgb))
+            candidate_hex = srgb_to_hex(self._to_srgb_nd(candidate_lab))
+            r = float(_wcag_cr(hex_to_srgb(candidate_hex), bg_srgb))
 
-            if ratio >= min_ratio:
+            if r >= ratio:
                 dist = abs(safe_L - orig_L)
                 best_dist = abs(best_L - orig_L)
-                if best_ratio < min_ratio or dist < best_dist:
+                if best_ratio < ratio or dist < best_dist:
                     best_hex = candidate_hex
-                    best_ratio = ratio
+                    best_ratio = r
                     best_L = safe_L
 
-        if best_ratio < min_ratio:
+        if best_ratio < ratio:
             for fallback in ("#000000", "#ffffff"):
-                r = self.contrast_ratio(fallback, bg_hex)
-                if r >= min_ratio:
+                if self.contrast_ratio(fallback, bg) >= ratio:
                     return fallback
-            r_black = self.contrast_ratio("#000000", bg_hex)
-            r_white = self.contrast_ratio("#ffffff", bg_hex)
-            return "#000000" if r_black > r_white else "#ffffff"
+            r_black = self.contrast_ratio("#000000", bg)
+            r_white = self.contrast_ratio("#ffffff", bg)
+            best = "#000000" if r_black > r_white else "#ffffff"
+            msg = (
+                f"ensure_contrast: no color reaches {ratio}:1 against {bg} "
+                f"(best achievable: {max(r_black, r_white):.2f}:1 with {best})."
+            )
+            if strict:
+                raise ContrastError(msg)
+            warnings.warn(msg + " Returning best effort below the requested ratio.",
+                          stacklevel=2)
+            return best
 
         return best_hex
 
-    def meets_contrast(
-        self, fg_hex: str, bg_hex: str, level: str = "AA"
-    ) -> bool:
-        """Check if fg/bg pair meets WCAG contrast level.
+    # ── Dark/light mode ─────────────────────────────────────────────
 
-        AA: 4.5:1, AAA: 7:1
-        """
-        thresholds = {"AA": 4.5, "AAA": 7.0}
-        threshold = thresholds.get(level.upper(), 4.5)
-        return self.contrast_ratio(fg_hex, bg_hex) >= threshold
+    def adapt_to_mode(self, color: str, from_mode: str = "light", to_mode: str = "dark") -> str:
+        """Adapt a color between light and dark mode.
 
-    # ── Gradient (GenSpace + arc-length) ────────────────────────────
-
-    @staticmethod
-    def _srgb_to_cielab(rgb):
-        """sRGB [0,1] → CIE Lab."""
-        r, g, b = float(rgb[0]), float(rgb[1]), float(rgb[2])
-        lr = r / 12.92 if r <= 0.04045 else ((r + 0.055) / 1.055) ** 2.4
-        lg = g / 12.92 if g <= 0.04045 else ((g + 0.055) / 1.055) ** 2.4
-        lb = b / 12.92 if b <= 0.04045 else ((b + 0.055) / 1.055) ** 2.4
-        x = (0.4124564 * lr + 0.3575761 * lg + 0.1804375 * lb) / 0.95047
-        y = 0.2126729 * lr + 0.7151522 * lg + 0.0721750 * lb
-        z = (0.0193339 * lr + 0.1191920 * lg + 0.9503041 * lb) / 1.08883
-        def f(t):
-            return t ** (1/3) if t > 0.008856 else 7.787 * t + 16 / 116
-        fx, fy, fz = f(x), f(y), f(z)
-        return np.array([116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)])
-
-    @staticmethod
-    def _ciede2000(lab1, lab2):
-        """CIEDE2000 color difference."""
-        L1, a1, b1 = float(lab1[0]), float(lab1[1]), float(lab1[2])
-        L2, a2, b2 = float(lab2[0]), float(lab2[1]), float(lab2[2])
-        C1 = np.sqrt(a1*a1 + b1*b1)
-        C2 = np.sqrt(a2*a2 + b2*b2)
-        Cab = (C1 + C2) / 2
-        Cab7 = Cab ** 7
-        p257 = 25.0 ** 7
-        G = 0.5 * (1 - np.sqrt(Cab7 / (Cab7 + p257)))
-        ap1 = (1 + G) * a1
-        ap2 = (1 + G) * a2
-        Cp1 = np.sqrt(ap1*ap1 + b1*b1)
-        Cp2 = np.sqrt(ap2*ap2 + b2*b2)
-        hp1 = np.arctan2(b1, ap1)
-        hp2 = np.arctan2(b2, ap2)
-        if hp1 < 0: hp1 += 2 * np.pi
-        if hp2 < 0: hp2 += 2 * np.pi
-        dLp = L2 - L1
-        dCp = Cp2 - Cp1
-        if Cp1 * Cp2 == 0:
-            dhp = 0.0
-        else:
-            dhp = hp2 - hp1
-            if dhp > np.pi: dhp -= 2 * np.pi
-            if dhp < -np.pi: dhp += 2 * np.pi
-        dHp = 2 * np.sqrt(Cp1 * Cp2) * np.sin(dhp / 2)
-        Lp = (L1 + L2) / 2
-        Cp = (Cp1 + Cp2) / 2
-        if Cp1 * Cp2 == 0:
-            hp = hp1 + hp2
-        else:
-            hp = (hp1 + hp2) / 2
-            if abs(hp1 - hp2) > np.pi:
-                hp += np.pi if hp < np.pi else -np.pi
-        T = (1 - 0.17 * np.cos(hp - np.pi/6) + 0.24 * np.cos(2*hp)
-             + 0.32 * np.cos(3*hp + np.pi/30) - 0.20 * np.cos(4*hp - 63*np.pi/180))
-        Lp50 = Lp - 50
-        SL = 1 + 0.015 * Lp50 * Lp50 / np.sqrt(20 + Lp50 * Lp50)
-        SC = 1 + 0.045 * Cp
-        SH = 1 + 0.015 * Cp * T
-        Cp7 = Cp ** 7
-        RC = 2 * np.sqrt(Cp7 / (Cp7 + p257))
-        hpDeg = hp * 180 / np.pi
-        dth = 30 * np.exp(-((hpDeg - 275) / 25) ** 2)
-        RT = -np.sin(2 * dth * np.pi / 180) * RC
-        return np.sqrt((dLp/SL)**2 + (dCp/SC)**2 + (dHp/SH)**2
-                       + RT * (dCp/SC) * (dHp/SH))
-
-    def gradient(self, start_hex: str, end_hex: str, steps: int = 16) -> list[str]:
-        """Generate a perceptually uniform gradient between two hex colors.
-
-        Uses GenSpace Lab path with CIEDE2000 arc-length reparameterization
-        for equal perceptual step sizes on any color pair.
-        """
-        if steps == 1:
-            return [start_hex]
-
-        lab1 = self.gen_from_hex(start_hex)
-        lab2 = self.gen_from_hex(end_hex)
-        dlab = lab2 - lab1
-
-        # Fine-sample the GenSpace Lab line and build cumulative CIEDE2000 arc length
-        N = 256
-        cum_dist = np.zeros(N + 1)
-        prev_cie = self._srgb_to_cielab(self.gen_to_srgb(lab1))
-        for i in range(1, N + 1):
-            t = i / N
-            srgb = self.gen_to_srgb(lab1 + dlab * t)
-            cie = self._srgb_to_cielab(srgb)
-            cum_dist[i] = cum_dist[i - 1] + self._ciede2000(prev_cie, cie)
-            prev_cie = cie
-        total_dist = cum_dist[N]
-
-        # Binary search for t values that produce equal cumulative distances
-        result = []
-        for s in range(steps):
-            target = (s / (steps - 1)) * total_dist
-            lo, hi = 0, N
-            while lo < hi - 1:
-                mid = (lo + hi) // 2
-                if cum_dist[mid] < target:
-                    lo = mid
-                else:
-                    hi = mid
-            denom = cum_dist[hi] - cum_dist[lo]
-            frac = (target - cum_dist[lo]) / denom if denom > 1e-12 else 0.0
-            t_new = (lo + frac) / N
-            result.append(self.gen_to_hex(lab1 + dlab * t_new))
-        return result
-
-    # ── Palette Generation (GenSpace) ──────────────────────────────
-
-    def palette(self, base_hex: str, steps: int = 10) -> list[str]:
-        """Generate lightness palette from a base color.
-
-        Evenly spaced L from near-white to near-black (GenSpace L range).
-        Hue and chroma preserved, gamut clamped. Uses GenSpace.
-        """
-        if steps < 1:
-            return []
-        lab = self.gen_from_hex(base_hex)
-        if steps == 1:
-            return [self.gen_to_hex(lab)]
-        L_hi = self._gen_white_L - 0.01
-        L_lo = 0.05
-        L_values = np.linspace(L_hi, L_lo, steps)
-        result = []
-        for L in L_values:
-            sample = lab.copy()
-            sample[0] = L
-            result.append(self.gen_to_hex(sample))
-        return result
-
-    def palette_hues(
-        self, lightness: float = 0.6, chroma: float = 0.15, steps: int = 12
-    ) -> list[str]:
-        """Generate hue ring at fixed lightness and chroma.
-
-        Hue angles evenly distributed 0–360°. Uses GenSpace.
-        """
-        hues = np.linspace(0, 2 * np.pi, steps, endpoint=False)
-        result = []
-        for h in hues:
-            a = chroma * np.cos(h)
-            b = chroma * np.sin(h)
-            lab = np.array([lightness, a, b])
-            result.append(self.gen_to_hex(lab))
-        return result
-
-    # ── Semantic Scale (GenSpace) ──────────────────────────────────
-
-    def semantic_scale(
-        self,
-        base_hex: str,
-        levels: list[int] | None = None,
-    ) -> dict[str, str]:
-        """Generate Tailwind-style semantic scale (50–950).
-
-        base_hex maps to level 500. Lightness distributed with smooth
-        mapping: lower levels → lighter, higher levels → darker.
-        Uses GenSpace.
-        """
-        if levels is None:
-            levels = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
-
-        lab = self.gen_from_hex(base_hex)
-        base_L = float(lab[0])
-
-        L_light = self._gen_white_L - 0.01
-        L_dark = 0.05
-
-        result = {}
-        for level in levels:
-            if level <= 500:
-                t = level / 500.0
-                L = L_light + t * (base_L - L_light)
-            else:
-                t = (level - 500) / 450.0
-                L = base_L + t * (L_dark - base_L)
-            sample = lab.copy()
-            sample[0] = L
-            result[str(level)] = self.gen_to_hex(sample)
-        return result
-
-    # ── Dark/Light Mode ──────────────────────────────────────────────
-
-    def adapt_to_mode(
-        self,
-        color_hex: str,
-        from_mode: str = "light",
-        to_mode: str = "dark",
-    ) -> str:
-        """Adapt color between light and dark mode.
-
-        Uses surround parameter S when S-dependent params are active.
-        Falls back to soft L-inversion via GenSpace otherwise.
+        Uses the metric surround pipeline when S-dependent params are
+        active; otherwise a soft L-inversion in GenSpace.
         """
         if from_mode == to_mode:
-            return color_hex
+            return srgb_to_hex(_color_to_srgb(color))
 
         S_MAP = {"light": 0.7, "dark": 0.2}
 
         if self._metric._has_surround:
             S_src = S_MAP.get(from_mode, 0.5)
             S_dst = S_MAP.get(to_mode, 0.5)
-            srgb = hex_to_srgb(color_hex)
-            XYZ = sRGB_to_XYZ(srgb)
+            XYZ = parse_color(color)
             lab_src = self._metric.from_XYZ(XYZ, S=S_src)
             XYZ_dst = self._metric.to_XYZ(lab_src, S=S_dst)
-            srgb_dst = clamp_srgb(XYZ_to_sRGB(XYZ_dst))
-            return srgb_to_hex(srgb_dst)
+            return srgb_to_hex(clamp_srgb(XYZ_to_sRGB(XYZ_dst)))
 
-        # Fallback: soft L-inversion via GenSpace
-        L_max = self._gen_white_L - 0.02
+        L_max = self._white_L - 0.02
         LIGHT_LO, LIGHT_HI = 0.05, L_max
         DARK_LO, DARK_HI = 0.08, L_max - 0.05
 
-        lab = self.gen_from_hex(color_hex)
+        lab = self.from_hex(color).view(np.ndarray)
         L = float(lab[0])
 
         if from_mode == "light":
@@ -535,107 +604,277 @@ class Helmlab:
             dst_lo, dst_hi = LIGHT_LO, LIGHT_HI
 
         t = np.clip((L - src_lo) / (src_hi - src_lo), 0.0, 1.0)
-        L_new = dst_hi - t * (dst_hi - dst_lo)
+        lab[0] = dst_hi - t * (dst_hi - dst_lo)
+        return self._emit(lab, "srgb")
 
-        lab[0] = L_new
-        return self.gen_to_hex(lab)
-
-    def adapt_pair(
-        self,
-        fg_hex: str,
-        bg_hex: str,
-        from_mode: str = "light",
-        to_mode: str = "dark",
-        min_ratio: float = 4.5,
-    ) -> tuple[str, str]:
-        """Adapt fg/bg pair to target mode, ensuring contrast."""
-        new_fg = self.adapt_to_mode(fg_hex, from_mode, to_mode)
-        new_bg = self.adapt_to_mode(bg_hex, from_mode, to_mode)
-        new_fg = self.ensure_contrast(new_fg, new_bg, min_ratio)
+    def adapt_pair(self, fg: str, bg: str, from_mode: str = "light",
+                   to_mode: str = "dark", ratio: float = 4.5) -> tuple[str, str]:
+        """Adapt an fg/bg pair to the target mode, then re-ensure contrast."""
+        new_fg = self.adapt_to_mode(fg, from_mode, to_mode)
+        new_bg = self.adapt_to_mode(bg, from_mode, to_mode)
+        new_fg = self.ensure_contrast(new_fg, new_bg, ratio)
         return new_fg, new_bg
 
-    # ── Info ─────────────────────────────────────────────────────────
+    # ── Internals ───────────────────────────────────────────────────
 
-    def delta_e(self, color1_hex: str, color2_hex: str) -> float:
-        """Euclidean Lab distance between two hex colors (uncompressed).
+    def _accept(self, lab) -> np.ndarray:
+        return _accept_lab(lab, MetricLab, "gen", "metric")
 
-        Returns ``sqrt(dL² + da² + db²)`` in Helmlab's metric Lab space.
-        Range ≈ 0 to 1.6 across sRGB primaries (e.g. ``#000000`` ↔ ``#ffffff``
-        ≈ 1.12, ``#ff0000`` ↔ ``#00ff00`` ≈ 1.62).
+    def _to_srgb_nd(self, lab_nd: np.ndarray) -> np.ndarray:
+        mapped = gamut_map(lab_nd, self.space, gamut="srgb")
+        return clamp_srgb(XYZ_to_sRGB(self.space.to_XYZ(mapped)))
 
-        This follows the OKLab convention where ``delta_e`` denotes Euclidean
-        distance in a perceptually-uniform Lab. It is the analogue of CIE76 ΔE
-        on CIE Lab — *not* the more elaborate CIEDE2000-style perceptual fit.
+    def _emit(self, lab_nd: np.ndarray, gamut: str) -> str:
+        """Gamut-map in GenSpace and emit the color string for the gamut."""
+        if gamut == "srgb":
+            return srgb_to_hex(self._to_srgb_nd(lab_nd))
+        mapped = gamut_map(lab_nd, self.space, gamut=gamut)
+        XYZ = self.space.to_XYZ(mapped)
+        if gamut == "display-p3":
+            c = clamp_srgb(linear_to_displayp3(XYZ_to_DisplayP3(XYZ)))
+            return f"color(display-p3 {c[0]:.4f} {c[1]:.4f} {c[2]:.4f})"
+        c = clamp_srgb(linear_to_rec2020(XYZ_to_Rec2020(XYZ)))
+        return f"color(rec2020 {c[0]:.4f} {c[1]:.4f} {c[2]:.4f})"
 
-        For the compressed perceptual metric (Minkowski + compression) used in
-        COMBVD-class benchmarks, use :meth:`perceptual_distance` instead.
+    def _path_points(self, lab1: np.ndarray, lab2: np.ndarray, fractions) -> list[np.ndarray]:
+        """Points along the CIEDE2000 arc-length-parameterized GenLab line at
+        the given arc fractions (0..1). Shared by gradient() and mix()."""
+        dlab = lab2 - lab1
+        N = 256
+        cum = np.zeros(N + 1)
+        prev = _srgb_to_cielab(self._to_srgb_nd(lab1))
+        for i in range(1, N + 1):
+            cie = _srgb_to_cielab(self._to_srgb_nd(lab1 + dlab * (i / N)))
+            cum[i] = cum[i - 1] + _ciede2000(prev, cie)
+            prev = cie
+        total = cum[N]
 
-        See Also
-        --------
-        perceptual_distance : Compressed perceptual distance (Lab inputs).
-        helmlab.MetricSpace.distance : Same compressed metric (XYZ inputs).
-        helmlab.MetricSpace.distance_from_lab : Compressed metric (Lab inputs, batched).
+        points = []
+        for f in fractions:
+            target = f * total
+            lo, hi = 0, N
+            while lo < hi - 1:
+                mid = (lo + hi) // 2
+                if cum[mid] < target:
+                    lo = mid
+                else:
+                    hi = mid
+            denom = cum[hi] - cum[lo]
+            frac = (target - cum[lo]) / denom if denom > 1e-12 else 0.0
+            points.append(lab1 + dlab * ((lo + frac) / N))
+        return points
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# hl.metric — measurement namespace
+# ═══════════════════════════════════════════════════════════════════════
+
+class Metric:
+    """Measurement namespace — everything that MEASURES colors (MetricSpace).
+
+    Four clearly-named difference metrics:
+    :meth:`difference` (trained, saturates ~0.15), :meth:`euclidean`
+    (unbounded ΔE76-analogue), :meth:`ciede2000` (industry standard),
+    :meth:`jnd` (difference in just-noticeable-difference units).
+    """
+
+    def __init__(self, space: MetricSpace, owner: "Helmlab"):
+        self.space = space  # raw MetricSpace (advanced access; XYZ-in distance lives here)
+        self._owner = owner
+        self._jnd_de = None       # lazy: tau[1]/mu_scale from confidence params
+        self._confidence = None   # lazy ConfidenceModel
+
+    # ── Conversions ─────────────────────────────────────────────────
+
+    def from_hex(self, color: str) -> MetricLab:
+        """Color string → MetricLab. Accepts '#rrggbb', '#rgb', 'color(display-p3 …)', 'color(rec2020 …)'."""
+        return _brand(self.space.from_XYZ(parse_color(color)), MetricLab)
+
+    def to_hex(self, lab) -> str:
+        """MetricLab → '#rrggbb' (gamut-mapped to sRGB)."""
+        return srgb_to_hex(self._to_srgb_nd(self._accept(lab)))
+
+    def to_css(self, lab, gamut: str = "display-p3") -> str:
+        """MetricLab → CSS color string in the requested gamut (gamut-mapped)."""
+        _check_gamut(gamut)
+        nd = self._accept(lab)
+        if gamut == "srgb":
+            return self.to_hex(nd)
+        mapped = gamut_map(nd, self.space, gamut=gamut)
+        XYZ = self.space.to_XYZ(mapped)
+        if gamut == "display-p3":
+            c = clamp_srgb(linear_to_displayp3(XYZ_to_DisplayP3(XYZ)))
+            return f"color(display-p3 {c[0]:.4f} {c[1]:.4f} {c[2]:.4f})"
+        c = clamp_srgb(linear_to_rec2020(XYZ_to_Rec2020(XYZ)))
+        return f"color(rec2020 {c[0]:.4f} {c[1]:.4f} {c[2]:.4f})"
+
+    def from_srgb(self, srgb) -> MetricLab:
+        """sRGB [0,1] → MetricLab."""
+        return _brand(self.space.from_XYZ(sRGB_to_XYZ(np.asarray(srgb, dtype=np.float64))), MetricLab)
+
+    def to_srgb(self, lab) -> np.ndarray:
+        """MetricLab → sRGB [0,1] (gamut-mapped, clamped)."""
+        return self._to_srgb_nd(self._accept(lab))
+
+    def from_xyz(self, XYZ) -> MetricLab:
+        """CIE XYZ (D65) → MetricLab."""
+        return _brand(self.space.from_XYZ(np.asarray(XYZ, dtype=np.float64)), MetricLab)
+
+    def to_xyz(self, lab) -> np.ndarray:
+        """MetricLab → CIE XYZ (D65)."""
+        return self.space.to_XYZ(self._accept(lab))
+
+    def lab(self, L: float, a: float, b: float) -> MetricLab:
+        """Branded MetricLab constructor from raw coordinates."""
+        return _brand([L, a, b], MetricLab)
+
+    def lch(self, L: float, C: float, h_deg: float) -> MetricLab:
+        """Cylindrical constructor → MetricLab. ⚠ L and C are 0–1-scale, not 0–100."""
+        rad = float(np.radians(h_deg))
+        return _brand([L, C * np.cos(rad), C * np.sin(rad)], MetricLab)
+
+    def to_lch(self, lab) -> np.ndarray:
+        """MetricLab → [L, C, h°] (plain array); h ∈ [0, 360).
+
+        Cylindrical view of Metric Lab — the same C and H that
+        :meth:`info` reports. For hue manipulation prefer the GENERATION
+        space (``hl.gen.rotate_hue`` / ``harmonies``): Metric Lab is tuned
+        for difference prediction, not for producing colors.
         """
-        lab1 = self.from_hex(color1_hex)
-        lab2 = self.from_hex(color2_hex)
+        nd = self._accept(lab)
+        C = float(np.hypot(nd[1], nd[2]))
+        h = float(np.degrees(np.arctan2(nd[2], nd[1]))) % 360.0
+        return np.array([nd[0], C, h])
+
+    def from_lch(self, lch) -> MetricLab:
+        """[L, C, h°] → MetricLab."""
+        lch = np.asarray(lch, dtype=np.float64)
+        return self.lch(float(lch[0]), float(lch[1]), float(lch[2]))
+
+    def in_gamut(self, lab_or_color, gamut: str = "srgb") -> bool:
+        """Whether a MetricLab or color string is inside the requested gamut."""
+        _check_gamut(gamut)
+        if isinstance(lab_or_color, str):
+            nd = self.space.from_XYZ(parse_color(lab_or_color)).view(np.ndarray)
+        else:
+            nd = self._accept(lab_or_color)
+        return bool(is_in_gamut(nd, self.space, gamut))
+
+    # ── The four difference metrics ─────────────────────────────────
+
+    def difference(self, a: str, b: str) -> float:
+        """THE trained perceptual difference between two colors (v21 metric,
+        COMBVD STRESS 22.48 — 23% better than CIEDE2000's 29.20).
+
+        Best for near-threshold judgments. Monotonic compression saturates
+        near ~0.15 for very different colors: rank is preserved but absolute
+        values plateau — for an unbounded number use :meth:`euclidean`, for
+        threshold units use :meth:`jnd`.
+        """
+        return float(self.space.distance(parse_color(a), parse_color(b)))
+
+    def euclidean(self, a: str, b: str) -> float:
+        """Uncompressed Euclidean distance in Metric Lab (ΔE76-analogue).
+
+        Unbounded companion to :meth:`difference`: range ≈ 0–1.6 across sRGB
+        (#000000 ↔ #ffffff ≈ 1.12, #ff0000 ↔ #00ff00 ≈ 1.62).
+        """
+        lab1 = self.from_hex(a).view(np.ndarray)
+        lab2 = self.from_hex(b).view(np.ndarray)
         return float(np.sqrt(np.sum((lab1 - lab2) ** 2)))
 
-    def euclidean_distance(self, color1_hex: str, color2_hex: str) -> float:
-        """Clearer alias of :meth:`delta_e` — uncompressed Euclidean Lab distance.
+    def ciede2000(self, a: str, b: str) -> float:
+        """CIEDE2000 ΔE between two colors (CIELAB scale, ~0–100).
 
-        Prefer this name: ``delta_e`` is easily mistaken for a CIEDE2000-style ΔE,
-        but this method is the CIE76 analogue (plain Euclidean distance in Helmlab
-        Lab). For the trained perceptual difference, use :meth:`difference`; for a
-        true CIEDE2000 number, use :meth:`delta_e_2000`.
-        """
-        return self.delta_e(color1_hex, color2_hex)
-
-    def delta_e_2000(self, color1_hex: str, color2_hex: str) -> float:
-        """CIEDE2000 ΔE between two hex colors (CIELAB scale, ~0–100).
-
-        The industry-standard difference formula, self-contained (no optional
-        deps). This is the recommended metric for **fixed-catalog nearest-color
-        matching** — in our tests it is measurably more stable under tiny input
-        perturbations than the trained metric (7 vs 16 selection flips per 100
-        targets at ±2/255), because helmlab's trained :meth:`difference` is fit
+        The industry-standard formula, self-contained. Recommended for
+        fixed-catalog nearest-color matching: measurably more stable under
+        tiny input perturbations than the trained metric (7 vs 16 selection
+        flips per 100 targets at ±2/255), because :meth:`difference` is fit
         for near-threshold judgments, not suprathreshold ranking.
-        Sanity anchor: ``delta_e_2000('#ff0000', '#00ff00') ≈ 86.6``.
+        Sanity anchor: ``ciede2000('#ff0000', '#00ff00') ≈ 86.6``.
         """
-        lab1 = self._srgb_to_cielab(hex_to_srgb(color1_hex))
-        lab2 = self._srgb_to_cielab(hex_to_srgb(color2_hex))
-        return float(self._ciede2000(lab1, lab2))
+        return float(_ciede2000(self._cielab(a), self._cielab(b)))
 
-    def nearest_color(self, target_hex: str, palette: list[str],
-                      metric: str = "ciede2000") -> dict:
-        """Pick the perceptually nearest color to ``target_hex`` from ``palette``.
+    def jnd(self, a: str, b: str) -> float:
+        """Difference in just-noticeable-difference units.
 
-        The purpose-built API for catalog matching (dye/brand/palette lookup).
+        ``jnd = difference / 0.0356`` where 0.0356 de is the point at which
+        the median observer of the v2 ordinal confidence model rates a pair
+        at least "moderately different" (``tau[1] / mu_scale``, read from the
+        bundled confidence params). Interpretation: < 1 likely unnoticed,
+        1–2 subtle, > 2 clearly visible. Because :meth:`difference` saturates
+        near ~0.15, values above ≈ 4.2 mean "far above threshold", not a
+        precise multiple.
+        """
+        if self._jnd_de is None:
+            m = self._confidence_model()
+            self._jnd_de = float(m.p["tau"][1] / m.p["mu_scale"])
+        return self.difference(a, b) / self._jnd_de
 
-        Parameters
-        ----------
-        metric : {'ciede2000', 'difference', 'euclidean'}
-            ``'ciede2000'`` (default) — most perturbation-stable choice for
-            suprathreshold argmax (7 vs 16 flips per 100 targets at ±2/255 in
-            our tests). ``'difference'`` — helmlab's trained metric (best for
-            near-threshold). ``'euclidean'`` — fast Metric-Lab CIE76 analogue.
+    # ── Lab-level distance (identical contract in both languages) ───
 
-        Returns
-        -------
-        dict with ``hex``, ``index``, ``distance``, ``runner_up`` (hex),
-        ``runner_up_distance`` and ``margin`` (relative gap to the runner-up —
-        small margins mean the pick is fragile; consider showing both).
+    def distance(self, lab_a, lab_b):
+        """Trained perceptual distance between two MetricLab values.
+
+        Identical contract in Python and JS: MetricLab in, distance out (the
+        0.x Python-XYZ/JS-Lab asymmetry is gone; the XYZ-in variant lives
+        only on the raw ``MetricSpace`` class). Supports batching (..., 3).
+        Same saturation behavior as :meth:`difference`.
+        """
+        a = self._accept(lab_a)
+        b = self._accept(lab_b)
+        if not (np.all(np.isfinite(a)) and np.all(np.isfinite(b))):
+            raise ValueError("distance got non-finite (NaN/Inf) Lab input.")
+        if max(np.max(np.abs(a[..., 0])), np.max(np.abs(b[..., 0]))) > 3.0:
+            raise ValueError(
+                "distance expects HELMLAB Lab (L≈0..1), but got L>3 — this "
+                "looks like CIELAB (L*=0..100). Convert via from_hex/from_xyz first."
+            )
+        res = self.space.distance(self.space.to_XYZ(a), self.space.to_XYZ(b))
+        return float(res) if np.ndim(res) == 0 else res
+
+    # ── Confidence / catalog / info ─────────────────────────────────
+
+    def confidence(self, a: str, b: str) -> dict:
+        """Perceptual difference plus how much observers will disagree.
+
+        EXPERIMENTAL (v2 ordinal model, n=47 pairs — see
+        :mod:`helmlab.metrics.confidence` for provenance and limits).
+        Returns ``de``, ``latent`` (mu), ``disagreement`` (sigma),
+        ``reliability`` ∈ [0, 1), ``p_noticeable`` (chance a random observer
+        rates the pair at least moderately different), ``reliable`` and
+        ``extrapolated`` (True when de is beyond the training range — treat
+        the numbers as indicative only).
+        """
+        XYZ1, XYZ2 = parse_color(a), parse_color(b)
+        lab1 = self.space.from_XYZ(XYZ1).view(np.ndarray)
+        lab2 = self.space.from_XYZ(XYZ2).view(np.ndarray)
+        de = float(self.space.distance(XYZ1, XYZ2))
+        chroma = 0.5 * (float(np.hypot(lab1[1], lab1[2])) + float(np.hypot(lab2[1], lab2[2])))
+        out = self._confidence_model().assess(de, chroma)
+        out["de"] = de
+        return out
+
+    def nearest(self, target: str, palette: list[str], metric: str = "ciede2000") -> dict:
+        """Pick the perceptually nearest color to ``target`` from ``palette``.
+
+        ``metric``: ``'ciede2000'`` (default — most perturbation-stable for
+        catalog argmax), ``'difference'`` (trained, near-threshold),
+        ``'euclidean'`` (fast unbounded). Returns ``hex``, ``index``,
+        ``distance``, ``runner_up``, ``runner_up_distance`` and ``margin``
+        (relative gap to the runner-up — small margins mean a fragile pick).
         """
         if not palette:
             raise ValueError("palette is empty")
         fns = {
-            "ciede2000": self.delta_e_2000,
+            "ciede2000": self.ciede2000,
             "difference": self.difference,
-            "euclidean": self.euclidean_distance,
+            "euclidean": self.euclidean,
         }
         if metric not in fns:
             raise ValueError(f"unknown metric {metric!r}; use one of {sorted(fns)}")
         fn = fns[metric]
-        dists = [float(fn(target_hex, c)) for c in palette]
+        dists = [float(fn(target, c)) for c in palette]
         order = sorted(range(len(palette)), key=lambda i: dists[i])
         best, second = order[0], (order[1] if len(order) > 1 else order[0])
         d0, d1 = dists[best], dists[second]
@@ -649,86 +888,16 @@ class Helmlab:
             "metric": metric,
         }
 
-    def perceptual_distance(self, lab1: np.ndarray, lab2: np.ndarray) -> float:
-        """Compressed perceptual distance (Minkowski + compression) between two Lab values.
-
-        This is the metric optimized against COMBVD/MacAdam/Hung-Feldman
-        human-judgment data; on COMBVD it scores STRESS ≈ 22.5 vs CIEDE2000's
-        ~29.2. The compression is monotonic and saturates near ~0.15 for very
-        different colors — comparing edits beyond that range will look similar.
-        For an uncompressed analogue use :meth:`delta_e` (Euclidean Lab).
-
-        Parameters
-        ----------
-        lab1, lab2 : np.ndarray
-            Lab values from :meth:`from_hex` / :meth:`from_srgb` /
-            :meth:`from_XYZ`. May be scalar (3,) or batched (..., 3).
-
-        See Also
-        --------
-        delta_e : Uncompressed Euclidean Lab on hex inputs.
-        helmlab.MetricSpace.distance_from_lab : Same metric, batched, no XYZ round-trip.
-        """
-        XYZ1 = self._metric.to_XYZ(np.asarray(lab1, dtype=np.float64))
-        XYZ2 = self._metric.to_XYZ(np.asarray(lab2, dtype=np.float64))
-        return float(self._metric.distance(XYZ1, XYZ2))
-
-    # ── Recommended single entry points for color difference ──────────
-    def difference(self, color1_hex: str, color2_hex: str) -> float:
-        """Perceptual color difference between two hex colors (the good metric).
-
-        This is the recommended entry point: it returns the trained perceptual
-        distance (the v21 metric, STRESS ≈ 22.7 on COMBVD) directly from hex,
-        so callers don't have to convert to Lab first or pick between the
-        lower-level methods. Larger = more different; the metric saturates near
-        ~0.15 for very different colors.
-
-        For the uncompressed Euclidean analogue use :meth:`euclidean_distance`;
-        for a reliability estimate alongside the difference use
-        :meth:`difference_with_confidence`.
-        """
-        lab1 = self.from_hex(color1_hex)
-        lab2 = self.from_hex(color2_hex)
-        return self.perceptual_distance(lab1, lab2)
-
-    def difference_with_confidence(self, color1_hex: str, color2_hex: str) -> dict:
-        """Perceptual difference plus how much observers will disagree about it.
-
-        EXPERIMENTAL. Returns a dict with the difference (``de``) and a
-        calibrated reliability (v2, ordinal model): ``latent`` (mu), ``disagreement``
-        (predicted inter-observer spread sigma, latent units), ``reliability`` ∈ [0, 1),
-        ``p_noticeable`` (chance a random observer rates the pair at least
-        moderately different) and ``reliable`` (p_noticeable > 0.5). Small / low-chroma differences come back
-        unreliable — that is the point. See :mod:`helmlab.metrics.confidence`
-        for provenance and limits.
-        """
-        lab1 = self.from_hex(color1_hex)
-        lab2 = self.from_hex(color2_hex)
-        de = self.perceptual_distance(lab1, lab2)
-        chroma = 0.5 * (float(np.hypot(lab1[1], lab1[2])) + float(np.hypot(lab2[1], lab2[2])))
-        cm = getattr(self, "_confidence_cache", None)
-        if cm is None:
-            from helmlab.metrics.confidence import ConfidenceModel
-            cm = ConfidenceModel()
-            self._confidence_cache = cm
-        out = cm.assess(de, chroma)
-        out["de"] = de  # report the perceptual distance itself, not the array form
-        return out
-
-    def export(self):
-        """Return a TokenExporter for this Helmlab instance."""
-        from helmlab.export import TokenExporter
-        return TokenExporter(self)
-
-    def info(self, color_hex: str) -> dict:
-        """Return color information dict (metric pipeline)."""
-        srgb = hex_to_srgb(color_hex)
-        lab = self.from_srgb(srgb)
-        XYZ = sRGB_to_XYZ(srgb)
+    def info(self, color: str) -> dict:
+        """Descriptive dict for a color: hex, srgb, xyz, lab, L, C, H,
+        luminance, in_srgb, in_p3, in_rec2020."""
+        XYZ = parse_color(color)
+        srgb = clamp_srgb(XYZ_to_sRGB(XYZ))
+        lab = self.space.from_XYZ(XYZ).view(np.ndarray)
         C = float(np.sqrt(lab[1] ** 2 + lab[2] ** 2))
         H_deg = float(np.degrees(np.arctan2(lab[2], lab[1])) % 360.0)
         return {
-            "hex": color_hex,
+            "hex": srgb_to_hex(srgb),
             "srgb": srgb.tolist(),
             "xyz": XYZ.tolist(),
             "lab": lab.tolist(),
@@ -736,4 +905,72 @@ class Helmlab:
             "C": C,
             "H": H_deg,
             "luminance": float(relative_luminance(srgb)),
+            "in_srgb": bool(is_in_gamut(lab, self.space, "srgb")),
+            "in_p3": bool(is_in_gamut(lab, self.space, "display-p3")),
+            "in_rec2020": bool(is_in_gamut(lab, self.space, "rec2020")),
         }
+
+    # ── Internals ───────────────────────────────────────────────────
+
+    def _accept(self, lab) -> np.ndarray:
+        return _accept_lab(lab, GenLab, "metric", "gen")
+
+    def _to_srgb_nd(self, lab_nd: np.ndarray) -> np.ndarray:
+        mapped = gamut_map(lab_nd, self.space, gamut="srgb")
+        return clamp_srgb(XYZ_to_sRGB(self.space.to_XYZ(mapped)))
+
+    def _cielab(self, color: str) -> np.ndarray:
+        s = color.strip()
+        if s.startswith("color("):
+            return _xyz_to_cielab(parse_color(s))
+        return _srgb_to_cielab(hex_to_srgb(s))
+
+    def _confidence_model(self):
+        if self._confidence is None:
+            from helmlab.metrics.confidence import ConfidenceModel
+            self._confidence = ConfidenceModel()
+        return self._confidence
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Helmlab — the entry point
+# ═══════════════════════════════════════════════════════════════════════
+
+class Helmlab:
+    """Two purpose-built color spaces behind three namespaces.
+
+    ``hl.gen`` creates colors (GenSpace — ColorBench 62-9-19 vs OKLab),
+    ``hl.metric`` measures them (MetricSpace — COMBVD STRESS 22.48),
+    ``hl.tokens`` exports design tokens. See API.md.
+    """
+
+    def __init__(self, metric_params: str | None = None, gen_params: str | None = None,
+                 surround: float = 0.5, neutral_correction: bool = True,
+                 ab_rotate_deg: float = -28.2):
+        self._surround = float(np.clip(surround, 0.0, 1.0))
+
+        if metric_params is not None:
+            mp = MetricParams.load(metric_params)
+            metric_space = MetricSpace(mp, surround=self._surround,
+                                       neutral_correction=neutral_correction,
+                                       ab_rotate_deg=ab_rotate_deg)
+        else:
+            metric_space = MetricSpace(surround=self._surround,
+                                       neutral_correction=neutral_correction,
+                                       ab_rotate_deg=ab_rotate_deg)
+
+        if gen_params is not None:
+            gen_space = GenSpace(GenParams.load(gen_params))
+        else:
+            gen_space = GenSpace()
+
+        self.gen = Gen(gen_space, metric_space, self)
+        self.metric = Metric(metric_space, self)
+
+        from helmlab.tokens import Tokens
+        self.tokens = Tokens(self.metric)
+
+    def set_surround(self, S: float):
+        """Change viewing context. 0 = dark, 0.5 = normal, 1 = bright."""
+        self._surround = float(np.clip(S, 0.0, 1.0))
+        self.metric.space._surround = self._surround

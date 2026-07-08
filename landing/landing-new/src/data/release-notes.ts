@@ -5,8 +5,8 @@ import { VERSION } from './version';
  *  evergreen stats so the card never ships empty. */
 export const releaseHighlights: Record<string, string[]> = {
   '0.17.0': [
-    'nearestColor() — honest catalog matching, ciede2000 default',
-    'deltaE2000() public + hex-friendly token exporter',
+    'metric.nearest() — honest catalog matching, ciede2000 default',
+    'metric.ciede2000() public + hex-friendly token export',
     'Python distance() now warns on Lab-looking input',
   ],
   '0.16.0': [
@@ -16,7 +16,7 @@ export const releaseHighlights: Record<string, string[]> = {
   ],
   '0.15.0': [
     'The parity release: full API, zero diffs at 1e-12',
-    'genToLch / genFromLch for hue rotations & harmonies',
+    'gen.toLch / gen.fromLch for hue rotations & harmonies',
     'PCHIP neutral correction + trusted publishing',
   ],
 };

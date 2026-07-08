@@ -23,7 +23,7 @@ class ColorPairGenerator:
 
     def __init__(self, helmlab):
         self._helmlab = helmlab
-        self._space = helmlab._space
+        self._space = helmlab.metric.space
 
     def _random_in_gamut_lab(self, rng: np.random.Generator, gamut: str = "srgb") -> np.ndarray:
         """Generate a random Lab coordinate that is in-gamut."""
@@ -39,7 +39,7 @@ class ColorPairGenerator:
 
     def _lab_to_hex(self, lab: np.ndarray) -> str:
         """Lab → hex via gamut-mapped sRGB."""
-        return self._helmlab.to_hex(lab)
+        return self._helmlab.metric.to_hex(lab)
 
     def _predicted_de(self, lab1: np.ndarray, lab2: np.ndarray) -> float:
         """Helmlab distance between two Lab values."""
@@ -166,8 +166,8 @@ class ColorPairGenerator:
         pairs = []
         for _ in range(n):
             base = rng.choice(top_k)
-            lab1 = self._helmlab.from_hex(base["hex1"])
-            lab2 = self._helmlab.from_hex(base["hex2"])
+            lab1 = self._helmlab.metric.from_hex(base["hex1"])
+            lab2 = self._helmlab.metric.from_hex(base["hex2"])
 
             # Perturb near the high-error pair
             noise = rng.normal(0.0, 0.02, size=3)

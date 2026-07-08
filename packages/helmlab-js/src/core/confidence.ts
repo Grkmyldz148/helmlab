@@ -20,6 +20,11 @@ const C = -0.12266288972117914;
 const SIGMA_FLOOR = 0.35;
 const TAU2 = 0.7421522316160746;
 const DE_TRAIN_MAX = 0.14811473587883495;
+
+/** 1 JND in trained-metric de units: TAU2 / MU_SCALE — the de at which the
+ * median observer of the ordinal model rates a pair at least "moderately
+ * different". Used by hl.metric.jnd(); mirrors Python (tau[1]/mu_scale). */
+export const JND_DE = TAU2 / MU_SCALE;
 const SQRT2 = Math.sqrt(2.0);
 
 /** Abramowitz & Stegun 7.1.26 — IDENTICAL arithmetic to the Python sibling

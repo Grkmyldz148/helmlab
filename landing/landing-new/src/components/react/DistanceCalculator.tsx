@@ -214,7 +214,7 @@ export default function DistanceCalculator() {
 
     if (hlMod) {
       const hl = new hlMod.Helmlab();
-      const helmDE = hl.deltaE(hex1, hex2) * HELMLAB_SCALE;
+      const helmDE = hl.metric.euclidean(hex1, hex2) * HELMLAB_SCALE;
       rows.push({
         key: 'helmlab',
         label: 'Helmlab ΔE',
@@ -241,7 +241,7 @@ export default function DistanceCalculator() {
   const conf = useMemo(() => {
     if (!hlMod) return null;
     try {
-      const c = new hlMod.Helmlab().differenceWithConfidence(hex1, hex2);
+      const c = new hlMod.Helmlab().metric.confidence(hex1, hex2);
       return { reliability: c.reliability, reliable: c.reliable };
     } catch {
       return null;
@@ -408,12 +408,12 @@ export default function DistanceCalculator() {
         </div>
       )}
 
-      {/* Confidence (beta) — difference_with_confidence() */}
+      {/* Confidence (beta) — metric.confidence() */}
       {conf && (
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 mb-6">
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-xs uppercase tracking-wider font-medium text-[#a1a1aa]">
-              difference_with_confidence()
+              metric.confidence()
             </span>
             <span className="text-[10px] font-mono uppercase tracking-wide text-[#f97316] border border-[#f97316]/30 rounded px-1 py-0.5">
               beta
@@ -468,8 +468,8 @@ export default function DistanceCalculator() {
         Helmlab ΔE and OKLab ΔE are Euclidean distances in their respective
         Lab spaces (scaled by 100 to match the CIE Lab range). CIEDE2000 is
         the industry reference. Helmlab's headline STRESS result (22.48 vs
-        CIEDE2000's 29.2 on COMBVD) belongs to the trained difference()
-        metric — the one behind the observer-agreement panel above — not to
+        CIEDE2000's 29.2 on COMBVD) belongs to the trained metric.difference()
+        — the one behind the observer-agreement panel above — not to
         this Euclidean ΔE.
       </p>
     </div>

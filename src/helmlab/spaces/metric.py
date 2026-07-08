@@ -595,8 +595,8 @@ class MetricSpace(ColorSpace):
         See Also
         --------
         distance_from_lab : Same metric but accepts Lab inputs directly.
-        helmlab.Helmlab.delta_e : Euclidean Lab distance (uncompressed) on hex inputs.
-        helmlab.Helmlab.perceptual_distance : Convenience wrapper from Lab inputs.
+        helmlab.helmlab.Metric.euclidean : Euclidean Lab distance (uncompressed) on hex inputs.
+        helmlab.helmlab.Metric.distance : Convenience wrapper from Lab inputs (hl.metric.distance).
         """
         # Footgun guard: this method takes CIE XYZ. Lab passed here silently
         # saturates near 0.15 (compression collapses corrupt inputs). Real
@@ -643,6 +643,12 @@ class MetricSpace(ColorSpace):
         """
         lab_1 = np.asarray(lab_1, dtype=np.float64)
         lab_2 = np.asarray(lab_2, dtype=np.float64)
+        # Guard: NaN/Inf inputs otherwise surface as NaN distances far from
+        # the call site; fail here where the bad input is identifiable.
+        if not (np.all(np.isfinite(lab_1)) and np.all(np.isfinite(lab_2))):
+            raise ValueError(
+                "distance_from_lab got non-finite (NaN/Inf) Lab input."
+            )
         # Guard: CIELAB (L* up to 100) is the most common misuse. Helmlab L is ≈0..1.
         if max(np.max(np.abs(lab_1[..., 0])), np.max(np.abs(lab_2[..., 0]))) > 3.0:
             raise ValueError(

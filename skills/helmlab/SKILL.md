@@ -1,22 +1,34 @@
 ---
 name: helmlab
-description: Correct usage of the helmlab color library (npm + PyPI) — two-space model (GenSpace for generation, MetricSpace for measurement), full API with verified outputs, and the gotchas that make AI-generated helmlab code fail (exporter input space, distance input contracts, 0–1 L scale). Use whenever code imports or should import helmlab.
+description: Correct usage of the helmlab color library (npm + PyPI) — 1.0 namespaced API (hl.gen / hl.metric / hl.tokens), branded Lab types, wide-gamut generation, and the measurement metrics (difference/jnd/ciede2000/confidence). Use whenever code imports or should import helmlab.
 ---
 
-# helmlab — correct API usage
+# helmlab — correct API usage (1.0)
 
-Perceptual color library, JS (`npm i helmlab`, 17.8KB, zero deps) and Python (`pip install helmlab`) with **identical outputs** (cross-checked to ~1e-15). JS is camelCase, Python snake_case; same math.
+Perceptual color library, JS (`npm i helmlab`, zero deps) and Python
+(`pip install helmlab`) with **identical outputs** — a permanent parity gate
+verifies the full surface: every string output byte-identical, numeric worst
+~1e-12, hex round-trips bit-exact on a 1728-color grid in both languages.
+JS is camelCase, Python snake_case; same math, same namespaces.
 
 ## The one mental model you need
 
-One `Helmlab` class wraps TWO spaces — never mix their Lab coordinates:
+One `Helmlab` instance, **three namespaces**. Color strings in, color
+strings out — Lab is the advanced layer:
 
-| Purpose | Methods | Space |
+| Namespace | Purpose | Key methods |
 |---|---|---|
-| CREATE colors (gradients, palettes, contrast fixes, dark mode) | `gradient` `palette` `paletteHues` `semanticScale` `ensureContrast` `adaptToMode` `adaptPair` + `genFromHex/genToHex/genToLch/genFromLch` | **GenSpace** |
-| MEASURE colors (ΔE, info, wide-gamut output, tokens) | `difference` `deltaE` `euclideanDistance` `perceptualDistance` `differenceWithConfidence` `info` `toHexP3` `toHexRec2020` `isInP3` + `fromHex/toHex` | **MetricSpace** |
+| `hl.gen` | CREATE colors (GenSpace) | `gradient` `mix` `palette` `scale` `hueRing` `harmonies` `rotateHue` `vivid` `cusp` `maxChroma` `gamutMap` `ensureContrast` `adaptToMode` `adaptPair` |
+| `hl.metric` | MEASURE colors (MetricSpace) | `difference` `euclidean` `ciede2000` `jnd` `distance` `confidence` `nearest` `info` `toCss` `inGamut` `toLch`/`fromLch` |
+| `hl.tokens` | EXPORT design tokens | `css` `android` `iosP3`/`ios_p3` `swift` `cssVariables` `tailwind` `multiFormat` `json` |
 
-`fromHex` ≠ `genFromHex`. Feeding Gen Lab into a Metric-Lab API silently produces wrong colors.
+Each namespace has its own `fromHex`; their Lab types are **branded**
+(`GenLab` / `MetricLab`) — cross-passing raises `TypeError` instead of
+silently producing a wrong color (this replaces the entire 0.x
+`fromHex` vs `genFromHex` footgun family).
+
+Color-string params accept `'#rrggbb'`, `'#rgb'`,
+`'color(display-p3 r g b)'`, `'color(rec2020 r g b)'` **everywhere**.
 
 ## Verified quick reference (JS; Python is the snake_case mirror)
 
@@ -24,61 +36,85 @@ One `Helmlab` class wraps TWO spaces — never mix their Lab coordinates:
 import { Helmlab } from 'helmlab';
 const hl = new Helmlab();
 
-// Generation
-hl.gradient('#0000ff', '#ffffff', 16);      // equal visual steps, stays blue
-hl.semanticScale('#3b82f6');                // {'50':'#e7efff', …'500':'#3b82f6' EXACT, …'950':'#000046'}
-hl.palette('#3b82f6', 10);                  // lightness ramp, LIGHT → DARK ('#fafcff' … '#000046')
-hl.paletteHues(0.6, 0.15, 12);              // categorical hue ring
-hl.ensureContrast('#3b82f6', '#ffffff');    // darkens to 4.5:1, hue kept
-hl.adaptToMode('#3b82f6', 'light', 'dark'); // '#2a67d9'
+// Generation — every function takes { gamut: 'srgb'|'display-p3'|'rec2020' }
+hl.gen.gradient('#0000ff', '#ffffff', 16);           // equal visual steps, stays blue
+hl.gen.gradient('#00f', '#fff', 8, { gamut: 'display-p3' }); // wide-gamut stops
+hl.gen.mix('#ff0000', '#0000ff');                    // visual midpoint (same path as gradient)
+hl.gen.scale('#3b82f6');                             // {'50':'#e7efff', …'500':'#3b82f6' EXACT, …'950':'#000046'}
+hl.gen.palette('#3b82f6', 10);                       // lightness ramp, LIGHT → DARK
+hl.gen.hueRing(12, { lightness: 0.6, chroma: 0.15 }); // categorical hue ring
+hl.gen.harmonies('#3b82f6', 'triadic');              // ['#3b82f6','#f13046','#00a250'] — constant L,C
+hl.gen.vivid('#6488b8', { gamut: 'display-p3' });    // same L & hue, chroma → gamut boundary
+hl.gen.cusp(263);                                    // [0.491, 0.379] most colorful point of a hue
+hl.gen.ensureContrast('#3b82f6', '#ffffff');         // darkens to 4.5:1, hue kept
+hl.gen.ensureContrast('#3b82f6', '#808080', 7, { strict: true }); // throws ContrastError if unreachable
+hl.gen.adaptToMode('#3b82f6', 'light', 'dark');      // '#2a67d9'
 
-// LCh (cylindrical GenSpace — hue rotations/harmonies)
-const lch = hl.genToLch(hl.genFromHex('#3b82f6')); // [0.5586, 0.2976, 263.1]  ⚠ L and C are 0–1-scale, NOT 0–100
-hl.genToHex(hl.genFromLch([lch[0], lch[1], (lch[2] + 120) % 360]));
+// LCh (cylindrical GenSpace) — ⚠ L and C are 0–1-scale, NOT 0–100
+const lch = hl.gen.toLch(hl.gen.fromHex('#3b82f6')); // [0.5586, 0.2976, 263.1]
+hl.gen.rotateHue('#3b82f6', 120);                    // prefer this over manual LCh math
 
-// Measurement
-hl.difference('#ff0000', '#00ff00');        // 0.148 — trained metric (COMBVD-fit), saturates ~0.15
-hl.euclideanDistance('#000000', '#ffffff'); // 1.12 — fast ΔE76-style (alias of deltaE)
-hl.contrastRatio('#ffffff', '#3b82f6');     // 3.68 (WCAG 2.1)
-hl.deltaE2000('#ff0000', '#00ff00');        // 86.61 — industry-standard CIEDE2000 (CIELAB scale 0-100)
-hl.nearestColor('#fbf0d0', palette);        // catalog matching: {hex, index, distance, runnerUp, margin}
-hl.differenceWithConfidence('#808080', '#828282');
-// { de:0.0117, latent, disagreement, reliability:0.41, pNoticeable:0.077, reliable:false, extrapolated:false }
+// Measurement — four clearly-named metrics
+hl.metric.difference('#ff0000', '#00ff00');   // 0.148 — trained (COMBVD-fit), saturates ~0.15
+hl.metric.euclidean('#000000', '#ffffff');    // 1.12 — unbounded ΔE76-analogue
+hl.metric.ciede2000('#ff0000', '#00ff00');    // 86.6 — industry standard, best for catalog argmax
+hl.metric.jnd('#808080', '#828282');          // 0.33 — threshold units (<1 unnoticed, >2 clearly visible)
+hl.metric.confidence('#808080', '#828282');   // { de, pNoticeable: 0.077, reliability: 0.41, reliable: false, extrapolated }
+hl.gen.contrastRatio('#ffffff', '#3b82f6');   // 3.68 (WCAG 2.1) — contrast lives on gen
 
-// Wide gamut + tokens (METRIC Lab in!)
-const lab = hl.fromHex('#ff0000');
-hl.toHexP3(lab);                            // 'color(display-p3 0.9176 0.2003 0.1386)'
-const ex = hl.export();                     // TokenExporter — takes METRIC Lab, or (v0.17+) a hex string
-ex.toCssOklch(lab);                         // 'oklch(62.8% 0.2576 29.2)'
-ex.exportTailwind(hl.semanticScale('#3b82f6'), 'primary');
-ex.exportCssCustomProperties(hl.semanticScale('#3b82f6'), '--primary');
+// Wide gamut, both directions
+hl.metric.info('color(display-p3 1 0 0)');    // { inSrgb: false, inP3: true, ... }
+hl.metric.toCss(hl.metric.fromHex('#ff0000'), 'display-p3'); // 'color(display-p3 0.9176 0.2003 0.1386)'
+
+// Tokens — color STRINGS in (never Lab)
+hl.tokens.css('#3b82f6', 'oklch');            // 'oklch(62.3% 0.1881 259.8)'
+hl.tokens.tailwind(hl.gen.scale('#3b82f6'), 'primary');
+hl.tokens.cssVariables(hl.gen.scale('#3b82f6'), '--primary'); // include the -- yourself
 ```
 
-## Gotchas (every one observed breaking real AI-generated code)
+## Gotchas
 
-1. **TokenExporter takes METRIC Lab** (`hl.fromHex`). Passing `genFromHex` output silently yields a different color (#3b82f6 → #4d2268). Since v0.17 every exporter method also accepts a hex string directly — prefer that, it's unambiguous.
-2. **`distance()` input contract differs by language**: Python `MetricSpace.distance(XYZ1, XYZ2)` takes CIE XYZ (Lab input saturates ≈0.15 — since v0.17 Python warns when inputs look like Lab); JS `distance(lab1, lab2)` takes Lab. Cross-language-safe: `distance_from_lab` / `distanceFromLab`, or the hex-in `difference()`.
-3. **GenSpace L and C are 0–1-scale.** `L - 15` gives black; darken with e.g. `L - 0.15`.
-4. **`difference()` saturates near ~0.15** for very dissimilar pairs — rank is preserved, absolute values plateau. For an unbounded number use `euclideanDistance` (range 0–1.6+).
-5. **`palette()` runs light→dark** and the base color is only approximate inside it; `semanticScale()` is the Tailwind-style API where level 500 is your exact input.
-6. **These APIs don't exist** (common hallucinations): `hl.hex2lab`, `hl.rgbToLab`, `hl('#hex').mix()`, `hl.mix`. Conversions are `fromHex/genFromHex` etc.
-7. **Raw classes need compiled params in JS**: `new GenSpace(compileGenParams(getDefaultGenParams()))` — bare `new GenSpace()` throws. Python: `GenSpace()` works; custom params via `GenParams.load(path)`, not a raw dict.
-8. `export_css_custom_properties(scale, prefix="--primary")` — include the `--` yourself.
+1. **0.x flat API is GONE** (1.0 clean break): `hl.fromHex`, `hl.gradient`,
+   `hl.semanticScale`, `hl.deltaE`, `hl.genFromHex`, `hl.export()`,
+   `TokenExporter`, `hl.toHexP3` no longer exist. Mapping: root conversions
+   → `hl.metric.*`; generation → `hl.gen.*` (`semanticScale`→`scale`,
+   `paletteHues`→`hueRing(count, {...})`); `deltaE/euclideanDistance` →
+   `metric.euclidean`; `deltaE2000` → `metric.ciede2000`;
+   `perceptualDistance/distanceFromLab` → `metric.distance`;
+   `differenceWithConfidence` → `metric.confidence`; `nearestColor` →
+   `metric.nearest`; exporter → `hl.tokens` (hex-in).
+2. **GenSpace L and C are 0–1-scale.** `L - 15` gives black; darken with
+   e.g. `L - 0.15`.
+3. **`difference()` saturates near ~0.15** for very dissimilar pairs — rank
+   preserved, absolute values plateau. Unbounded: `euclidean` (0–1.6+);
+   threshold units: `jnd`.
+4. **`palette()` runs light→dark and the base is only approximate inside
+   it**; `scale()` is the Tailwind-style API where level 500 is exact.
+5. **`metric.distance(labA, labB)` takes MetricLab in BOTH languages** —
+   the 0.x Python-XYZ/JS-Lab asymmetry is gone. XYZ-in lives only on
+   Python's raw `MetricSpace` class.
+6. **Cross-space Lab throws.** If you see
+   `TypeError: hl.metric got a GenLab`, convert the original color with the
+   right namespace's `fromHex` — don't cast.
+7. **Raw classes** (advanced): `hl.gen.space` / `hl.metric.space` expose
+   the live GenSpace/AnalyticalSpace; constructing raw JS spaces still needs
+   compiled params (`new GenSpace(compileGenParams(getDefaultGenParams()))`).
+8. `ensureContrast` fallback: if the ratio is unreachable even with pure
+   black/white, default warns and returns best effort; `strict: true` (JS
+   opts / Python kwarg) raises `ContrastError`.
 
 ## Ecosystem
 
-- **Color.js** (master, pending release): spaces `helmgen`, `helmgenlch`, `helmlab-metric` + deltaE method `"Helmlab"`. Until released: `npm i github:color-js/color.js` or use this package.
-- **PostCSS**: `npm i postcss-helmlab` → `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` CSS functions with P3/Rec2020 `@supports` fallbacks.
-- Python extras: `pip install 'helmlab[datasets]'` for benchmark data loaders; `py.typed` shipped (mypy/pyright OK).
-
-## Catalog matching (the #1 real-world distance job)
-
-Picking the nearest color from a fixed palette (dye/brand/token lookup) is a
-suprathreshold ranking job — NOT what the trained `difference()` was fit for.
-Use `nearestColor()` (default ciede2000, measurably the most perturbation-stable
-choice: 7 vs 16 selection flips per 100 targets at ±2/255) and check `margin`:
-a small margin means the pick is fragile — show both candidates.
+- **PostCSS**: `npm i postcss-helmlab` → `helmlab()`, `helmlch()`,
+  `helmgen()`, `helmgenlch()` CSS functions; since 1.0 the P3/Rec2020
+  output uses the TRUE gamut-mapped paths of both spaces.
+- **Color.js** (master): spaces `helmgen`, `helmgenlch`, `helmlab-metric` +
+  deltaE method `"Helmlab"`.
+- Python extras: `pip install 'helmlab[datasets]'`; `py.typed` shipped.
 
 ## When NOT to use helmlab
 
-Near-achromatic gradient mastering and deutan-safe palettes → OKLab is measurably better. CSS-only with no JS budget → native `oklch()`. HDR/PQ → Jzazbz/ICtCp. For the full task-routing table with benchmark numbers, see the companion `color-space-routing` skill. Docs: helmlab.space/docs · benchmark honesty tables: helmlab.space/benchmark
+Near-achromatic gradient mastering and deutan-safe palettes → OKLab is
+measurably better. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
+Jzazbz/ICtCp. Full routing table: the companion `color-space-routing`
+skill. Docs: helmlab.space/docs · honesty tables: helmlab.space/benchmark

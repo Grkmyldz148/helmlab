@@ -49,7 +49,7 @@ export default function ColorPicker() {
       if (mod) {
         const hl = new mod.Helmlab();
         // GenSpace coordinates
-        const genLab = hl.genFromHex(h);
+        const genLab = hl.gen.fromHex(h);
         spaces.push({
           label: 'Helmlab GenSpace',
           L: genLab[0].toFixed(4),
@@ -58,7 +58,7 @@ export default function ColorPicker() {
         });
 
         // Round-trip test
-        const backHex = hl.genToHex(genLab);
+        const backHex = hl.gen.toHex(genLab);
         const [r2, g2, b2] = hexToRgb(backHex);
         const dR = Math.abs(r - r2);
         const dG = Math.abs(g - g2);
@@ -70,10 +70,10 @@ export default function ColorPicker() {
         });
 
         // Gamut info via helmlab
-        const metricLab = hl.fromHex(h);
+        const metricLab = hl.metric.fromHex(h);
         setGamut({
-          srgb: hl.isInSrgb(metricLab),
-          p3: hl.isInP3(metricLab),
+          srgb: hl.metric.inGamut(metricLab),
+          p3: hl.metric.inGamut(metricLab, 'display-p3'),
         });
       } else {
         spaces.push({

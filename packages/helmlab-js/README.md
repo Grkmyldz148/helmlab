@@ -20,88 +20,111 @@ npm install helmlab
 
 ## Quick start
 
+One `Helmlab` instance, three namespaces: **`hl.gen`** creates colors,
+**`hl.metric`** measures them, **`hl.tokens`** exports design tokens.
+
 ```ts
 import { Helmlab } from 'helmlab';
 
 const hl = new Helmlab();
 
-// Generate — GenSpace under the hood
-hl.gradient('#0000ff', '#ffffff', 16);   // stays blue through the midpoint
-hl.semanticScale('#3b82f6');             // Tailwind-style { '50': '#e7efff', ..., '950': '#000046' } — 500 is your exact input
-hl.palette('#3b82f6', 10);               // lightness ramp, light → dark
+// Create — GenSpace
+hl.gen.gradient('#0000ff', '#ffffff', 16);   // stays blue through the midpoint
+hl.gen.scale('#3b82f6');                     // Tailwind-style { '50': ..., '950': ... } — 500 is your exact input
+hl.gen.palette('#3b82f6', 10);               // lightness ramp, light → dark
 
-// Measure — MetricSpace under the hood
-hl.difference('#ff0000', '#00ff00');     // 0.148 — the trained perceptual metric (STRESS 22.48)
-hl.euclideanDistance('#ff0000', '#00ff00'); // 1.62 — plain Euclidean Lab, ΔE76-style, fast
+// Measure — MetricSpace
+hl.metric.difference('#ff0000', '#00ff00');  // 0.148 — the trained perceptual metric (STRESS 22.48)
+hl.metric.jnd('#808080', '#828282');         // 0.33 — in just-noticeable-difference units
+hl.metric.euclidean('#ff0000', '#00ff00');   // 1.62 — plain Euclidean Lab, unbounded
 
 // Accessibility
-hl.contrastRatio('#ffffff', '#3b82f6');  // 3.68 (WCAG 2.1)
-hl.ensureContrast('#3b82f6', '#ffffff'); // darkens until 4.5:1, hue preserved
+hl.gen.contrastRatio('#ffffff', '#3b82f6');  // 3.68 (WCAG 2.1)
+hl.gen.ensureContrast('#3b82f6', '#ffffff'); // darkens until 4.5:1, hue preserved
 ```
 
-## Two spaces, one rule
+## Two spaces, two Lab types
 
-Every method routes to the space it was designed for — you never pick manually:
+Each namespace has its own `fromHex`, and their Lab values are **branded
+types** (`GenLab` / `MetricLab`). Passing one space's Lab to the other
+throws a `TypeError` — the 0.x silent-wrong-color footgun is structurally
+gone. Everyday use never touches Lab: color strings in, color strings out.
 
-| You call | Space used | Why |
+| Namespace | Space | For |
 |---|---|---|
-| `gradient` `palette` `paletteHues` `semanticScale` `ensureContrast` `adaptToMode` `adaptPair` | **GenSpace** | optimized for smooth, in-gamut color *creation* |
-| `difference` `deltaE` `euclideanDistance` `perceptualDistance` `differenceWithConfidence` `info` `toHexP3` `toHexRec2020` | **MetricSpace** | optimized to predict human difference judgments |
-
-The Lab coordinates of the two spaces are **not interchangeable**: `fromHex`/`toHex` speak Metric Lab, `genFromHex`/`genToHex` speak Gen Lab. The `TokenExporter` (`hl.export()`) takes **Metric Lab**.
+| `hl.gen` | GenSpace | `gradient` `mix` `palette` `scale` `hueRing` `harmonies` `rotateHue` `vivid` `cusp` `maxChroma` `gamutMap` `ensureContrast` `adaptToMode` `adaptPair` |
+| `hl.metric` | MetricSpace | `difference` `euclidean` `ciede2000` `jnd` `distance` `confidence` `nearest` `info` `toCss` |
+| `hl.tokens` | — | `css` `android` `iosP3` `swift` `cssVariables` `tailwind` `multiFormat` `json` (all take color strings) |
 
 ## Measuring color difference
 
 ```ts
 // Recommended: the trained metric (Minkowski + compression, fit on COMBVD).
 // Saturates near ~0.15 for very dissimilar pairs — order is preserved.
-hl.difference('#3b82f6', '#4c8af7');     // 0.0227
+hl.metric.difference('#3b82f6', '#4c8af7');   // 0.0227
+
+// In threshold units: <1 likely unnoticed, 1–2 subtle, >2 clearly visible
+hl.metric.jnd('#3b82f6', '#4c8af7');
 
 // Experimental: difference + how much real observers would disagree about it
-hl.differenceWithConfidence('#808080', '#828282');
+hl.metric.confidence('#808080', '#828282');
 // { de: 0.0117, pNoticeable: 0.077, reliability: 0.41, reliable: false, ... }
 
-// Fast Euclidean for quick UI checks (alias: deltaE)
-hl.euclideanDistance('#000000', '#ffffff'); // 1.12
+// Catalog matching (most perturbation-stable for argmax): CIEDE2000
+hl.metric.nearest('#3b82f6', ['#3b7ff0', '#ff0000'], 'ciede2000');
 ```
 
 ## Generating colors
 
 ```ts
-// Perceptually even gradient: CIEDE2000 arc-length reparameterization,
-// gamut-mapped sampling — equal visual step sizes on any pair
-hl.gradient('#ef4444', '#3b82f6', 16);
+// Perceptually even gradient: CIEDE2000 arc-length reparameterization —
+// equal visual step sizes on any pair. Every generation function takes
+// { gamut: 'srgb' | 'display-p3' | 'rec2020' }.
+hl.gen.gradient('#ef4444', '#3b82f6', 16);
+hl.gen.gradient('#0000ff', '#ffffff', 16, { gamut: 'display-p3' });
+
+// The visual midpoint on the same path (not the coordinate average)
+hl.gen.mix('#ef4444', '#3b82f6', 0.5);
 
 // Hue ring at fixed lightness/chroma (categorical palettes)
-hl.paletteHues(0.6, 0.15, 12);
+hl.gen.hueRing(12, { lightness: 0.6, chroma: 0.15 });
 
-// Cylindrical LCh on GenSpace — hue rotations & harmonies
-// (same coordinates as the `helmgenlch` space on Color.js)
-const lch = hl.genToLch(hl.genFromHex('#3b82f6'));  // [0.5586, 0.2976, 263.1]
-const triad = hl.genToHex(hl.genFromLch([lch[0], lch[1], (lch[2] + 120) % 360]));
+// Harmonies: constant-L,C hue rotations (matched lightness & colorfulness)
+hl.gen.harmonies('#3b82f6', 'triadic');      // also: complementary, analogous, tetradic, split_complementary
+hl.gen.rotateHue('#3b82f6', 120);
+
+// Cusp geometry — the 360/360/360 strength, exposed:
+hl.gen.cusp(263);                            // [L, C] of the most colorful point of a hue
+hl.gen.maxChroma(0.6, 263, 'display-p3');    // chroma headroom of a wide gamut
+hl.gen.vivid('#6488b8', { gamut: 'display-p3' }); // same L & hue, chroma → boundary
 ```
 
 ## Wide gamut & tokens
 
 ```ts
-const lab = hl.fromHex('#ff0000');
-hl.toHexP3(lab);        // 'color(display-p3 0.9176 0.2003 0.1386)' — gamut mapped, hue preserved
-hl.toHexRec2020(lab);   // 'color(rec2020 0.7920 0.2310 0.0738)'
-hl.isInP3(lab);         // gamut tests: isInSrgb / isInP3 / isInRec2020
+// Wide-gamut INPUT everywhere a color string is accepted:
+hl.metric.info('color(display-p3 1 0 0)');   // { inSrgb: false, inP3: true, ... }
 
-const ex = hl.export(); // TokenExporter — takes METRIC Lab (hl.fromHex)
-ex.toCssOklch(lab);     // 'oklch(62.8% 0.2576 29.2)'
-ex.exportTailwind(hl.semanticScale('#3b82f6'), 'primary');
-ex.exportCssCustomProperties(hl.semanticScale('#3b82f6'), '--primary');
-// also: toCssHex / toCssRgb / toCssHsl / toCssDisplayP3 / toAndroidArgb / toIosP3 / toSwiftLiteral
+// Wide-gamut OUTPUT:
+const lab = hl.metric.fromHex('#ff0000');
+hl.metric.toCss(lab, 'display-p3');          // 'color(display-p3 0.9176 0.2003 0.1386)'
+hl.metric.toCss(lab, 'rec2020');
+hl.metric.inGamut(lab, 'display-p3');
+
+// Tokens: color strings in, platform strings out (no Lab, no footgun)
+hl.tokens.css('#3b82f6', 'oklch');           // 'oklch(62.3% 0.1881 259.8)'
+hl.tokens.tailwind(hl.gen.scale('#3b82f6'), 'primary');
+hl.tokens.cssVariables(hl.gen.scale('#3b82f6'), '--primary');
+// also: css(c,'hex'|'rgb'|'hsl'|'p3'|'rec2020') / android / iosP3 / swift / multiFormat / json
 ```
 
 ## Dark / light mode
 
 ```ts
-hl.adaptToMode('#3b82f6', 'light', 'dark');            // '#2a67d9' — soft L-inversion, hue kept
-hl.adaptPair('#3366ff', '#ffffff', 'light', 'dark');   // [fg, bg] with contrast ≥ 4.5 guaranteed
-hl.meetsContrast('#1e40af', '#ffffff', 'AAA');         // WCAG check without modifying colors
+hl.gen.adaptToMode('#3b82f6', 'light', 'dark');           // soft L-inversion, hue kept
+hl.gen.adaptPair('#3366ff', '#ffffff', 'light', 'dark');  // [fg, bg] re-contrasted
+hl.gen.meetsContrast('#1e40af', '#ffffff', 'AAA');        // WCAG check without modifying
+hl.gen.ensureContrast('#3b82f6', '#808080', 7, { strict: true }); // throws ContrastError if unreachable
 ```
 
 ## Advanced: raw spaces
@@ -120,7 +143,7 @@ Custom parameter sets (research / retraining) are accepted by both constructors 
 
 ## Python parity
 
-The [`helmlab` PyPI package](https://pypi.org/project/helmlab/) is the same math with a snake_case API (`difference()` ↔ `difference()`, `genToLch` ↔ `gen_to_lch`). Outputs are cross-checked down to float64 — a battery over the full public API shows **zero differences at 1e-12 tolerance**.
+The [`helmlab` PyPI package](https://pypi.org/project/helmlab/) is the same math with a snake_case API (`hl.gen.ensureContrast` ↔ `hl.gen.ensure_contrast`). A permanent parity gate (`tests/parity-1.0.test.ts`, reference generated by the Python package) covers the full public surface: **every string output is byte-identical, numeric worst-case difference ~1e-12**, hex round-trips bit-exact on a 1728-color grid in both languages. Conversion precision: XYZ round-trip 2.9e-15 (MetricSpace) / 5.8e-9 (GenSpace).
 
 ## Using with Color.js
 

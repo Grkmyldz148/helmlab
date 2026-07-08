@@ -7,7 +7,7 @@ const hl = new Helmlab();
 describe('Analytical forward transform', () => {
   for (const t of ref.forward) {
     it(`fromHex(${t.hex}) matches Python`, () => {
-      const lab = hl.fromHex(t.hex);
+      const lab = hl.metric.fromHex(t.hex);
       // NC LUT uses linear interp (not PCHIP), so near-black tolerance is wider
       const tol = (t.hex === '#000000' || t.hex === '#1a1a1a') ? 1 : 4;
       expect(lab[0]).toBeCloseTo(t.lab[0], tol);
@@ -20,8 +20,8 @@ describe('Analytical forward transform', () => {
 describe('Hex round-trip', () => {
   for (const t of ref.forward) {
     it(`toHex(fromHex(${t.hex})) = ${t.rt_hex}`, () => {
-      const lab = hl.fromHex(t.hex);
-      const rt = hl.toHex(lab);
+      const lab = hl.metric.fromHex(t.hex);
+      const rt = hl.metric.toHex(lab);
       expect(rt).toBe(t.rt_hex);
     });
   }
@@ -30,8 +30,8 @@ describe('Hex round-trip', () => {
 describe('Forward → toSrgb matches Python', () => {
   for (const t of ref.forward) {
     it(`toSrgb for ${t.hex}`, () => {
-      const lab = hl.fromHex(t.hex);
-      const srgb = hl.toSrgb(lab);
+      const lab = hl.metric.fromHex(t.hex);
+      const srgb = hl.metric.toSrgb(lab);
       // Allow 2/255 tolerance for gamut mapping differences
       expect(srgb[0]).toBeCloseTo(t.srgb[0], 2);
       expect(srgb[1]).toBeCloseTo(t.srgb[1], 2);
@@ -43,8 +43,8 @@ describe('Forward → toSrgb matches Python', () => {
 describe('XYZ round-trip', () => {
   it('fromXYZ → toXYZ preserves values', () => {
     for (const t of ref.xyz) {
-      const lab = hl.fromXYZ(t.xyz as [number, number, number]);
-      const xyz = hl.toXYZ(lab);
+      const lab = hl.metric.fromXyz(t.xyz as [number, number, number]);
+      const xyz = hl.metric.toXyz(lab);
       expect(xyz[0]).toBeCloseTo(t.xyz[0], 5);
       expect(xyz[1]).toBeCloseTo(t.xyz[1], 5);
       expect(xyz[2]).toBeCloseTo(t.xyz[2], 5);
@@ -55,7 +55,7 @@ describe('XYZ round-trip', () => {
 describe('info()', () => {
   for (const t of ref.forward) {
     it(`info(${t.hex}).L matches`, () => {
-      const info = hl.info(t.hex);
+      const info = hl.metric.info(t.hex);
       expect(info.L).toBeCloseTo(t.L, 4);
     });
   }

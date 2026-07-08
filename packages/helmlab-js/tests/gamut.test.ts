@@ -5,20 +5,20 @@ const hl = new Helmlab();
 
 describe('Gamut mapping', () => {
   it('in-gamut colors are not modified', () => {
-    const lab = hl.fromHex('#808080');
-    expect(hl.isInSrgb(lab)).toBe(true);
+    const lab = hl.metric.fromHex('#808080');
+    expect(hl.metric.inGamut(lab)).toBe(true);
   });
 
   it('pure primaries are in sRGB gamut', () => {
     for (const hex of ['#ff0000', '#00ff00', '#0000ff']) {
-      const lab = hl.fromHex(hex);
-      expect(hl.isInSrgb(lab)).toBe(true);
+      const lab = hl.metric.fromHex(hex);
+      expect(hl.metric.inGamut(lab)).toBe(true);
     }
   });
 
   it('out-of-gamut Lab is gamut-mapped to valid sRGB', () => {
     // High chroma, should be OOG
-    const srgb = hl.toSrgb([0.5, 0.8, 0.8]);
+    const srgb = hl.metric.toSrgb([0.5, 0.8, 0.8]);
     expect(srgb[0]).toBeGreaterThanOrEqual(0);
     expect(srgb[0]).toBeLessThanOrEqual(1);
     expect(srgb[1]).toBeGreaterThanOrEqual(0);
@@ -29,7 +29,7 @@ describe('Gamut mapping', () => {
 
   it('gamut mapping preserves lightness', () => {
     const L = 0.5;
-    const lab = hl.fromHex(hl.toHex([L, 0.8, 0.8]));
+    const lab = hl.metric.fromHex(hl.metric.toHex([L, 0.8, 0.8]));
     // L should be close (gamut mapping preserves L)
     expect(lab[0]).toBeCloseTo(L, 1);
   });

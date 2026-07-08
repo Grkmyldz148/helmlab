@@ -91,8 +91,8 @@ class TestHelmlabConversions:
     def test_hex_roundtrip(self, p):
         """hex → Lab → hex roundtrip (quantization tolerance)."""
         for h in ["#3b82f6", "#ef4444", "#22c55e", "#808080"]:
-            lab = p.from_hex(h)
-            recovered = p.to_hex(lab)
+            lab = p.metric.from_hex(h)
+            recovered = p.metric.to_hex(lab)
             # Allow 1/255 per-channel tolerance from 8-bit quantization
             srgb_orig = hex_to_srgb(h)
             srgb_rec = hex_to_srgb(recovered)
@@ -102,14 +102,14 @@ class TestHelmlabConversions:
         """sRGB → Lab → sRGB roundtrip."""
         colors = np.array([[0.5, 0.3, 0.8], [0.1, 0.9, 0.2]])
         for srgb in colors:
-            lab = p.from_srgb(srgb)
-            rec = p.to_srgb(lab)
+            lab = p.metric.from_srgb(srgb)
+            rec = p.metric.to_srgb(lab)
             np.testing.assert_allclose(rec, srgb, atol=1e-4)
 
     def test_known_colors(self, p):
         """Black → low L, white → high L."""
-        black_lab = p.from_hex("#000000")
-        white_lab = p.from_hex("#ffffff")
+        black_lab = p.metric.from_hex("#000000")
+        white_lab = p.metric.from_hex("#ffffff")
         assert black_lab[0] < 0.1  # near-zero lightness
         assert white_lab[0] > 0.8  # high lightness
         # Black should have significantly lower L than white
@@ -119,7 +119,7 @@ class TestHelmlabConversions:
         """to_srgb always returns [0,1] values."""
         # Extreme Lab values
         extreme = np.array([0.5, 0.8, 0.8])
-        srgb = p.to_srgb(extreme)
+        srgb = p.metric.to_srgb(extreme)
         assert np.all(srgb >= 0.0)
         assert np.all(srgb <= 1.0)
 
@@ -137,32 +137,32 @@ class TestContrast:
 
     def test_black_white_21(self, p):
         """Black vs white → 21:1."""
-        cr = p.contrast_ratio("#000000", "#ffffff")
+        cr = p.gen.contrast_ratio("#000000", "#ffffff")
         assert abs(cr - 21.0) < 0.01
 
     def test_same_color_1(self, p):
         """Same color → 1:1."""
-        cr = p.contrast_ratio("#3b82f6", "#3b82f6")
+        cr = p.gen.contrast_ratio("#3b82f6", "#3b82f6")
         assert abs(cr - 1.0) < 0.01
 
     def test_ensure_contrast_aa(self, p):
         """ensure_contrast returns color meeting AA (4.5:1)."""
-        adjusted = p.ensure_contrast("#777777", "#ffffff", 4.5)
-        cr = p.contrast_ratio(adjusted, "#ffffff")
+        adjusted = p.gen.ensure_contrast("#777777", "#ffffff", 4.5)
+        cr = p.gen.contrast_ratio(adjusted, "#ffffff")
         assert cr >= 4.5 - 0.01
 
     def test_ensure_contrast_aaa(self, p):
         """ensure_contrast returns color meeting AAA (7:1)."""
-        adjusted = p.ensure_contrast("#999999", "#ffffff", 7.0)
-        cr = p.contrast_ratio(adjusted, "#ffffff")
+        adjusted = p.gen.ensure_contrast("#999999", "#ffffff", 7.0)
+        cr = p.gen.contrast_ratio(adjusted, "#ffffff")
         assert cr >= 7.0 - 0.01
 
     def test_ensure_contrast_preserves_hue(self, p):
         """ensure_contrast preserves hue (±5°)."""
         base = "#3b82f6"  # blue
-        adjusted = p.ensure_contrast(base, "#ffffff", 4.5)
-        lab_orig = p.from_hex(base)
-        lab_adj = p.from_hex(adjusted)
+        adjusted = p.gen.ensure_contrast(base, "#ffffff", 4.5)
+        lab_orig = p.metric.from_hex(base)
+        lab_adj = p.metric.from_hex(adjusted)
         h_orig = np.arctan2(lab_orig[2], lab_orig[1])
         h_adj = np.arctan2(lab_adj[2], lab_adj[1])
         # Hue difference within ~5° (0.087 rad)
@@ -184,21 +184,21 @@ class TestPalette:
 
     def test_correct_length(self, p):
         """palette returns requested number of steps."""
-        pal = p.palette("#3b82f6", steps=10)
+        pal = p.gen.palette("#3b82f6", steps=10)
         assert len(pal) == 10
 
     def test_monotonic_lightness(self, p):
         """Palette colors have monotonically decreasing L (base Lab)."""
-        pal = p.palette("#3b82f6", steps=10)
-        labs = [p.base_from_hex(h) for h in pal]
+        pal = p.gen.palette("#3b82f6", steps=10)
+        labs = [p.gen.from_hex(h) for h in pal]
         Ls = [lab[0] for lab in labs]
         for i in range(len(Ls) - 1):
             assert Ls[i] > Ls[i + 1], f"L[{i}]={Ls[i]:.3f} ≤ L[{i+1}]={Ls[i+1]:.3f}"
 
     def test_uniform_spacing(self, p):
         """Palette steps are roughly uniformly spaced in base Lab L."""
-        pal = p.palette("#3b82f6", steps=10)
-        labs = [p.base_from_hex(h) for h in pal]
+        pal = p.gen.palette("#3b82f6", steps=10)
+        labs = [p.gen.from_hex(h) for h in pal]
         Ls = [lab[0] for lab in labs]
         diffs = [Ls[i] - Ls[i + 1] for i in range(len(Ls) - 1)]
         # All diffs should be roughly similar (gamut clamp distorts extremes)
@@ -208,7 +208,7 @@ class TestPalette:
 
     def test_hues_count(self, p):
         """palette_hues returns correct number of colors."""
-        hues = p.palette_hues(steps=12)
+        hues = p.gen.hue_ring(12)
         assert len(hues) == 12
 
 
@@ -225,15 +225,15 @@ class TestSemanticScale:
 
     def test_correct_keys(self, p):
         """Scale has all expected level keys."""
-        scale = p.semantic_scale("#3b82f6")
+        scale = p.gen.scale("#3b82f6")
         expected = {"50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"}
         assert set(scale.keys()) == expected
 
     def test_monotonic_lightness(self, p):
         """Higher level → lower L (darker) in base Lab."""
-        scale = p.semantic_scale("#3b82f6")
+        scale = p.gen.scale("#3b82f6")
         levels = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]
-        labs = [p.base_from_hex(scale[str(lv)]) for lv in levels]
+        labs = [p.gen.from_hex(scale[str(lv)]) for lv in levels]
         Ls = [lab[0] for lab in labs]
         for i in range(len(Ls) - 1):
             assert Ls[i] >= Ls[i + 1] - 0.01, (
@@ -243,15 +243,15 @@ class TestSemanticScale:
     def test_base_is_500(self, p):
         """Level 500 is close to the base color in base Lab."""
         base = "#3b82f6"
-        scale = p.semantic_scale(base)
-        base_lab = p.base_from_hex(base)
-        s500_lab = p.base_from_hex(scale["500"])
+        scale = p.gen.scale(base)
+        base_lab = p.gen.from_hex(base)
+        s500_lab = p.gen.from_hex(scale["500"])
         # L should be identical (same base)
         np.testing.assert_allclose(s500_lab[0], base_lab[0], atol=0.02)
 
     def test_gamut_valid(self, p):
         """All scale colors are valid hex strings."""
-        scale = p.semantic_scale("#ef4444")
+        scale = p.gen.scale("#ef4444")
         for lv, hex_str in scale.items():
             assert hex_str.startswith("#")
             assert len(hex_str) == 7
@@ -274,36 +274,36 @@ class TestAdaptMode:
         """Light → dark: light color becomes dark, dark becomes light."""
         # Light gray in light mode → should become darker in dark mode
         light_gray = "#cccccc"
-        adapted = p.adapt_to_mode(light_gray, "light", "dark")
-        L_orig = p.base_from_hex(light_gray)[0]
-        L_adapted = p.base_from_hex(adapted)[0]
+        adapted = p.gen.adapt_to_mode(light_gray, "light", "dark")
+        L_orig = p.gen.from_hex(light_gray)[0]
+        L_adapted = p.gen.from_hex(adapted)[0]
         assert L_adapted < L_orig, "Light color should become darker"
 
         # Dark gray → should become lighter
         dark_gray = "#333333"
-        adapted = p.adapt_to_mode(dark_gray, "light", "dark")
-        L_orig = p.base_from_hex(dark_gray)[0]
-        L_adapted = p.base_from_hex(adapted)[0]
+        adapted = p.gen.adapt_to_mode(dark_gray, "light", "dark")
+        L_orig = p.gen.from_hex(dark_gray)[0]
+        L_adapted = p.gen.from_hex(adapted)[0]
         assert L_adapted > L_orig, "Dark color should become lighter"
 
     def test_dark_to_light_inverts_L(self, p):
         """Dark → light reverses the adaptation."""
         dark_color = "#334455"
-        adapted = p.adapt_to_mode(dark_color, "dark", "light")
-        L_orig = p.base_from_hex(dark_color)[0]
-        L_adapted = p.base_from_hex(adapted)[0]
+        adapted = p.gen.adapt_to_mode(dark_color, "dark", "light")
+        L_orig = p.gen.from_hex(dark_color)[0]
+        L_adapted = p.gen.from_hex(adapted)[0]
         assert L_adapted > L_orig, "Dark mode color should become lighter in light mode"
 
     def test_same_mode_identity(self, p):
         """Same mode → same color."""
         color = "#3b82f6"
-        assert p.adapt_to_mode(color, "light", "light") == color
-        assert p.adapt_to_mode(color, "dark", "dark") == color
+        assert p.gen.adapt_to_mode(color, "light", "light") == color
+        assert p.gen.adapt_to_mode(color, "dark", "dark") == color
 
     def test_adapt_pair_meets_contrast(self, p):
         """adapt_pair result meets contrast requirement."""
-        fg, bg = p.adapt_pair("#333333", "#ffffff", "light", "dark", 4.5)
-        cr = p.contrast_ratio(fg, bg)
+        fg, bg = p.gen.adapt_pair("#333333", "#ffffff", "light", "dark", 4.5)
+        cr = p.gen.contrast_ratio(fg, bg)
         assert cr >= 4.5 - 0.01
 
 
@@ -320,17 +320,17 @@ class TestDeltaE:
 
     def test_self_zero(self, p):
         """Distance to self = 0."""
-        assert p.delta_e("#3b82f6", "#3b82f6") < 1e-10
+        assert p.metric.euclidean("#3b82f6", "#3b82f6") < 1e-10
 
     def test_symmetric(self, p):
         """d(a,b) = d(b,a)."""
-        de1 = p.delta_e("#3b82f6", "#ef4444")
-        de2 = p.delta_e("#ef4444", "#3b82f6")
+        de1 = p.metric.euclidean("#3b82f6", "#ef4444")
+        de2 = p.metric.euclidean("#ef4444", "#3b82f6")
         assert abs(de1 - de2) < 1e-10
 
     def test_positive(self, p):
         """Different colors → positive distance."""
-        assert p.delta_e("#000000", "#ffffff") > 0.1
+        assert p.metric.euclidean("#000000", "#ffffff") > 0.1
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -346,32 +346,32 @@ class TestGamutMapping:
 
     def test_is_in_gamut_white(self, p):
         """White is in sRGB gamut."""
-        lab_white = p.from_hex("#ffffff")
-        assert p.is_in_srgb(lab_white)
+        lab_white = p.metric.from_hex("#ffffff")
+        assert p.metric.in_gamut(lab_white)
 
     def test_is_in_gamut_oog(self, p):
         """Extreme chroma is out of sRGB gamut."""
         extreme = np.array([0.5, 0.8, 0.0])
-        assert not p.is_in_srgb(extreme)
+        assert not p.metric.in_gamut(extreme)
 
     def test_max_chroma_positive(self, p):
         """max_chroma returns a positive value for mid-lightness."""
         from helmlab.utils.gamut import max_chroma
-        C_max = max_chroma(0.5, 0.0, p._space, "srgb")
+        C_max = max_chroma(0.5, 0.0, p.metric.space, "srgb")
         assert C_max > 0.0
 
     def test_max_chroma_less_than_unrestricted(self, p):
         """max_chroma for sRGB < max_chroma for Display P3 at same L,H."""
         from helmlab.utils.gamut import max_chroma
-        C_srgb = max_chroma(0.5, 1.0, p._space, "srgb")
-        C_p3 = max_chroma(0.5, 1.0, p._space, "display-p3")
+        C_srgb = max_chroma(0.5, 1.0, p.metric.space, "srgb")
+        C_p3 = max_chroma(0.5, 1.0, p.metric.space, "display-p3")
         assert C_p3 >= C_srgb - 1e-4
 
     def test_gamut_map_preserves_hue(self, p):
         """gamut_map preserves hue angle (±0.5°)."""
         oog = np.array([0.5, 0.6, 0.3])
         from helmlab.utils.gamut import gamut_map
-        mapped = gamut_map(oog, p._space, "srgb")
+        mapped = gamut_map(oog, p.metric.space, "srgb")
         h_orig = np.arctan2(oog[2], oog[1])
         h_mapped = np.arctan2(mapped[2], mapped[1])
         dh = abs(h_orig - h_mapped)
@@ -382,22 +382,22 @@ class TestGamutMapping:
         """gamut_map preserves lightness (±0.001)."""
         oog = np.array([0.5, 0.6, 0.3])
         from helmlab.utils.gamut import gamut_map
-        mapped = gamut_map(oog, p._space, "srgb")
+        mapped = gamut_map(oog, p.metric.space, "srgb")
         assert abs(mapped[0] - oog[0]) < 0.001
 
     def test_gamut_map_in_gamut_unchanged(self, p):
         """In-gamut color passes through unchanged."""
         from helmlab.utils.gamut import gamut_map
-        lab = p.from_hex("#808080")
-        mapped = gamut_map(lab, p._space, "srgb")
+        lab = p.metric.from_hex("#808080")
+        mapped = gamut_map(lab, p.metric.space, "srgb")
         np.testing.assert_allclose(mapped, lab, atol=1e-10)
 
     def test_gamut_map_oog_becomes_in_gamut(self, p):
         """Out-of-gamut color becomes in-gamut after mapping."""
         oog = np.array([0.5, 0.8, 0.0])
         from helmlab.utils.gamut import gamut_map
-        mapped = gamut_map(oog, p._space, "srgb")
-        assert p.is_in_srgb(mapped)
+        mapped = gamut_map(oog, p.metric.space, "srgb")
+        assert p.metric.in_gamut(mapped)
 
     def test_gamut_map_batch(self, p):
         """Batch gamut mapping is consistent with single mapping."""
@@ -407,9 +407,9 @@ class TestGamutMapping:
             [0.5, 0.01, 0.01],
             [0.5, 0.6, 0.3],
         ])
-        batch_result = gamut_map(labs, p._space, "srgb")
+        batch_result = gamut_map(labs, p.metric.space, "srgb")
         for i in range(len(labs)):
-            single = gamut_map(labs[i], p._space, "srgb")
+            single = gamut_map(labs[i], p.metric.space, "srgb")
             np.testing.assert_allclose(batch_result[i], single, atol=1e-10)
 
 
@@ -437,20 +437,20 @@ class TestDisplayP3:
     def test_p3_gamut_wider_than_srgb(self, p):
         """P3 gamut allows higher chroma than sRGB at same L,H."""
         from helmlab.utils.gamut import max_chroma
-        C_srgb = max_chroma(0.6, 0.5, p._space, "srgb")
-        C_p3 = max_chroma(0.6, 0.5, p._space, "display-p3")
+        C_srgb = max_chroma(0.6, 0.5, p.metric.space, "srgb")
+        C_p3 = max_chroma(0.6, 0.5, p.metric.space, "display-p3")
         assert C_p3 > C_srgb
 
     def test_srgb_subset_of_p3(self, p):
         """sRGB in-gamut color is also in Display P3 gamut."""
-        lab = p.from_hex("#3b82f6")
-        assert p.is_in_srgb(lab)
-        assert p.is_in_p3(lab)
+        lab = p.metric.from_hex("#3b82f6")
+        assert p.metric.in_gamut(lab)
+        assert p.metric.in_gamut(lab, "display-p3")
 
     def test_to_hex_p3_format(self, p):
         """to_hex_p3 returns CSS color(display-p3 ...) format."""
-        lab = p.from_hex("#3b82f6")
-        result = p.to_hex_p3(lab)
+        lab = p.metric.from_hex("#3b82f6")
+        result = p.metric.to_css(lab)
         assert result.startswith("color(display-p3 ")
         assert result.endswith(")")
 
@@ -459,79 +459,66 @@ class TestDisplayP3:
 # Token Export (Part B)
 # ═══════════════════════════════════════════════════════════════════════
 
-class TestTokenExporter:
-    """Tests for design token export."""
+class TestTokens:
+    """Tests for design token export (hl.tokens — color strings in)."""
 
     @pytest.fixture
     def p(self):
         return Helmlab()
 
     def test_css_hex_format(self, p):
-        """to_css_hex returns valid '#rrggbb'."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        result = exp.to_css_hex(lab)
+        result = p.tokens.css("#3b82f6", "hex")
         assert result.startswith("#")
         assert len(result) == 7
 
     def test_css_oklch_format(self, p):
-        """to_css_oklch returns 'oklch(L% C H)' pattern."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        result = exp.to_css_oklch(lab)
+        result = p.tokens.css("#3b82f6", "oklch")
         assert result.startswith("oklch(")
         assert "%" in result
         assert result.endswith(")")
 
     def test_css_displayp3_format(self, p):
-        """to_css_displayp3 returns 'color(display-p3 r g b)' pattern."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        result = exp.to_css_displayp3(lab)
+        result = p.tokens.css("#3b82f6", "p3")
         assert result.startswith("color(display-p3 ")
         assert result.endswith(")")
 
+    def test_css_rec2020_format(self, p):
+        result = p.tokens.css("#3b82f6", "rec2020")
+        assert result.startswith("color(rec2020 ")
+
     def test_android_argb_format(self, p):
-        """to_android_argb returns '0xFF' prefix with 8 hex chars."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        result = exp.to_android_argb(lab)
+        result = p.tokens.android("#3b82f6")
         assert result.startswith("0xFF")
         assert len(result) == 10  # 0xFF + 6 hex
 
     def test_ios_p3_dict(self, p):
-        """to_ios_p3 returns dict with r,g,b keys in [0,1]."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        result = exp.to_ios_p3(lab)
+        result = p.tokens.ios_p3("#3b82f6")
         assert set(result.keys()) == {"r", "g", "b"}
         for v in result.values():
             assert 0.0 <= v <= 1.0
 
-    def test_css_custom_properties(self, p):
-        """export_css_custom_properties returns valid CSS."""
-        exp = p.export()
-        scale = p.semantic_scale("#3b82f6")
-        css = exp.export_css_custom_properties(scale, prefix="--blue")
+    def test_swift_literal(self, p):
+        result = p.tokens.swift("#3b82f6")
+        assert result.startswith("Color(.displayP3,")
+
+    def test_css_variables(self, p):
+        scale = p.gen.scale("#3b82f6")
+        css = p.tokens.css_variables(scale, prefix="--blue")
         assert "--blue-50:" in css
         assert "--blue-500:" in css
         assert "--blue-950:" in css
 
-    def test_export_tailwind(self, p):
-        """export_tailwind returns valid structure."""
-        exp = p.export()
-        scale = p.semantic_scale("#3b82f6")
-        tw = exp.export_tailwind(scale, "blue")
+    def test_tailwind(self, p):
+        scale = p.gen.scale("#3b82f6")
+        tw = p.tokens.tailwind(scale, "blue")
         assert "blue" in tw
         assert "500" in tw["blue"]
         assert tw["blue"]["500"].startswith("#")
 
-    def test_export_json_parseable(self, p):
-        """export_json returns parseable JSON with all formats."""
+    def test_json_parseable(self, p):
         import json as json_mod
-        exp = p.export()
-        scale = p.semantic_scale("#3b82f6")
-        result = exp.export_json({"blue": scale})
+        scale = p.gen.scale("#3b82f6")
+        result = p.tokens.json({"blue": scale})
         parsed = json_mod.loads(result)
         assert "blue" in parsed
         assert "500" in parsed["blue"]
@@ -539,21 +526,19 @@ class TestTokenExporter:
         assert "oklch" in parsed["blue"]["500"]
 
     def test_roundtrip_hex(self, p):
-        """Export hex → parse → same color."""
-        exp = p.export()
-        lab = p.from_hex("#3b82f6")
-        hex_out = exp.to_css_hex(lab)
+        hex_out = p.tokens.css("#3b82f6", "hex")
         srgb_orig = hex_to_srgb("#3b82f6")
         srgb_rec = hex_to_srgb(hex_out)
         np.testing.assert_allclose(srgb_rec, srgb_orig, atol=2.0 / 255.0)
 
     def test_css_rgb_format(self, p):
-        """to_css_rgb returns 'rgb(r, g, b)' pattern."""
-        exp = p.export()
-        lab = p.from_hex("#ff0000")
-        result = exp.to_css_rgb(lab)
+        result = p.tokens.css("#ff0000", "rgb")
         assert result.startswith("rgb(")
         assert result.endswith(")")
+
+    def test_unknown_format_raises(self, p):
+        with pytest.raises(ValueError, match="unknown format"):
+            p.tokens.css("#3b82f6", "cmyk")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -569,12 +554,12 @@ class TestSurroundParam:
 
     def test_s05_matches_current(self, p):
         """S=0.5 (default) matches existing v14 output exactly."""
-        lab_default = p.from_hex("#3b82f6")
+        lab_default = p.metric.from_hex("#3b82f6")
         # Explicitly pass S=0.5
         srgb = hex_to_srgb("#3b82f6")
         from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
-        lab_explicit = p._space.from_XYZ(XYZ, S=0.5)
+        lab_explicit = p.metric.space.from_XYZ(XYZ, S=0.5)
         np.testing.assert_allclose(lab_explicit, lab_default, atol=1e-12)
 
     def test_roundtrip_s02(self, p):
@@ -582,8 +567,8 @@ class TestSurroundParam:
         srgb = hex_to_srgb("#ef4444")
         from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
-        lab = p._space.from_XYZ(XYZ, S=0.2)
-        XYZ_rec = p._space.to_XYZ(lab, S=0.2)
+        lab = p.metric.space.from_XYZ(XYZ, S=0.2)
+        XYZ_rec = p.metric.space.to_XYZ(lab, S=0.2)
         np.testing.assert_allclose(XYZ_rec, XYZ, atol=1e-6)
 
     def test_roundtrip_s08(self, p):
@@ -591,16 +576,16 @@ class TestSurroundParam:
         srgb = hex_to_srgb("#22c55e")
         from helmlab.utils.srgb_convert import sRGB_to_XYZ as s2x
         XYZ = s2x(srgb)
-        lab = p._space.from_XYZ(XYZ, S=0.8)
-        XYZ_rec = p._space.to_XYZ(lab, S=0.8)
+        lab = p.metric.space.from_XYZ(XYZ, S=0.8)
+        XYZ_rec = p.metric.space.to_XYZ(lab, S=0.8)
         np.testing.assert_allclose(XYZ_rec, XYZ, atol=1e-6)
 
     def test_distance_s05_matches_v14(self, p):
         """Distance at S=0.5 matches v14 Euclidean distance."""
-        de1 = p.delta_e("#3b82f6", "#ef4444")
+        de1 = p.metric.euclidean("#3b82f6", "#ef4444")
         # Direct Lab distance at S=0.5
-        lab1 = p.from_hex("#3b82f6")
-        lab2 = p.from_hex("#ef4444")
+        lab1 = p.metric.from_hex("#3b82f6")
+        lab2 = p.metric.from_hex("#ef4444")
         de2 = float(np.sqrt(np.sum((lab1 - lab2) ** 2)))
         assert abs(de1 - de2) < 1e-10
 
@@ -613,7 +598,7 @@ class TestSurroundHelmlab:
         p = Helmlab()
         p.set_surround(0.2)
         assert p._surround == 0.2
-        assert p._space._surround == 0.2
+        assert p.metric.space._surround == 0.2
 
     def test_set_surround_clamps(self):
         """set_surround clamps to [0,1]."""
@@ -627,16 +612,16 @@ class TestSurroundHelmlab:
         """adapt_to_mode uses L-inversion fallback when S params = 0."""
         p = Helmlab()
         # With default params (all S params = 0), should use L-inversion
-        result = p.adapt_to_mode("#cccccc", "light", "dark")
-        lab_orig = p.base_from_hex("#cccccc")
-        lab_adapted = p.base_from_hex(result)
+        result = p.gen.adapt_to_mode("#cccccc", "light", "dark")
+        lab_orig = p.gen.from_hex("#cccccc")
+        lab_adapted = p.gen.from_hex(result)
         assert lab_adapted[0] < lab_orig[0]
 
     def test_adapt_pair_with_surround(self):
         """adapt_pair still meets contrast with surround."""
         p = Helmlab()
-        fg, bg = p.adapt_pair("#333333", "#ffffff", "light", "dark", 4.5)
-        cr = p.contrast_ratio(fg, bg)
+        fg, bg = p.gen.adapt_pair("#333333", "#ffffff", "light", "dark", 4.5)
+        cr = p.gen.contrast_ratio(fg, bg)
         assert cr >= 4.5 - 0.01
 
 
@@ -684,8 +669,8 @@ class TestBaseLab:
     def test_base_roundtrip(self, p):
         """base_from_hex → base_to_hex roundtrip (±1/255)."""
         for h in ["#3b82f6", "#ef4444", "#22c55e", "#808080", "#ffffff", "#000000"]:
-            lab = p.base_from_hex(h)
-            recovered = p.base_to_hex(lab)
+            lab = p.gen.from_hex(h)
+            recovered = p.gen.to_hex(lab)
             srgb_orig = hex_to_srgb(h)
             srgb_rec = hex_to_srgb(recovered)
             np.testing.assert_allclose(srgb_rec, srgb_orig, atol=2.0 / 255.0)
@@ -693,14 +678,14 @@ class TestBaseLab:
     def test_achromatic_low_chroma(self, p):
         """Grays have low chroma in base Lab (no NC, so not exactly zero)."""
         for h in ["#000000", "#808080", "#ffffff", "#333333", "#cccccc"]:
-            lab = p.base_from_hex(h)
+            lab = p.gen.from_hex(h)
             C = np.sqrt(lab[1] ** 2 + lab[2] ** 2)
             # Independent gammas cause small residual chroma (~0.1 max)
             assert C < 0.2, f"{h}: base Lab chroma={C:.6f}, expected < 0.2"
 
     def test_palette_not_washed_out(self, p):
         """Palette colors should be vivid (not all gray/white)."""
-        pal = p.palette("#3b82f6", steps=5)
+        pal = p.gen.palette("#3b82f6", steps=5)
         # At least 3 of 5 should have some saturation
         saturated = 0
         for h in pal:
@@ -712,14 +697,14 @@ class TestBaseLab:
 
     def test_ensure_contrast_not_white(self, p):
         """ensure_contrast should not return #ffffff for dark bg with colored fg."""
-        result = p.ensure_contrast("#a51d1d", "#111113")
+        result = p.gen.ensure_contrast("#a51d1d", "#111113")
         assert result != "#ffffff", "ensure_contrast returned white — base Lab regression"
-        cr = p.contrast_ratio(result, "#111113")
+        cr = p.gen.contrast_ratio(result, "#111113")
         assert cr >= 4.5 - 0.01
 
     def test_semantic_scale_vivid(self, p):
         """Semantic scale level 500 should be close to the input color."""
-        scale = p.semantic_scale("#3b82f6")
+        scale = p.gen.scale("#3b82f6")
         # Level 500 should be the base color (or very close)
         srgb_500 = hex_to_srgb(scale["500"])
         srgb_base = hex_to_srgb("#3b82f6")
@@ -727,8 +712,8 @@ class TestBaseLab:
 
     def test_gradient_no_brightness_fold(self, p):
         """Palette L should be monotonically decreasing (no brightness fold)."""
-        pal = p.palette("#ff6b00", steps=10)
-        labs = [p.base_from_hex(h) for h in pal]
+        pal = p.gen.palette("#ff6b00", steps=10)
+        labs = [p.gen.from_hex(h) for h in pal]
         Ls = [float(lab[0]) for lab in labs]
         for i in range(len(Ls) - 1):
             assert Ls[i] >= Ls[i + 1] - 0.01, (
@@ -750,27 +735,27 @@ class TestXYZOnHelmlab:
     def test_xyz_roundtrip(self, p):
         """from_XYZ → to_XYZ roundtrip."""
         XYZ = np.array([0.2, 0.2, 0.3])
-        lab = p.from_XYZ(XYZ)
-        XYZ_rt = p.to_XYZ(lab)
+        lab = p.metric.from_xyz(XYZ)
+        XYZ_rt = p.metric.to_xyz(lab)
         np.testing.assert_allclose(XYZ, XYZ_rt, atol=1e-10)
 
     def test_from_xyz_matches_from_srgb(self, p):
         """from_XYZ should match from_srgb via sRGB→XYZ."""
         srgb = np.array([0.5, 0.3, 0.8])
         XYZ = sRGB_to_XYZ(srgb)
-        lab_via_srgb = p.from_srgb(srgb)
-        lab_via_xyz = p.from_XYZ(XYZ)
+        lab_via_srgb = p.metric.from_srgb(srgb)
+        lab_via_xyz = p.metric.from_xyz(XYZ)
         np.testing.assert_allclose(lab_via_srgb, lab_via_xyz, atol=1e-12)
 
     def test_d65_white(self, p):
         """D65 white → Lab L should be close to 1."""
         D65 = np.array([0.95047, 1.0, 1.08883])
-        lab = p.from_XYZ(D65)
+        lab = p.metric.from_xyz(D65)
         assert lab[0] > 0.9, f"White L={lab[0]}, expected > 0.9"
 
     def test_black(self, p):
         """Black XYZ → Lab L should be close to 0."""
-        lab = p.from_XYZ(np.array([0.0, 0.0, 0.0]))
+        lab = p.metric.from_xyz(np.array([0.0, 0.0, 0.0]))
         assert abs(lab[0]) < 0.05, f"Black L={lab[0]}, expected ~0"
 
 
@@ -787,29 +772,29 @@ class TestPerceptualDistance:
 
     def test_self_zero(self, p):
         """Distance to self is zero."""
-        lab = p.from_hex("#3b82f6")
-        d = p.perceptual_distance(lab, lab)
+        lab = p.metric.from_hex("#3b82f6")
+        d = p.metric.distance(lab, lab)
         assert d < 1e-10
 
     def test_symmetric(self, p):
         """d(a,b) == d(b,a)."""
-        lab1 = p.from_hex("#ff0000")
-        lab2 = p.from_hex("#00ff00")
-        assert abs(p.perceptual_distance(lab1, lab2) - p.perceptual_distance(lab2, lab1)) < 1e-12
+        lab1 = p.metric.from_hex("#ff0000")
+        lab2 = p.metric.from_hex("#00ff00")
+        assert abs(p.metric.distance(lab1, lab2) - p.metric.distance(lab2, lab1)) < 1e-12
 
     def test_positive(self, p):
         """Different colors have positive distance."""
-        lab1 = p.from_hex("#ff0000")
-        lab2 = p.from_hex("#0000ff")
-        assert p.perceptual_distance(lab1, lab2) > 0
+        lab1 = p.metric.from_hex("#ff0000")
+        lab2 = p.metric.from_hex("#0000ff")
+        assert p.metric.distance(lab1, lab2) > 0
 
     def test_greater_for_dissimilar(self, p):
         """Very different colors have larger distance than similar ones."""
-        lab_r = p.from_hex("#ff0000")
-        lab_rish = p.from_hex("#ee1111")
-        lab_b = p.from_hex("#0000ff")
-        d_close = p.perceptual_distance(lab_r, lab_rish)
-        d_far = p.perceptual_distance(lab_r, lab_b)
+        lab_r = p.metric.from_hex("#ff0000")
+        lab_rish = p.metric.from_hex("#ee1111")
+        lab_b = p.metric.from_hex("#0000ff")
+        d_close = p.metric.distance(lab_r, lab_rish)
+        d_far = p.metric.distance(lab_r, lab_b)
         assert d_far > d_close
 
 
@@ -830,29 +815,29 @@ class TestDeltaEEuclidean:
         return Helmlab()
 
     def test_self_zero(self, p):
-        assert p.delta_e("#3b82f6", "#3b82f6") == 0.0
+        assert p.metric.euclidean("#3b82f6", "#3b82f6") == 0.0
 
     def test_black_white_matches_lab_norm(self, p):
         """Should equal sqrt((Lw - Lb)² + (aw - ab)² + (bw - bb)²)."""
-        lab_w = p.from_hex("#ffffff")
-        lab_b = p.from_hex("#000000")
+        lab_w = p.metric.from_hex("#ffffff")
+        lab_b = p.metric.from_hex("#000000")
         expected = float(np.sqrt(np.sum((lab_w - lab_b) ** 2)))
-        actual = p.delta_e("#ffffff", "#000000")
+        actual = p.metric.euclidean("#ffffff", "#000000")
         assert abs(actual - expected) < 1e-12
 
     def test_distinct_from_perceptual_distance(self, p):
         """Two methods report two different metrics. Regression guard."""
-        lab_w = p.from_hex("#ffffff")
-        lab_b = p.from_hex("#000000")
-        euclidean = p.delta_e("#ffffff", "#000000")
-        perceptual = p.perceptual_distance(lab_w, lab_b)
+        lab_w = p.metric.from_hex("#ffffff")
+        lab_b = p.metric.from_hex("#000000")
+        euclidean = p.metric.euclidean("#ffffff", "#000000")
+        perceptual = p.metric.distance(lab_w, lab_b)
         # Euclidean Lab black-white ≈ 1.12; perceptual is compressed near 0.15
         assert euclidean > 0.5
         assert perceptual < 0.5
         assert euclidean > perceptual  # uncompressed always >= compressed for big edits
 
     def test_returns_float(self, p):
-        d = p.delta_e("#ff0000", "#00ff00")
+        d = p.metric.euclidean("#ff0000", "#00ff00")
         assert isinstance(d, float)
 
 
@@ -903,41 +888,6 @@ class TestDistanceInputContract:
 # ═══════════════════════════════════════════════════════════════════════
 # Deprecated base_* methods emit DeprecationWarning
 # ═══════════════════════════════════════════════════════════════════════
-
-class TestBaseDeprecation:
-    """Tests that base_* methods emit DeprecationWarning (silent before v0.12.1)."""
-
-    @pytest.fixture
-    def p(self):
-        return Helmlab()
-
-    def test_base_from_hex_warns(self, p):
-        with pytest.warns(DeprecationWarning, match="gen_from_hex"):
-            p.base_from_hex("#ff0000")
-
-    def test_base_to_hex_warns(self, p):
-        lab = p.gen_from_hex("#ff0000")
-        with pytest.warns(DeprecationWarning, match="gen_to_hex"):
-            p.base_to_hex(lab)
-
-    def test_base_from_srgb_warns(self, p):
-        with pytest.warns(DeprecationWarning, match="gen_from_srgb"):
-            p.base_from_srgb(np.array([1.0, 0.0, 0.0]))
-
-    def test_base_to_srgb_warns(self, p):
-        lab = p.gen_from_hex("#ff0000")
-        with pytest.warns(DeprecationWarning, match="gen_to_srgb"):
-            p.base_to_srgb(lab)
-
-    def test_base_from_hex_returns_same_as_gen(self, p):
-        """Behavior is unchanged — only warning was added."""
-        import warnings
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            old = p.base_from_hex("#3b82f6")
-        new = p.gen_from_hex("#3b82f6")
-        np.testing.assert_allclose(old, new, atol=1e-12)
-
 
 # ═══════════════════════════════════════════════════════════════════════
 # display_phi_deg — opt-in display alignment, exact isometry
@@ -1035,3 +985,267 @@ class TestDisplayPhi:
         c_zero = np.hypot(lab_zero[1], lab_zero[2])
         c_rot = np.hypot(lab_rot[1], lab_rot[2])
         np.testing.assert_allclose(c_zero, c_rot, atol=1e-12)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Contract guards (2026-07-08 audit fixes)
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestContractGuards:
+    """ensure_contrast fallback warning + distance_from_lab finite guard."""
+
+    def test_ensure_contrast_warns_when_unreachable(self):
+        """7:1 against mid-gray is unreachable even for black/white → warn."""
+        import warnings
+        hl = Helmlab()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = hl.gen.ensure_contrast("#3b82f6", "#808080", ratio=7.0)
+        assert result in ("#000000", "#ffffff")
+        assert any("ensure_contrast" in str(x.message) for x in w)
+
+    def test_ensure_contrast_no_warn_when_reachable(self):
+        import warnings
+        hl = Helmlab()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = hl.gen.ensure_contrast("#3b82f6", "#ffffff", ratio=4.5)
+        assert hl.gen.contrast_ratio(result, "#ffffff") >= 4.5
+        assert not any("ensure_contrast" in str(x.message) for x in w)
+
+    def test_distance_from_lab_rejects_nan(self):
+        hl = Helmlab()
+        lab = hl.metric.from_hex("#3b82f6")
+        bad = np.array([np.nan, 0.1, 0.1])
+        with pytest.raises(ValueError, match="non-finite"):
+            hl.metric.distance(lab, bad)
+
+    def test_distance_from_lab_rejects_inf(self):
+        hl = Helmlab()
+        lab = hl.metric.from_hex("#3b82f6")
+        bad = np.array([0.5, np.inf, 0.1])
+        with pytest.raises(ValueError, match="non-finite"):
+            hl.metric.distance(bad, lab)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 1.0 API — branded types, wide gamut, harmonies, mix, jnd
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestBrandedLabTypes:
+    """Cross-space Lab misuse is a TypeError, not a silent wrong color."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_gen_lab_rejected_by_metric(self, p):
+        lab = p.gen.from_hex("#3b82f6")
+        with pytest.raises(TypeError, match="GenLab"):
+            p.metric.to_hex(lab)
+
+    def test_metric_lab_rejected_by_gen(self, p):
+        lab = p.metric.from_hex("#3b82f6")
+        with pytest.raises(TypeError, match="MetricLab"):
+            p.gen.to_hex(lab)
+
+    def test_plain_arrays_still_accepted(self, p):
+        assert p.metric.to_hex([0.5, 0.05, -0.05]).startswith("#")
+        assert p.gen.to_hex(np.array([0.5, 0.05, -0.05])).startswith("#")
+
+    def test_branded_types_survive_numpy_ops(self, p):
+        from helmlab import GenLab
+        lab = p.gen.from_hex("#3b82f6")
+        assert isinstance(lab.copy(), GenLab)
+
+
+class TestWideGamut10:
+    """gamut= option on generation + wide-gamut input strings."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_gradient_p3(self, p):
+        g = p.gen.gradient("#0000ff", "#ffffff", 3, gamut="display-p3")
+        assert len(g) == 3
+        assert all(x.startswith("color(display-p3 ") for x in g)
+
+    def test_gradient_rec2020(self, p):
+        g = p.gen.gradient("#ff0000", "#00ff00", 2, gamut="rec2020")
+        assert all(x.startswith("color(rec2020 ") for x in g)
+
+    def test_gradient_bad_gamut_raises(self, p):
+        with pytest.raises(ValueError, match="unknown gamut"):
+            p.gen.gradient("#ff0000", "#00ff00", 3, gamut="cmyk")
+
+    def test_p3_input_string(self, p):
+        info = p.metric.info("color(display-p3 1 0 0)")
+        assert info["in_srgb"] is False
+        assert info["in_p3"] is True
+
+    def test_p3_input_to_gen(self, p):
+        lab = p.gen.from_hex("color(display-p3 1 0 0)")
+        assert float(lab[0]) > 0.3
+
+    def test_bad_css_color_raises(self, p):
+        with pytest.raises(ValueError, match="unparseable"):
+            p.metric.from_hex("color(foo 1 0 0)")
+
+    def test_non_string_raises(self, p):
+        with pytest.raises(TypeError):
+            p.gen.from_hex(123)
+
+    def test_scale_p3(self, p):
+        scale = p.gen.scale("#3b82f6", gamut="display-p3")
+        assert scale["500"].startswith("color(display-p3 ")
+
+
+class TestHarmoniesMixRotate:
+    """1.0 generation features: harmonies, mix, rotate_hue, hue_ring."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_harmonies_triadic(self, p):
+        h = p.gen.harmonies("#3b82f6", "triadic")
+        assert len(h) == 3
+        assert h[0] == p.gen.to_hex(p.gen.from_hex("#3b82f6"))
+
+    def test_harmonies_counts(self, p):
+        assert len(p.gen.harmonies("#3b82f6", "complementary")) == 2
+        assert len(p.gen.harmonies("#3b82f6", "analogous")) == 3
+        assert len(p.gen.harmonies("#3b82f6", "tetradic")) == 4
+        assert len(p.gen.harmonies("#3b82f6", "split_complementary")) == 3
+
+    def test_harmonies_preserve_L(self, p):
+        for h in p.gen.harmonies("#3b82f6", "triadic"):
+            lab = p.gen.from_hex(h)
+            base = p.gen.from_hex("#3b82f6")
+            # L equal within gamut-mapping tolerance
+            assert abs(float(lab[0]) - float(base[0])) < 0.02
+
+    def test_harmonies_bad_kind_raises(self, p):
+        with pytest.raises(ValueError, match="unknown harmony"):
+            p.gen.harmonies("#3b82f6", "quadratic")
+
+    def test_mix_endpoints(self, p):
+        a, b = "#ff0000", "#0000ff"
+        assert p.gen.mix(a, b, 0.0) == p.gen.to_hex(p.gen.from_hex(a))
+        assert p.gen.mix(a, b, 1.0) == p.gen.to_hex(p.gen.from_hex(b))
+
+    def test_mix_matches_gradient_midpoint(self, p):
+        a, b = "#ff0000", "#0000ff"
+        assert p.gen.mix(a, b, 0.5) == p.gen.gradient(a, b, 3)[1]
+
+    def test_rotate_hue_identity(self, p):
+        base_rt = p.gen.to_hex(p.gen.from_hex("#3b82f6"))
+        assert p.gen.rotate_hue("#3b82f6", 0) == base_rt
+        assert p.gen.rotate_hue("#3b82f6", 360) == base_rt
+
+    def test_hue_ring_count_and_distinct(self, p):
+        ring = p.gen.hue_ring(6)
+        assert len(ring) == 6
+        assert len(set(ring)) == 6
+
+
+class TestJndAndStrictContrast:
+    """metric.jnd + ensure_contrast(strict=True)."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_jnd_self_zero(self, p):
+        assert p.metric.jnd("#808080", "#808080") == 0.0
+
+    def test_jnd_big_pair_above_threshold(self, p):
+        assert p.metric.jnd("#ff0000", "#00ff00") > 3.0
+
+    def test_jnd_is_scaled_difference(self, p):
+        de = p.metric.difference("#808080", "#828282")
+        jnd = p.metric.jnd("#808080", "#828282")
+        np.testing.assert_allclose(jnd, de / 0.03563295091867221, rtol=1e-9)
+
+    def test_strict_contrast_raises(self, p):
+        from helmlab import ContrastError
+        with pytest.raises(ContrastError):
+            p.gen.ensure_contrast("#3b82f6", "#808080", ratio=7.0, strict=True)
+
+    def test_gamut_map_exposed(self, p):
+        from helmlab import GenLab
+        oog = p.gen.lab(0.5, 0.8, 0.0)
+        mapped = p.gen.gamut_map(oog)
+        assert isinstance(mapped, GenLab)
+        assert p.gen.in_gamut(mapped)
+
+
+class TestCuspGeometryExposed:
+    """1.0: GenSpace's cusp geometry as public API (max_chroma, cusp, vivid,
+    adaptive gamut mapping)."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_max_chroma_positive_and_p3_wider(self, p):
+        c_srgb = p.gen.max_chroma(0.6, 263)
+        c_p3 = p.gen.max_chroma(0.6, 263, "display-p3")
+        assert c_srgb > 0
+        assert c_p3 > c_srgb
+
+    def test_cusp_is_max_over_L(self, p):
+        L_cusp, C_cusp = p.gen.cusp(263)
+        assert 0 < L_cusp < 1
+        # cusp chroma >= max chroma at other lightness values on same hue
+        for L in (0.3, 0.6, 0.8):
+            assert C_cusp >= p.gen.max_chroma(L, 263) - 1e-3
+
+    def test_vivid_preserves_L_and_hue(self, p):
+        base = "#6488b8"
+        vivid = p.gen.vivid(base)
+        lch_base = p.gen.to_lch(p.gen.from_hex(base))
+        lch_vivid = p.gen.to_lch(p.gen.from_hex(vivid))
+        assert abs(lch_vivid[0] - lch_base[0]) < 0.02
+        dh = abs(lch_vivid[2] - lch_base[2]) % 360
+        assert min(dh, 360 - dh) < 3.0
+        assert lch_vivid[1] > lch_base[1]  # more chroma
+
+    def test_vivid_p3_more_chroma_than_srgb(self, p):
+        base = "#6488b8"
+        v_srgb = p.gen.to_lch(p.gen.from_hex(p.gen.vivid(base)))
+        v_p3 = p.gen.to_lch(p.gen.from_hex(p.gen.vivid(base, gamut="display-p3")))
+        assert v_p3[1] > v_srgb[1] - 1e-3
+
+    def test_adaptive_gamut_map_in_gamut(self, p):
+        oog = p.gen.lab(0.5, 0.8, 0.0)
+        mapped = p.gen.gamut_map(oog, method="adaptive")
+        assert p.gen.in_gamut(mapped)
+
+
+class TestMetricLch:
+    """1.0: metric-side cylindrical LCh (symmetric with gen)."""
+
+    @pytest.fixture
+    def p(self):
+        return Helmlab()
+
+    def test_lch_roundtrip(self, p):
+        from helmlab import MetricLab
+        lab = p.metric.from_hex("#3b82f6")
+        lch = p.metric.to_lch(lab)
+        back = p.metric.from_lch(lch)
+        assert isinstance(back, MetricLab)
+        np.testing.assert_allclose(back, np.asarray(lab), atol=1e-12)
+
+    def test_lch_matches_info(self, p):
+        lab = p.metric.from_hex("#3b82f6")
+        lch = p.metric.to_lch(lab)
+        info = p.metric.info("#3b82f6")
+        np.testing.assert_allclose(lch[1], info["C"], atol=1e-12)
+        np.testing.assert_allclose(lch[2], info["H"], atol=1e-9)
+
+    def test_gen_lab_rejected(self, p):
+        with pytest.raises(TypeError, match="GenLab"):
+            p.metric.to_lch(p.gen.from_hex("#3b82f6"))

@@ -50,12 +50,12 @@ function useHelmlabVisuals() {
         const grads: Record<string, string> = {};
         const mids: Record<string, string> = {};
         for (const [name, a, b, n] of STRIP_PAIRS) {
-          const stops = h.gradient(a, b, n);
+          const stops = h.gen.gradient(a, b, n);
           grads[`${name}Hl`] = toCss(stops);
           mids[`${name}Hl`] = stops[Math.floor(n / 2)];
         }
-        // semanticScale is the Tailwind-style 50-950 API the copy describes
-        setHl({ grads, mids, pal: Object.values(h.semanticScale("#3b82f6")) });
+        // gen.scale is the Tailwind-style 50-950 API the copy describes
+        setHl({ grads, mids, pal: Object.values(h.gen.scale("#3b82f6")) });
       })
       .catch(() => {});
   }, []);
@@ -206,10 +206,10 @@ export default function DesignerFlow() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { title: "Design Systems", desc: "Generate a full 50-950 Tailwind-style scale from any brand color. Every step is perceptually even. Export to CSS variables, Tailwind config, or design tokens.", code: 'hl.semanticScale("#3b82f6")' },
-              { title: "Dark Mode", desc: `Dark gradients that don't turn muddy. ${darkGradientPct()}% smoother in the dark range where OKLab struggles most. Your dark theme looks intentional, not accidental.`, code: 'hl.adaptToMode("#3b82f6", "light", "dark")' },
-              { title: "Data Visualization", desc: "Categorical palettes with maximum separation. Your chart colors stay distinct even for colorblind users.", code: "hl.palette_hues(lightness=0.6, steps=8)" },
-              { title: "Wide Gamut (P3)", desc: "Modern displays show colors outside sRGB. Helmlab maps them correctly — no ugly hue shifts when clipping P3 colors to sRGB.", code: 'hl.gamutMap("#ff0080", "srgb")' },
+              { title: "Design Systems", desc: "Generate a full 50-950 Tailwind-style scale from any brand color. Every step is perceptually even. Export to CSS variables, Tailwind config, or design tokens.", code: 'hl.gen.scale("#3b82f6")' },
+              { title: "Dark Mode", desc: `Dark gradients that don't turn muddy. ${darkGradientPct()}% smoother in the dark range where OKLab struggles most. Your dark theme looks intentional, not accidental.`, code: 'hl.gen.adaptToMode("#3b82f6", "light", "dark")' },
+              { title: "Data Visualization", desc: "Categorical palettes with maximum separation. Your chart colors stay distinct even for colorblind users.", code: "hl.gen.hueRing(8, { lightness: 0.6 })" },
+              { title: "Wide Gamut (P3)", desc: "Modern displays show colors outside sRGB. Helmlab maps them correctly — no ugly hue shifts when clipping P3 colors to sRGB.", code: 'hl.gen.toHex(hl.gen.fromHex("color(display-p3 1 0 0.5)"))' },
             ].map((uc) => (
               <div key={uc.title} className="rounded-2xl border border-white/5 bg-zinc-950 p-8">
                 <div className="text-2xl mb-3">{uc.title}</div>
@@ -258,7 +258,7 @@ export default function DesignerFlow() {
               <code>
                 <span className="text-zinc-500">{"// That's it. Really."}</span>{"\n"}
                 <span className="text-purple-400">import</span>{" { Helmlab } "}<span className="text-purple-400">from</span> <span className="text-orange-400">'helmlab'</span>;{"\n"}
-                <span className="text-purple-400">const</span> scale = <span className="text-purple-400">new</span> <span className="text-blue-400">Helmlab</span>().<span className="text-emerald-400">semanticScale</span>(<span className="text-orange-400">'#3b82f6'</span>);
+                <span className="text-purple-400">const</span> scale = <span className="text-purple-400">new</span> <span className="text-blue-400">Helmlab</span>().gen.<span className="text-emerald-400">scale</span>(<span className="text-orange-400">'#3b82f6'</span>);
               </code>
             </pre>
           </div>

@@ -57,7 +57,7 @@ export default function GradientTool() {
 
       if (mod) {
         const hl = new mod.Helmlab();
-        const helmlabColors = hl.gradient(s, e, STEPS);
+        const helmlabColors = hl.gen.gradient(s, e, STEPS);
         const helmlabRow: GradientRow = {
           label: 'Helmlab',
           colors: helmlabColors,

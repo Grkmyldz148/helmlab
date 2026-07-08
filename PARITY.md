@@ -1,7 +1,46 @@
 # Helmlab Python / JS Parity Report
 
-**Tarih:** 2026-04-12
-**Versiyon:** 0.11.8 (her iki paket)
+**Güncel: 2026-07-08 — 1.0.0 working tree, ÖLÇÜLMÜŞ parite** (alt bölümler 0.11.8 tarihi kaydıdır)
+
+## 1.0 Parite Kapısı (kalıcı test)
+
+`packages/helmlab-js/tests/parity-1.0.test.ts` + Python'dan üretilen
+`tests/reference/reference-1.0.json` (`scripts/generate-reference.py`).
+Tam public yüzeyi kapsar: conversions, gradient/mix/palette/scale/hueRing/
+harmonies/rotate/vivid/cusp/maxChroma/adaptive-gamut-map/contrast/adapt,
+difference/euclidean/ciede2000/jnd/distance/confidence/nearest/info, tokens
+(6 CSS formatı + android/ios/swift + scale exportları), round-trip.
+
+### Ölçülen sonuçlar (2026-07-08, 14/14 test)
+
+| Kategori | En kötü Py↔JS farkı |
+|---|---|
+| Lab / LCh koordinatları | 8.4e-13 |
+| difference / distance / jnd / euclidean | 1.1e-12 |
+| confidence alanları | 6.6e-13 |
+| contrast ratio / info / nearest | 7.3e-13 |
+| **TÜM string çıktılar** (hex, color(), oklch, gradient/mix/vivid/harmonies/scale/palette/tokens) | **birebir eşit (0 fark)** |
+| cusp L/C · maxChroma | 3.1e-4 / 5e-4 (iteratif arama, iç tolerans 1e-4 — beklenen) |
+| adaptive gamut map | 6.8e-5 (50-iter binary search) |
+| near-achromatic hue açısı | ~1e-3° (C≈0'da atan2 gürültü büyütmesi — algısal olarak anlamsız) |
+
+### Round-trip hassasiyeti (dönüşüm kusursuzluğu)
+
+| Test | Sonuç |
+|---|---|
+| Hex → Lab → Hex, 1728-renk grid, **iki uzay, iki dil** | **0 kayıp (bit-exact)** |
+| XYZ → Lab → XYZ (gamut içi 576 renk), MetricSpace | max **2.9e-15** (makine hassasiyeti) |
+| XYZ → Lab → XYZ, GenSpace | max **5.8e-9** (enrichment Halley; 8-bit kuantumundan ~6 mertebe küçük), medyan 3.9e-16 |
+
+- 1.0: `hl.metric.distance(labA, labB)` İKİ dilde de MetricLab alır — 0.x
+  XYZ/Lab asimetrisi facade'dan kalktı (XYZ-girişli varyant yalnızca Python
+  raw MetricSpace sınıfında).
+- NC LUT: Python scipy PCHIP ↔ JS elle yazılmış PCHIP — ölçülen fark 1e-13
+  sınıfında, parite tam.
+
+---
+
+# 0.11.8 tarihî kaydı (2026-04-12)
 
 ## Yapılan Değişiklikler
 

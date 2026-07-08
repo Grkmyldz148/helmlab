@@ -1,7 +1,9 @@
 export const VERSION: string = typeof __HELMLAB_VERSION__ !== 'undefined' ? __HELMLAB_VERSION__ : '0.0.0-dev';
-export { Helmlab } from './helmlab.js';
-export type { HelmlabOptions } from './helmlab.js';
-export type { Lab, XYZ, RGB, Hex, LCh, SemanticScale, WCAGLevel } from './types.js';
+export { Helmlab, Gen, Metric, ContrastError, parseColor } from './helmlab.js';
+export type { HelmlabOptions, Gamut, HarmonyKind } from './helmlab.js';
+export { Tokens } from './tokens.js';
+export type { TokenCssFormat } from './tokens.js';
+export type { Lab, XYZ, RGB, Hex, LCh, SemanticScale, WCAGLevel, GenLab, MetricLab } from './types.js';
 export type { HelmlabParams, GenParams } from './core/params.js';
 
 // Lower-level exports for advanced usage
@@ -21,6 +23,6 @@ export {
   clampRgb, relativeLuminance,
 } from './utils/srgb.js';
 export { gamutMap, isInGamut, maxChroma, findCusp } from './utils/gamut.js';
+export type { GamutMapMethod } from './utils/gamut.js';
 export type { SpaceLike } from './utils/gamut.js';
 export { contrastRatio } from './utils/contrast.js';
-export { TokenExporter } from './export.js';

@@ -66,8 +66,8 @@ function srgbHexToRec2020String (hex, alpha) {
 
 function labToSrgbString (L, a, b, alpha, space) {
 	const hex = (space === "helmlab" || space === "helmlch")
-		? h.toHex([L, a, b])
-		: h.genToHex([L, a, b]);
+		? h.metric.toHex([L, a, b])
+		: h.gen.toHex([L, a, b]);
 	const [r, g, bb] = hexToSrgb(hex);
 	const ri = Math.round(r * 255);
 	const gi = Math.round(g * 255);
@@ -79,31 +79,23 @@ function labToSrgbString (L, a, b, alpha, space) {
 }
 
 function labToP3String (L, a, b, alpha, space) {
-	if (space === "helmlab" || space === "helmlch") {
-		// MetricSpace has true P3 path with gamut mapping → wider colors
-		const base = h.toHexP3([L, a, b]);
-		if (alpha !== null && alpha !== 1) {
-			return base.replace(/\)$/, ` / ${alpha})`);
-		}
-		return base;
+	// 1.0: BOTH spaces have a true gamut-mapped P3 path → wider colors
+	const ns = (space === "helmlab" || space === "helmlch") ? h.metric : h.gen;
+	const base = ns.toCss([L, a, b], "display-p3");
+	if (alpha !== null && alpha !== 1) {
+		return base.replace(/\)$/, ` / ${alpha})`);
 	}
-	// GenSpace is sRGB-bound; re-encode as P3 for format consistency
-	const hex = h.genToHex([L, a, b]);
-	return srgbHexToP3String(hex, alpha);
+	return base;
 }
 
 function labToRec2020String (L, a, b, alpha, space) {
-	if (space === "helmlab" || space === "helmlch") {
-		// MetricSpace has true Rec2020 path with gamut mapping → widest colors
-		const base = h.toHexRec2020([L, a, b]);
-		if (alpha !== null && alpha !== 1) {
-			return base.replace(/\)$/, ` / ${alpha})`);
-		}
-		return base;
+	// 1.0: BOTH spaces have a true gamut-mapped Rec2020 path → widest colors
+	const ns = (space === "helmlab" || space === "helmlch") ? h.metric : h.gen;
+	const base = ns.toCss([L, a, b], "rec2020");
+	if (alpha !== null && alpha !== 1) {
+		return base.replace(/\)$/, ` / ${alpha})`);
 	}
-	// GenSpace is sRGB-bound; re-encode as Rec2020 for format consistency
-	const hex = h.genToHex([L, a, b]);
-	return srgbHexToRec2020String(hex, alpha);
+	return base;
 }
 
 function lchToLab (L, C, hDeg) {
@@ -298,19 +290,19 @@ function handleGradient (value, target) {
 			const endHex = hexStops[hexStops.length - 1];
 
 			// h.gradient gives sRGB hex stops with CIEDE2000 arc-length spacing
-			const gradientHexes = h.gradient(startHex, endHex, steps);
+			const gradientHexes = h.gen.gradient(startHex, endHex, steps);
 
 			const formatStop = (hex, i) => {
 				const pct = ((i / (steps - 1)) * 100).toFixed(1);
 				if (target === "p3") {
 					if (space === "helmlab" || space === "helmlch") {
-						return `${h.toHexP3(h.fromHex(hex))} ${pct}%`;
+						return `${h.metric.toCss(h.metric.fromHex(hex), 'display-p3')} ${pct}%`;
 					}
 					return `${srgbHexToP3String(hex, 1)} ${pct}%`;
 				}
 				if (target === "rec2020") {
 					if (space === "helmlab" || space === "helmlch") {
-						return `${h.toHexRec2020(h.fromHex(hex))} ${pct}%`;
+						return `${h.metric.toCss(h.metric.fromHex(hex), 'rec2020')} ${pct}%`;
 					}
 					return `${srgbHexToRec2020String(hex, 1)} ${pct}%`;
 				}
@@ -369,8 +361,8 @@ function handleColorMix (value, target) {
 		}
 
 		const useGen = space === "helmgen" || space === "helmgenlch";
-		const lab1 = useGen ? h.genFromHex(stop1.color) : h.fromHex(stop1.color);
-		const lab2 = useGen ? h.genFromHex(stop2.color) : h.fromHex(stop2.color);
+		const lab1 = useGen ? h.gen.fromHex(stop1.color) : h.metric.fromHex(stop1.color);
+		const lab2 = useGen ? h.gen.fromHex(stop2.color) : h.metric.fromHex(stop2.color);
 
 		const t = stop1.pct / 100;
 		const mixed = [

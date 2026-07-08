@@ -41,14 +41,16 @@ import { Helmlab } from 'helmlab';
 
 const hl = new Helmlab();
 
-const lab = hl.fromHex('#3B82F6');                    // Hex → Helmlab Lab
-const hex = hl.toHex([0.5, -0.1, 0.2]);              // Lab → hex (gamut mapped)
-hl.contrastRatio('#ffffff', '#3B82F6');                // → 3.68
-hl.ensureContrast('#3B82F6', '#ffffff', 4.5);         // Adjust to meet 4.5:1
-hl.difference('#ff0000', '#00ff00');                  // Perceptual color difference (the good metric)
-hl.deltaE('#ff0000', '#00ff00');                      // Euclidean Lab distance (uncompressed, ΔE76-style)
-hl.gradient('#ff0000', '#0000ff', 8);                 // Perfectly uniform gradient
-hl.semanticScale('#3B82F6');                          // Tailwind-style 50–950 scale
+hl.gen.gradient('#ff0000', '#0000ff', 8);             // Perfectly uniform gradient
+hl.gen.gradient('#00f', '#fff', 8, { gamut: 'display-p3' }); // wide-gamut output
+hl.gen.scale('#3B82F6');                              // Tailwind-style 50-950 scale
+hl.gen.harmonies('#3B82F6', 'triadic');               // constant-L,C hue rotations
+hl.gen.vivid('#6488b8', { gamut: 'display-p3' });     // chroma to the gamut boundary
+hl.gen.ensureContrast('#3B82F6', '#ffffff', 4.5);     // adjust to meet 4.5:1
+hl.metric.difference('#ff0000', '#00ff00');           // trained perceptual metric
+hl.metric.jnd('#808080', '#828282');                  // just-noticeable-difference units
+hl.metric.ciede2000('#ff0000', '#00ff00');            // industry standard, ~86.6
+hl.tokens.css('#3B82F6', 'oklch');                    // design-token export
 ```
 
 ~17.8KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. Full API reference: [helmlab.space/docs](https://helmlab.space/docs/).
@@ -83,27 +85,45 @@ pip install helmlab
 
 ## Quick Start (Python)
 
+One `Helmlab` instance, three namespaces: **`hl.gen`** creates colors,
+**`hl.metric`** measures them, **`hl.tokens`** exports design tokens.
+The two spaces have branded Lab types — mixing them raises a `TypeError`
+instead of silently producing a wrong color.
+
 ```python
 from helmlab import Helmlab
 
 hl = Helmlab()
 
-# sRGB to Helmlab Lab
-lab = hl.from_srgb([0.2, 0.5, 0.8])
-print(f"L={lab[0]:.3f}, a={lab[1]:.3f}, b={lab[2]:.3f}")
+# ── Create (GenSpace) ──────────────────────────────────────────────
+hl.gen.gradient("#ff0000", "#0000ff", 8)              # equal perceptual steps
+hl.gen.gradient("#0000ff", "#ffffff", 8, gamut="display-p3")  # wide-gamut output
+hl.gen.mix("#ff0000", "#0000ff")                      # visual midpoint (same path)
+hl.gen.scale("#3b82f6")                               # Tailwind 50-950, 500 == input
+hl.gen.harmonies("#3b82f6", "triadic")                # constant-L,C hue rotations
+hl.gen.vivid("#6488b8", gamut="display-p3")           # chroma -> gamut boundary
+hl.gen.cusp(263)                                      # most colorful point of a hue
+hl.gen.ensure_contrast("#ffffff", "#3b82f6", ratio=4.5, strict=True)
 
-# Color difference between two sRGB colors
-dist = hl.delta_e("#ff0000", "#00ff00")
+# ── Measure (MetricSpace) ──────────────────────────────────────────
+hl.metric.difference("#ff0000", "#00ff00")   # trained metric (COMBVD 22.48)
+hl.metric.jnd("#808080", "#828282")          # in just-noticeable-difference units
+hl.metric.ciede2000("#ff0000", "#00ff00")    # industry standard, ~86.6
+hl.metric.confidence("#808080", "#828282")   # observer-disagreement estimate
+hl.metric.info("color(display-p3 1 0 0)")    # wide-gamut input works everywhere
 
-# Perfectly uniform gradient (arc-length reparameterized)
-gradient = hl.gradient("#ff0000", "#0000ff", 8)
-
-# Ensure WCAG AA contrast (4.5:1)
-adjusted = hl.ensure_contrast("#ffffff", "#3B82F6", min_ratio=4.5)
-
-# Generate a palette (Tailwind-style 50-950 scale)
-scale = hl.semantic_scale("#3B82F6")
+# ── Export (hex in, tokens out) ────────────────────────────────────
+hl.tokens.css("#3b82f6", "oklch")            # 'oklch(62.3% 0.1881 259.8)'
+hl.tokens.css_variables(hl.gen.scale("#3b82f6"), "--primary")
 ```
+
+JS is the camelCase mirror (`hl.gen.ensureContrast(...)`). Parity is
+enforced by a permanent cross-language gate: **every string output is
+byte-identical, numeric worst-case difference ~1e-12**, and hex round-trips
+are bit-exact on a 1728-color grid in both spaces and both languages.
+Full surface: [API.md](API.md). Upgrading from 0.x: the flat
+`hl.gradient()/hl.from_hex()` API was removed in 1.0 — every method now
+lives on `hl.gen` / `hl.metric` / `hl.tokens`.
 
 ## Architecture
 

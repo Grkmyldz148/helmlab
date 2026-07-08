@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: cd packages/helmlab-js && npm ci && npx vitest run
+      - run: cd packages/helmlab-js && npm ci && npx tsc --noEmit && npx vitest run
 
   # ─── Version consistency guard ────────────────────────
   # Fails the build if pyproject / __init__ / helmlab-js / site version.ts drift.

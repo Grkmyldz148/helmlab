@@ -391,6 +391,20 @@ export class AnalyticalSpace {
    * STRESS ≈ 22.5 on COMBVD; saturates near 0.15 for very dissimilar pairs.
    */
   distance(lab1: Lab, lab2: Lab): number {
+    // Guard (mirrors Python's distance_from_lab): CIELAB (L* up to 100) is
+    // the most common misuse — Helmlab L is ≈0..1. NaN/Inf would otherwise
+    // surface as NaN far from the call site.
+    for (const lab of [lab1, lab2]) {
+      if (!Number.isFinite(lab[0]) || !Number.isFinite(lab[1]) || !Number.isFinite(lab[2])) {
+        throw new Error('distance() got non-finite (NaN/Inf) Lab input.');
+      }
+      if (Math.abs(lab[0]) > 3.0) {
+        throw new Error(
+          'distance() expects HELMLAB Lab (L≈0..1), but got L>3 — this looks ' +
+          'like CIELAB (L*=0..100). Convert via fromXYZ()/fromHex() first.'
+        );
+      }
+    }
     const r = this.p.raw;
     // Neutral correction is a display-only post-step: fromXYZ() subtracts an
     // L-dependent (a, b) offset so grays render exactly neutral. That offset

@@ -25,7 +25,7 @@ function maxAbsDiff(a: number[], b: number[]): number {
 
 describe('Black point', () => {
   it('MetricSpace: XYZ=[0,0,0] → Lab=[0,0,0]', () => {
-    const lab = hl.fromXYZ([0, 0, 0]);
+    const lab = hl.metric.fromXyz([0, 0, 0]);
     expect(lab[0]).toBeCloseTo(0, 10);
     expect(lab[1]).toBeCloseTo(0, 10);
     expect(lab[2]).toBeCloseTo(0, 10);
@@ -40,8 +40,8 @@ describe('Black point', () => {
 
   it('MetricSpace: black round-trip XYZ → Lab → XYZ', () => {
     const xyz: XYZ = [0, 0, 0];
-    const lab = hl.fromXYZ(xyz);
-    const rec = hl.toXYZ(lab);
+    const lab = hl.metric.fromXyz(xyz);
+    const rec = hl.metric.toXyz(lab);
     expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-12);
   });
 
@@ -53,7 +53,7 @@ describe('Black point', () => {
   });
 
   it('MetricSpace: #000000 has zero chroma', () => {
-    const lab = hl.fromHex('#000000');
+    const lab = hl.metric.fromHex('#000000');
     expect(chroma(lab)).toBeLessThan(1e-8);
   });
 
@@ -73,8 +73,8 @@ describe('Near-black', () => {
   for (const Y of darkYvals) {
     it(`MetricSpace: Y=${Y} gray round-trip`, () => {
       const xyz: XYZ = [D65[0] * Y, D65[1] * Y, D65[2] * Y];
-      const lab = hl.fromXYZ(xyz);
-      const rec = hl.toXYZ(lab);
+      const lab = hl.metric.fromXyz(xyz);
+      const rec = hl.metric.toXyz(lab);
       expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-8);
     });
 
@@ -87,7 +87,7 @@ describe('Near-black', () => {
 
     it(`MetricSpace: Y=${Y} gray has low chroma`, () => {
       const xyz: XYZ = [D65[0] * Y, D65[1] * Y, D65[2] * Y];
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       // MetricSpace enrichment stages produce small residual chroma
       // for extreme darks outside the NC LUT range
       const tol = Y < 0.001 ? 0.05 : 1e-3;
@@ -104,8 +104,8 @@ describe('Near-black', () => {
   const darkHexes = ['#010101', '#020202', '#050505', '#0a0a0a', '#101010'];
   for (const hex of darkHexes) {
     it(`MetricSpace: ${hex} round-trip`, () => {
-      const lab = hl.fromHex(hex);
-      const rt = hl.toHex(lab);
+      const lab = hl.metric.fromHex(hex);
+      const rt = hl.metric.toHex(lab);
       const parse = (h: string) => [
         parseInt(h.slice(1, 3), 16),
         parseInt(h.slice(3, 5), 16),
@@ -121,7 +121,7 @@ describe('Near-black', () => {
 
 describe('White point', () => {
   it('MetricSpace: D65 white has near-zero chroma', () => {
-    const lab = hl.fromXYZ(D65);
+    const lab = hl.metric.fromXyz(D65);
     expect(chroma(lab)).toBeLessThan(1e-3);
   });
 
@@ -131,8 +131,8 @@ describe('White point', () => {
   });
 
   it('MetricSpace: D65 round-trip', () => {
-    const lab = hl.fromXYZ(D65);
-    const rec = hl.toXYZ(lab);
+    const lab = hl.metric.fromXyz(D65);
+    const rec = hl.metric.toXyz(lab);
     expect(maxAbsDiff(rec, D65)).toBeLessThan(1e-8);
   });
 
@@ -144,8 +144,8 @@ describe('White point', () => {
 
   for (const hex of ['#f0f0f0', '#f8f8f8', '#fefefe', '#ffffff']) {
     it(`MetricSpace: ${hex} round-trip`, () => {
-      const lab = hl.fromHex(hex);
-      const rt = hl.toHex(lab);
+      const lab = hl.metric.fromHex(hex);
+      const rt = hl.metric.toHex(lab);
       const parse = (h: string) => [
         parseInt(h.slice(1, 3), 16),
         parseInt(h.slice(3, 5), 16),
@@ -165,7 +165,7 @@ describe('Achromatic axis', () => {
     for (let i = 0; i <= 255; i++) {
       const Y = i / 255;
       const xyz: XYZ = [D65[0] * Y, D65[1] * Y, D65[2] * Y];
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       const C = chroma(lab);
       if (C > maxC) maxC = C;
     }
@@ -190,7 +190,7 @@ describe('Achromatic axis', () => {
     const Yvals = [0, 1e-6, 1e-5, 1e-4, 1e-3, 0.01, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0];
     for (const Y of Yvals) {
       const xyz: XYZ = [D65[0] * Y, D65[1] * Y, D65[2] * Y];
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       expect(lab[0]).toBeGreaterThanOrEqual(prevL - 1e-10);
       prevL = lab[0];
     }
@@ -211,7 +211,7 @@ describe('Achromatic axis', () => {
     let maxC = 0;
     for (let v = 0; v < 256; v += 17) {
       const hex = '#' + [v, v, v].map(c => c.toString(16).padStart(2, '0')).join('');
-      const lab = hl.fromHex(hex);
+      const lab = hl.metric.fromHex(hex);
       const C = chroma(lab);
       if (C > maxC) maxC = C;
     }
@@ -228,7 +228,7 @@ describe('NC LUT continuity', () => {
     for (let i = 0; i <= 200; i++) {
       const Y = Math.pow(10, -5 + (i / 200) * 4); // 1e-5 to 0.1
       const xyz: XYZ = [D65[0] * Y, D65[1] * Y, D65[2] * Y];
-      labs.push(hl.fromXYZ(xyz));
+      labs.push(hl.metric.fromXyz(xyz));
     }
     let maxJumpA = 0, maxJumpB = 0;
     for (let i = 1; i < labs.length; i++) {
@@ -267,8 +267,8 @@ describe('Extreme inputs', () => {
 
   for (const { label, xyz } of exactExtremes) {
     it(`MetricSpace: ${label} round-trip`, () => {
-      const lab = hl.fromXYZ(xyz);
-      const rec = hl.toXYZ(lab);
+      const lab = hl.metric.fromXyz(xyz);
+      const rec = hl.metric.toXyz(lab);
       expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-6);
     });
 
@@ -288,8 +288,8 @@ describe('Extreme inputs', () => {
 
   for (const { label, xyz } of clampedExtremes) {
     it(`MetricSpace: ${label} clamped RT`, () => {
-      const lab = hl.fromXYZ(xyz);
-      const rec = hl.toXYZ(lab);
+      const lab = hl.metric.fromXyz(xyz);
+      const rec = hl.metric.toXyz(lab);
       expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-3);
     });
 
@@ -301,7 +301,7 @@ describe('Extreme inputs', () => {
   }
 
   it('MetricSpace: no NaN on zero input', () => {
-    const lab = hl.fromXYZ([0, 0, 0]);
+    const lab = hl.metric.fromXyz([0, 0, 0]);
     expect(Number.isNaN(lab[0])).toBe(false);
     expect(Number.isNaN(lab[1])).toBe(false);
     expect(Number.isNaN(lab[2])).toBe(false);
@@ -315,7 +315,7 @@ describe('Extreme inputs', () => {
   });
 
   it('MetricSpace: no NaN on tiny input', () => {
-    const lab = hl.fromXYZ([1e-20, 1e-20, 1e-20]);
+    const lab = hl.metric.fromXyz([1e-20, 1e-20, 1e-20]);
     expect(Number.isNaN(lab[0])).toBe(false);
     expect(Number.isNaN(lab[1])).toBe(false);
     expect(Number.isNaN(lab[2])).toBe(false);
@@ -341,8 +341,8 @@ describe('sRGB primaries round-trip', () => {
   for (const hex of colors) {
     it(`MetricSpace: ${hex}`, () => {
       const xyz = srgbToXyz(hexToSrgb(hex));
-      const lab = hl.fromXYZ(xyz);
-      const rec = hl.toXYZ(lab);
+      const lab = hl.metric.fromXyz(xyz);
+      const rec = hl.metric.toXyz(lab);
       expect(maxAbsDiff(rec, xyz)).toBeLessThan(1e-8);
     });
 
@@ -365,8 +365,8 @@ describe('Web-safe 216 colors stress test', () => {
         for (let b = 0; b < 256; b += 51) {
           const srgb = [r / 255, g / 255, b / 255] as [number, number, number];
           const xyz = srgbToXyz(srgb);
-          const lab = hl.fromXYZ(xyz);
-          const rec = hl.toXYZ(lab);
+          const lab = hl.metric.fromXyz(xyz);
+          const rec = hl.metric.toXyz(lab);
           const err = maxAbsDiff(rec, xyz);
           if (err > maxErr) maxErr = err;
         }
@@ -404,7 +404,7 @@ describe('refRange validation', () => {
   const GEN_AB_MAX = 0.51;
 
   it('MetricSpace: D65 white L within refRange', () => {
-    const lab = hl.fromXYZ(D65);
+    const lab = hl.metric.fromXyz(D65);
     expect(lab[0]).toBeGreaterThan(0);
     expect(lab[0]).toBeLessThanOrEqual(METRIC_L_MAX);
   });
@@ -422,7 +422,7 @@ describe('refRange validation', () => {
     ];
     for (const hex of primaries) {
       const xyz = srgbToXyz(hexToSrgb(hex));
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       expect(Math.abs(lab[1])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
       expect(Math.abs(lab[2])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
     }
@@ -449,7 +449,7 @@ describe('refRange validation', () => {
     ];
     for (const p3 of p3Primaries) {
       const xyz = displayP3ToXyz(p3);
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       expect(Math.abs(lab[1])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
       expect(Math.abs(lab[2])).toBeLessThanOrEqual(METRIC_AB_MAX + 0.001);
     }
@@ -475,7 +475,7 @@ describe('refRange validation', () => {
     ];
     for (const hex of primaries) {
       const xyz = srgbToXyz(hexToSrgb(hex));
-      const lab = hl.fromXYZ(xyz);
+      const lab = hl.metric.fromXyz(xyz);
       expect(lab[0]).toBeGreaterThanOrEqual(0);
       expect(lab[0]).toBeLessThanOrEqual(METRIC_L_MAX + 0.001);
     }

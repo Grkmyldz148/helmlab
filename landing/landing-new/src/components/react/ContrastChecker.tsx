@@ -72,7 +72,7 @@ export default function ContrastChecker() {
     if (hlMod) {
       try {
         const hl = new hlMod.Helmlab();
-        const fixed = hl.ensureContrast(fg, bg, 4.5);
+        const fixed = hl.gen.ensureContrast(fg, bg, 4.5);
         setFixedFg(fixed.toLowerCase());
         return;
       } catch {
