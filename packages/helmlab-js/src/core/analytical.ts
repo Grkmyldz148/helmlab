@@ -256,13 +256,7 @@ export class AnalyticalSpace {
       const hOut = atan2(b, a);
       const C = sqrt(a * a + b * b);
       // Newton iteration: find h_raw s.t. h_raw + delta(h_raw) = h_out
-      let hRaw = hOut;
-      for (let i = 0; i < 8; i++) {
-        const f = hRaw + hueDelta(r, hRaw) - hOut;
-        let fp = 1 + hueDeltaDeriv(r, hRaw);
-        if (abs(fp) < 1e-10) fp = 1;
-        hRaw -= f / fp;
-      }
+      const hRaw = hueNewton(r, hOut);
       a = C * cos(hRaw);
       b = C * sin(hRaw);
     }
@@ -517,11 +511,34 @@ function hueDelta(r: R, h: number): number {
          r.hue_cos4 * cos(4 * h) + r.hue_sin4 * sin(4 * h);
 }
 
-function hueDeltaDeriv(r: R, h: number): number {
-  return -r.hue_cos1 * sin(h) + r.hue_sin1 * cos(h) +
-         -2 * r.hue_cos2 * sin(2 * h) + 2 * r.hue_sin2 * cos(2 * h) +
-         -3 * r.hue_cos3 * sin(3 * h) + 3 * r.hue_sin3 * cos(3 * h) +
-         -4 * r.hue_cos4 * sin(4 * h) + 4 * r.hue_sin4 * cos(4 * h);
+/** Solve h + hueDelta(h) = hOut by Newton (at most 8 steps).
+ *
+ * Bit-identical to the 1.0.0 loop: each sin/cos is evaluated once per step and
+ * shared between hueDelta and its derivative (same arguments, same arithmetic
+ * order), and the loop stops only at an exact fixed point, after which every
+ * remaining step would leave h unchanged. */
+function hueNewton(r: R, hOut: number): number {
+  let h = hOut;
+  for (let i = 0; i < 8; i++) {
+    const c1 = cos(h), s1 = sin(h);
+    const h2 = 2 * h, h3 = 3 * h, h4 = 4 * h;
+    const c2 = cos(h2), s2 = sin(h2), c3 = cos(h3), s3 = sin(h3), c4 = cos(h4), s4 = sin(h4);
+    const delta = r.hue_cos1 * c1 + r.hue_sin1 * s1 +
+                  r.hue_cos2 * c2 + r.hue_sin2 * s2 +
+                  r.hue_cos3 * c3 + r.hue_sin3 * s3 +
+                  r.hue_cos4 * c4 + r.hue_sin4 * s4;
+    const deriv = -r.hue_cos1 * s1 + r.hue_sin1 * c1 +
+                  -2 * r.hue_cos2 * s2 + 2 * r.hue_sin2 * c2 +
+                  -3 * r.hue_cos3 * s3 + 3 * r.hue_sin3 * c3 +
+                  -4 * r.hue_cos4 * s4 + 4 * r.hue_sin4 * c4;
+    const f = h + delta - hOut;
+    let fp = 1 + deriv;
+    if (abs(fp) < 1e-10) fp = 1;
+    const next = h - f / fp;
+    if (Object.is(next, h)) break;
+    h = next;
+  }
+  return h;
 }
 
 function chromaScale(r: R, h: number): number {
@@ -578,7 +595,9 @@ function lCorrectInv(r: R, L1: number, h: number): number {
                r.L_corr_p2 * (dt * (0.5 - L) - t) +
                r.L_corr_p3 * 2 * t * dt;
     if (abs(dfdL) < 1e-10) dfdL = 1;
-    L -= f / dfdL;
+    const next = L - f / dfdL;
+    if (Object.is(next, L)) break; // exact fixed point: further steps change nothing
+    L = next;
   }
   return L;
 }
@@ -607,7 +626,9 @@ function darkLCompressInv(r: R, Ln: number, h: number): number {
     const gp = coeff * oml * (1 - 3 * L);
     let fp = eg * (1 + L * gp);
     if (abs(fp) < 1e-10) fp = 1;
-    L -= f / fp;
+    const next = L - f / fp;
+    if (Object.is(next, L)) break; // exact fixed point: further steps change nothing
+    L = next;
   }
   return L;
 }

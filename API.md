@@ -72,7 +72,7 @@ Invalid strings raise. (Shared parser `parse_color() → XYZ`.)
 | `gamut_map(lab, gamut='srgb', method='chroma')` | `GenLab` | `method='adaptive'` = Ottosson-style cusp projection (trades a little L for chroma) |
 | `in_gamut(lab_or_color, gamut='srgb')` | `bool` | |
 
-### Cusp geometry (the 360/360/360 strength, exposed)
+### Cusp geometry
 | Python | Returns | Semantics |
 |---|---|---|
 | `max_chroma(lightness, hue_deg, gamut='srgb')` | `float` | maximum in-gamut chroma at fixed L, h |
@@ -121,9 +121,9 @@ complementary `[0, 180]` · analogous `[0, -30, 30]` · triadic `[0, 120, 240]`
 ### Measurement — four clearly-named metrics
 | Python | Range | What it is |
 |---|---|---|
-| `difference(a, b)` | 0…~0.15 (saturates) | **the trained metric** (v21, COMBVD STRESS 22.48). Best for near-threshold judgments; rank preserved, absolute value plateaus for very different colors |
+| `difference(a, b)` | 0…~0.15 (saturates) | **the trained metric** (v21; fit on COMBVD). Intended for small and near-threshold differences; rank preserved, absolute value plateaus for very different colors |
 | `euclidean(a, b)` | 0…~1.6 | uncompressed ΔE76-analogue in Metric Lab; unbounded companion |
-| `ciede2000(a, b)` | 0…~100 | industry-standard CIEDE2000 (CIELAB scale); most stable for suprathreshold catalog argmax |
+| `ciede2000(a, b)` | 0…~100 | industry-standard CIEDE2000 (CIELAB scale); default metric for `nearest` (suprathreshold catalog argmax) |
 | `jnd(a, b)` | 0…∞ | `difference / 0.035633` — difference in **just-noticeable-difference units**. 1.0 = the point where the median observer of the ordinal model rates the pair at least "moderately different" (`tau[1]/mu_scale` from the v2 confidence fit). ≥ ~4.2 JND = the saturation zone; values there mean "far above threshold", not a precise multiple |
 
 Plus:

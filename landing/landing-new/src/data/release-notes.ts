@@ -4,6 +4,11 @@ import { VERSION } from './version';
  *  Add an entry when bumping the version; unknown versions fall back to
  *  evergreen stats so the card never ships empty. */
 export const releaseHighlights: Record<string, string[]> = {
+  '1.0.1': [
+    'JS: gen inverse 2.2×, gradient 1.9×, scale 2.2× faster',
+    'Outputs bit-identical to 1.0.0 (all 16.7M sRGB colors checked)',
+    'README benchmark claims corrected; Python unchanged',
+  ],
   '0.17.0': [
     'metric.nearest() — honest catalog matching, ciede2000 default',
     'metric.ciede2000() public + hex-friendly token export',

@@ -115,7 +115,7 @@ export const claims = {
   datasets: { combvdPairs: 3813, combvdSubsets: 6, macadamPairs: 128 },
 
   // ── Package facts ──
-  bundleKB: 17.8,            // minified + gzipped (measured: npm run size, v0.15 — PCHIP NC + LCh helpers)
+  bundleKB: 21,              // gzipped dist/index.js (gzip -9: 20,589 bytes), measured 2026-11-08 on 1.0.1
   oklabBundleKB: 2,
   metricParams: 72,
   genParams: 45,  // active scalars in gen_params.json: M1 9 + M2 9 + depcubic 1 + PW-L 19+1 + enrichment 5 + C^cp 1 (2 dead keys excluded)

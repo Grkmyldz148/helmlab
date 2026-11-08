@@ -2,7 +2,7 @@
 
 A family of purpose-built color spaces for UI design systems.
 
-Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement (STRESS 22.48 on COMBVD with Bradford CAT — 23% better than CIEDE2000's 29.20), and **GenSpace** for gradient/palette generation (**62-9-19 vs OKLab** on ColorBench's 90 metrics including independent datasets, 360/360/360 gamut cusps, zero monotonicity violations in sRGB/P3 — 1 in Rec.2020).
+Helmlab provides two complementary color spaces: **MetricSpace** for perceptual distance measurement and **GenSpace** for gradient/palette generation. MetricSpace STRESS (lower = closer agreement with observers) is 22.48 on COMBVD (3,813 pairs, Bradford CAT to D65; CIEDE2000: 29.20 — both models were derived from COMBVD, so this is a fit-data comparison) and 29.65 / 33.06 on independent display data (SCDd set 18, 588 pairs each on grey / black background; CIEDE2000: 34.23 / 39.37). GenSpace has a valid gamut cusp at each of 3,600 hues in sRGB, Display P3 and Rec.2020. Details: [Benchmarks](#benchmarks).
 
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
@@ -13,14 +13,14 @@ Helmlab provides two complementary color spaces: **MetricSpace** for perceptual 
 
 ## Key Features
 
-- **State-of-the-art color difference** — MetricSpace: STRESS 22.48 vs CIEDE2000's 29.20 on COMBVD (3,813 pairs, with Bradford CAT pre-processing)
-- **Superior gradient generation** — GenSpace: **62 wins** vs OKLab's 9 (19 ties) across 90 ColorBench metrics (3,038 gradient pairs, 3 gamuts), 360/360/360 valid cusps, zero monotonicity violations in sRGB/P3 (1 in Rec.2020)
-- **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): eliminates cusp singularities while preserving gradient quality. Exact analytical inverse via hyperbolic functions
-- **Chroma power** — Mild compression (C^0.978) improves gradient step uniformity across 3,038 pairs
-- **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness. Fixes blue→white purple shift without affecting other colors
-- **True blue gradients** — Blue→White midpoint is sky blue (G/R = 1.51), not lavender
-- **Perfect achromatic axis** — Grays map to C* ≈ 10⁻¹⁵ (structural guarantee from uniform transfer function)
-- **Perfectly uniform gradients** — Built-in CIEDE2000 arc-length reparameterization, CV ≈ 0% on any pair
+- **Color difference** — MetricSpace: STRESS 22.48 vs CIEDE2000's 29.20 on COMBVD (3,813 pairs, Bradford CAT to D65; fit data for both models); 29.65 / 33.06 vs 34.23 / 39.37 on independent SCDd set 18 (588 pairs each, grey / black background)
+- **Gradient generation** — GenSpace: a valid gamut cusp at each of 3,600 hues in sRGB, Display P3 and Rec.2020
+- **Depressed cubic transfer** — `y³ + αy = x` (α=0.021): finite derivative at zero (unlike `x^(1/3)`). Exact analytical inverse via hyperbolic functions
+- **Chroma power** — Mild chroma compression (C^0.978), analytically invertible
+- **L-gated hue enrichment** — Targeted hue rotation in the blue region, gated by lightness, aimed at the blue→white purple shift. Achromatic colors are unchanged
+- **Blue gradients** — Blue→White midpoint stays blue (`hl.gen.mix('#0000ff', '#ffffff')` → `#649cff`), not lavender
+- **Neutral achromatic axis** — GenSpace grays map to C* ≈ 10⁻¹⁵, up to at least Y = 10 (structural: same transfer function on every channel)
+- **Equal-step gradients** — `gradient()` reparameterizes the path by CIEDE2000 arc length, so steps are approximately equal in CIEDE2000 on any pair
 - **Embedded Helmholtz-Kohlrausch** — MetricSpace: lightness is chroma-dependent, learned from data
 - **UI tooling** — Gamut mapping, WCAG contrast enforcement, palette generation, dark/light mode adaptation
 - **Token export** — CSS (`oklch()`), Android XML, iOS Swift (Display P3), Tailwind, JSON
@@ -41,7 +41,7 @@ import { Helmlab } from 'helmlab';
 
 const hl = new Helmlab();
 
-hl.gen.gradient('#ff0000', '#0000ff', 8);             // Perfectly uniform gradient
+hl.gen.gradient('#ff0000', '#0000ff', 8);             // equal CIEDE2000 steps
 hl.gen.gradient('#00f', '#fff', 8, { gamut: 'display-p3' }); // wide-gamut output
 hl.gen.scale('#3B82F6');                              // Tailwind-style 50-950 scale
 hl.gen.harmonies('#3B82F6', 'triadic');               // constant-L,C hue rotations
@@ -53,7 +53,7 @@ hl.metric.ciede2000('#ff0000', '#00ff00');            // industry standard, ~86.
 hl.tokens.css('#3B82F6', 'oklch');                    // design-token export
 ```
 
-~17.8KB gzipped, zero dependencies, ESM + CJS with full TypeScript types. Full API reference: [helmlab.space/docs](https://helmlab.space/docs/).
+About 21 KB gzipped (ESM build, gzip -9), zero dependencies, ESM + CJS with full TypeScript types. Full API reference: [helmlab.space/docs](https://helmlab.space/docs/).
 
 ### PostCSS
 
@@ -106,7 +106,7 @@ hl.gen.cusp(263)                                      # most colorful point of a
 hl.gen.ensure_contrast("#ffffff", "#3b82f6", ratio=4.5, strict=True)
 
 # ── Measure (MetricSpace) ──────────────────────────────────────────
-hl.metric.difference("#ff0000", "#00ff00")   # trained metric (COMBVD 22.48)
+hl.metric.difference("#ff0000", "#00ff00")   # trained metric (fit on COMBVD)
 hl.metric.jnd("#808080", "#828282")          # in just-noticeable-difference units
 hl.metric.ciede2000("#ff0000", "#00ff00")    # industry standard, ~86.6
 hl.metric.confidence("#808080", "#828282")   # observer-disagreement estimate
@@ -121,6 +121,8 @@ JS is the camelCase mirror (`hl.gen.ensureContrast(...)`). Parity is
 enforced by a permanent cross-language gate: **every string output is
 byte-identical, numeric worst-case difference ~1e-12**, and hex round-trips
 are bit-exact on a 1728-color grid in both spaces and both languages.
+In JS the hex round-trip was also checked on all 16,777,216 8-bit sRGB
+colors: 0 losses in both spaces (2026-11-08).
 Full surface: [API.md](API.md). Upgrading from 0.x: the flat
 `hl.gradient()/hl.from_hex()` API was removed in 1.0 — every method now
 lives on `hl.gen` / `hl.metric` / `hl.tokens`.
@@ -141,7 +143,7 @@ Helmlab (UI layer)
 
 ### MetricSpace (72 parameters)
 
-Jointly optimized with CMA-ES against COMBVD (with Bradford CAT pre-processing). 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation. STRESS 22.48 with Bradford CAT (22.73 without) — the lowest published figure on COMBVD; cross-validated estimate ~24.3.
+Jointly optimized with CMA-ES against COMBVD (with Bradford CAT pre-processing); MacAdam 1974 and He et al. 2022 were also used during fitting and model selection. 13-stage enriched pipeline with hue correction, Helmholtz-Kohlrausch, chroma scaling, neutral correction, and rigid rotation. STRESS 22.48 on COMBVD with Bradford CAT to D65 (fit data; CIEDE2000, also derived from COMBVD: 29.20). Independent display data: see [Benchmarks](#benchmarks).
 
 ### GenSpace (v0.11.1 — Depressed Cubic + Chroma Power + L-Gated Enrichment)
 
@@ -151,63 +153,54 @@ Pipeline: `XYZ → M₁ → depcubic(α=0.021) → M₂ → PW L_corr → L-gate
 
 Solved analytically via `y = 2s·sinh(arcsinh(x/2s³)/3)` where `s = √(α/3)`, refined with a single Halley iteration for full precision. The inverse is trivial: `x = y³ + αy`. This depressed cubic has a finite derivative at zero (unlike standard `x^(1/3)`), which eliminates gamut boundary singularities.
 
-**Chroma power:** `C' = C^0.978` — mild chroma compression applied post-M2 that improves gradient step uniformity. Analytically invertible (`C = C'^(1/0.978)`).
+**Chroma power:** `C' = C^0.978` — mild chroma compression applied post-M2. Analytically invertible (`C = C'^(1/0.978)`).
 
-**L-gated hue enrichment:** A targeted hue rotation `h' = h + A·gate(L)·gauss(h−center)` applied post-M2, where the gate function `sin²(π·(L−L_lo)/(L_hi−L_lo))` activates only in mid-to-high lightness and the Gaussian targets the blue hue region. This fixes the blue→white purple shift with zero impact on achromatic colors or other hue regions. Invertible via Halley iteration (cubic convergence, 8 iterations).
+**L-gated hue enrichment:** A targeted hue rotation `h' = h + A·gate(L)·gauss(h−center)` applied post-M2, where the gate function `sin²(π·(L−L_lo)/(L_hi−L_lo))` activates only in mid-to-high lightness and the Gaussian targets the blue hue region. It is aimed at the blue→white purple shift; achromatic colors are unchanged (a hue rotation leaves C = 0 at 0), and the Gaussian window confines the rotation mainly to blue hues. Invertible via Halley iteration (cubic convergence, up to 8 iterations).
 
 **Key properties:**
-- 360/360/360 valid cusps in sRGB, Display P3, and Rec.2020 (OKLab: 299/308/360)
-- Zero invalid cusps across all gamuts; zero monotonicity violations in sRGB/P3 (1 in Rec.2020)
-- Blue→White gradient: sky blue midpoint (G/R = 1.51), no lavender shift
-- Achromatic: C* ≈ 10⁻¹⁵ (structural guarantee — uniform transfer × orthogonal M₂)
-- Munsell Value uniformity: 0.16% (OKLab: 2.80% — 18x better)
+- A valid gamut cusp at each of 3,600 hues in sRGB, Display P3 and Rec.2020 (checked 2026-11-08)
+- Blue→White gradient: midpoint `#649cff` (blue, no lavender shift)
+- Achromatic: C* ≈ 10⁻¹⁵ up to at least Y = 10 (structural: M₁ maps D65 grays to equal cone responses, the same transfer applies to every channel, and the a and b rows of M₂ sum to zero)
 - Adaptive gamut clipping with cusp-finding (Ottosson-style L0 calculation)
 - Piecewise-linear L correction with 19 breakpoints (analytically invertible)
 
-**ColorBench evaluation (90 metrics, 3,038 gradient pairs, 3 gamuts):**
+**Known trade-offs:** The enrichment inverse is iterative (Halley), so float round-trips are not exact to machine precision; 8-bit hex round-trips are lossless (all 16,777,216 sRGB colors, JS, 2026-11-08). Minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
 
-| Category | GenSpace wins | OKLab wins | Tie |
-|----------|---------------|------------|-----|
-| Gamut geometry | **24** | 0 | 3 |
-| Application | **8** | 1 | 3 |
-| Independent (Hung-Berns, Ebner-Fairchild, Pointer) | **6** | 1 | 0 |
-| Gradient quality | **5** | 3 | 3 |
-| Perceptual accuracy | **5** | 0 | 0 |
-| Structural | **4** | 2 | 2 |
-| Achromatic | **2** | 0 | 0 |
-| Advanced | **2** | 0 | 4 |
-| Hue | **2** | 0 | 0 |
-| Special | **2** | 1 | 0 |
-| Accessibility | 1 | 1 | 0 |
-| Banding | **1** | 0 | 1 |
-| Numerical stability | 0 | 0 | 3 |
-| **Total** | **62** | **9** | **19** |
+**Blue-region gamut fold:** M1→f→M2 spaces such as OKLab and GenSpace can have small non-contiguous in-gamut regions near h≈260° in sRGB, caused by cubic polynomial roots in the inverse. See [color.js#81](https://github.com/color-js/color.js/issues/81).
 
-**Known trade-offs:** Slightly reduced round-trip precision in sRGB (~5.6×10⁻⁸ vs OKLab's ~1.6×10⁻¹⁵, due to enrichment Halley iteration — invisible in 8-bit pipelines), minor primary hue discontinuity at exact primary vertices, and reduced near-achromatic gradient uniformity in very low chroma regions.
+### Known limitations
 
-**Blue-region gamut fold:** All power-law based M1→f→M2 spaces exhibit tiny non-contiguous gamut regions near h≈260° in sRGB due to cubic polynomial roots in the inverse. OKLab has 46 such holes; GenSpace has 5, each ~0.001 chroma wide (sub-pixel, invisible). See [color.js#81](https://github.com/color-js/color.js/issues/81).
+- **MetricSpace coordinates are intended for SDR content** (Y ≤ 1 relative to diffuse white). Above diffuse white the neutral axis carries residual chroma (about 0.02 at Y = 2.2, 0.11 at Y = 3, 0.14 from Y ≈ 4) and L grows quickly (≈ 1.80 at Y = 3, ≈ 19 at Y = 10). `difference()`, `distance()` and `jnd()` are unaffected because they remove the neutral correction before measuring. For coordinates above diffuse white use GenSpace (gray axis stays neutral to ~1e-15 up to at least Y = 10).
 
 ## Benchmarks
 
 ### Perceptual Distance (MetricSpace)
 
-STRESS on COMBVD (3,813 pairs), all methods without CAT for a like-for-like protocol. Lower is better. (With Bradford CAT pre-processing Helmlab v21 reaches the headline **22.48**.)
+STRESS of MetricSpace (v21) and CIEDE2000. Lower STRESS = closer agreement with observers.
 
-| Method | COMBVD STRESS | vs CIEDE2000 |
-|--------|--------------|-------------|
-| **Helmlab v21** | **22.73** | **-22.1%** |
-| CIEDE2000 | 29.18 | — |
-| CIE94 | 33.59 | +15.1% |
-| CAM16-UCS (Euclid.) | 33.90 | +16.2% |
-| ΔE CMC | 34.04 | +16.6% |
-| IPT (Euclid.) | 41.21 | +41.3% |
-| CIE Lab ΔE76 | 42.80 | +46.7% |
-| Oklab (Euclid.) | 47.46 | +62.7% |
+| Dataset | Pairs | Role | MetricSpace | CIEDE2000 |
+|---------|-------|------|-------------|-----------|
+| COMBVD (BFD-P, Leeds, RIT-DuPont, Witt), Bradford CAT to D65 | 3,813 | fit data: both models were derived from it | 22.48 | 29.20 |
+| SCDd set 18, grey background (Liang/Georgoula 2015, ZJU) | 588 | independent: used to fit neither model | 29.65 | 34.23 |
+| SCDd set 18, black background (Liang/Georgoula 2015, ZJU) | 588 | independent: used to fit neither model | 33.06 | 39.37 |
+
+COMBVD by subset (fit data for both models, same protocol):
+
+| COMBVD subset | Pairs | MetricSpace | CIEDE2000 |
+|---|---|---|---|
+| BFD-P | 2,776 | 21.81 | 29.55 |
+| Leeds | 307 | 21.84 | 19.25 |
+| RIT-DuPont | 312 | 21.90 | 19.47 |
+| Witt | 418 | 30.93 | 30.22 |
+
+CIEDE2000 has the lower STRESS on Leeds, RIT-DuPont and Witt; MetricSpace's lower pooled value comes from BFD-P, the largest subset.
+
+MacAdam 1974 and He et al. 2022 (He, Xiao, Pointer, Melgosa & Bressler, *Materials* 15:4055, 3D-printed spheres) were used in MetricSpace's fitting and model selection, so no held-out result is reported for them.
 
 <details>
 <summary><strong>How was STRESS measured?</strong></summary>
 
-STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is a combined visual-difference dataset of 3,813 color pairs from 6 independent psychophysical experiments (Luo & Rigg 1986, RIT-DuPont, Witt, Leeds, BFD, He et al. 2022), containing 64,000+ individual human judgments.
+STRESS (Standardized Residual Sum of Squares) is the CIE-standard metric for evaluating color difference formulas. **COMBVD** is the combined visual-difference dataset of 3,813 color pairs from BFD-P, Leeds, RIT-DuPont and Witt; CIEDE2000 was derived from it.
 
 For each pair *i*, let ΔVᵢ = human visual difference, ΔEᵢ = predicted distance. STRESS finds the optimal scale *F* minimizing residuals:
 
@@ -221,37 +214,11 @@ Scale: 0 = perfect, 100 = no correlation. Full methodology: [arXiv:2602.23010](h
 
 ### Gradient Quality (GenSpace)
 
-Helmlab GenSpace vs OKLab — head-to-head on [ColorBench](https://github.com/Grkmyldz148/colorbench) (90 metrics, 3,038 gradient pairs across sRGB, Display P3, and Rec.2020 gamuts):
-
-| Category | GenSpace wins | OKLab wins | Tie |
-|----------|---------------|------------|-----|
-| Gamut geometry | **24** | 0 | 3 |
-| Application | **8** | 1 | 3 |
-| Independent (Hung-Berns, Ebner-Fairchild, Pointer) | **6** | 1 | 0 |
-| Gradient quality | **5** | 3 | 3 |
-| Perceptual accuracy | **5** | 0 | 0 |
-| Structural | **4** | 2 | 2 |
-| Achromatic | **2** | 0 | 0 |
-| Advanced | **2** | 0 | 4 |
-| Hue | **2** | 0 | 0 |
-| Special | **2** | 1 | 0 |
-| Accessibility | 1 | 1 | 0 |
-| Banding | **1** | 0 | 1 |
-| Numerical stability | 0 | 0 | 3 |
-| **Total** | **62** | **9** | **19** |
+The GenSpace vs OKLab benchmark is being re-run with the audited [ColorBench](https://github.com/Grkmyldz148/colorbench); results will be published there.
 
 ### Gradient Uniformity
 
-CV (coefficient of variation of CIEDE2000 step sizes). Lower is better.
-
-| Method | Red→Blue | Orange→Cyan | Black→White | Technique |
-|--------|----------|-------------|-------------|-----------|
-| **Helmlab `gradient()`** | **≈ 0%** | **≈ 0%** | **≈ 0%** | arc-length reparam. |
-| Helmlab GenSpace | 30.3% | 26.5% | 40.7% | linear interpolation |
-| Oklab | 31.5% | 41.4% | 41.2% | linear interpolation |
-| CIE Lab | 44.8% | 52.3% | 61.5% | linear interpolation |
-
-> **Note:** `gradient()` achieves ≈ 0% via CIEDE2000 arc-length reparameterization. This redistributes steps to equal perceptual spacing — an algorithm that could be applied to any space. Helmlab ships it built-in.
+`gradient()` reparameterizes the interpolation path by CIEDE2000 arc length, so successive steps are approximately equal in CIEDE2000. The same algorithm could be applied to any space; Helmlab ships it built-in.
 
 ## Project Structure
 
@@ -272,7 +239,7 @@ src/helmlab/
 │   ├── gamut.py            # Gamut mapping (binary search + adaptive clipping)
 │   └── ...                 # Converters, I/O, visualization
 ├── data/
-│   ├── metric_params.json  # MetricSpace params (v21, STRESS 22.48 w/ Bradford CAT)
+│   ├── metric_params.json  # MetricSpace params (v21)
 │   ├── gen_params.json     # GenSpace params (v0.11.1, depcubic + enrichment)
 │   └── ...                 # Dataset loaders (COMBVD, Munsell, etc.)
 ├── export.py               # Token export (CSS, Android, iOS, Tailwind)
@@ -280,17 +247,17 @@ src/helmlab/
 
 packages/helmlab-js/        # npm package (TypeScript)
 packages/postcss-helmlab/   # PostCSS plugin
-tests/                      # 588 tests (336 Python + 252 JavaScript)
+tests/                      # 670 tests (371 Python + 299 JavaScript)
 
-# ColorBench (the 90-metric evaluation suite) lives in its own repo:
+# ColorBench (the evaluation suite) lives in its own repo:
 # https://github.com/Grkmyldz148/colorbench
 ```
 
 ## Tests
 
 ```bash
-python -m pytest tests/ -q              # 336 Python tests (334 pass + 2 skip)
-cd packages/helmlab-js && npx vitest run # 252 JS tests
+python -m pytest tests/ -q              # 371 Python tests (369 pass + 2 skip)
+cd packages/helmlab-js && npx vitest run # 299 JS tests
 ```
 
 ## AI skill: color-space routing
