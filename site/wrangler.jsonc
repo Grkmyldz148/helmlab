@@ -1,0 +1,15 @@
+// helmlab.space: temporary page (design doc 7.3). Assets-only Worker; the Faz 4 docs build reuses it (7.10).
+{
+  "name": "helmlab-site",
+  "compatibility_date": "2026-05-01",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "helmlab.space", "custom_domain": true },
+    { "pattern": "www.helmlab.space", "custom_domain": true }
+  ],
+  "workers_dev": false,
+  "preview_urls": false
+}

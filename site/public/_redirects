@@ -1,0 +1,11 @@
+# Old helmlab.space paths, Faz 0–3 (design doc 7.13). Temporary (302).
+/docs          https://github.com/Grkmyldz148/helmlab/blob/main/API.md 302
+/docs/         https://github.com/Grkmyldz148/helmlab/blob/main/API.md 302
+/docs/*        https://github.com/Grkmyldz148/helmlab/blob/main/API.md 302
+/docs.html     https://github.com/Grkmyldz148/helmlab/blob/main/API.md 302
+/playground    / 302
+/playground/*  / 302
+/benchmark     /#status 302
+/benchmark/*   /#status 302
+/blog          / 302
+/blog/*        / 302

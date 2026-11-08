@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helmlab</title>
+<meta name="description" content="Helmlab defines color spaces for generating colors and for measuring color differences, and publishes their reference code.">
+<link rel="canonical" href="https://helmlab.space/">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="/" aria-label="Helmlab, home">
+      <img src="logo.png" width="36" height="36" alt="">
+      <span class="wordmark">Helmlab<span class="dot">.</span></span>
+    </a>
+    <nav aria-label="Project pages">
+      <a href="https://github.com/Grkmyldz148/helmlab">GitHub</a>
+      <a href="https://www.npmjs.com/package/helmlab">npm</a>
+      <a href="https://pypi.org/project/helmlab/">PyPI</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="status" id="status">This site is being rebuilt as documentation. Performance figures shown on the previous site are withdrawn. Figures will be published on one evidence page, generated from one file. Each figure there will name its dataset, its size (n), and whether that data was used to fit, tune or design the model.</p>
+
+  <h1>Helmlab</h1>
+  <p class="lead">Helmlab defines color spaces for generating colors (gradients, palettes, gamut mapping) and for measuring color differences, and publishes their reference code.</p>
+
+  <section aria-labelledby="definition">
+    <h2 id="definition">Current definition: Helmlab 2026</h2>
+    <p>Helmlab 2026 is defined by the outputs of <code>helmlab</code> 1.0.0 on npm and PyPI. <code>helmlab</code> 1.0.1 has identical outputs; only its JavaScript speed and documentation changed.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th scope="col">Identifier</th><th scope="col">What it names</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>helmgen</code></td><td>GenSpace in Lab coordinates, for generating colors</td></tr>
+          <tr><td><code>helmgenlch</code></td><td>GenSpace in LCh coordinates (lightness, chroma, hue)</td></tr>
+          <tr><td><code>helmlab-metric</code></td><td>MetricSpace, for measuring color differences</td></tr>
+          <tr><td>ΔE <code>helmlab</code></td><td>Color difference computed from <code>helmlab-metric</code> coordinates</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>A specification and test vectors for Helmlab 2026 are planned.</p>
+  </section>
+
+  <section aria-labelledby="install">
+    <h2 id="install">Install</h2>
+    <pre><code>npm i helmlab
+pip install helmlab</code></pre>
+    <p>API reference: <a href="https://github.com/Grkmyldz148/helmlab/blob/main/API.md">API.md</a>. Changes by version: <a href="https://github.com/Grkmyldz148/helmlab/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
+  </section>
+
+  <section aria-labelledby="other">
+    <h2 id="other">Other implementations</h2>
+    <p>These libraries are maintained outside Helmlab: <a href="https://colorjs.io/">Color.js</a>, <a href="https://facelessuser.github.io/coloraide/">ColorAide</a> and <a href="https://www.npmjs.com/package/color-space">color-space</a>.</p>
+  </section>
+
+  <section aria-labelledby="issues">
+    <h2 id="issues">Known issues</h2>
+    <ul>
+      <li>Color.js 0.7.1 and ColorAide 8.13.1 implement <code>helmlab-metric</code> without the neutral-correction step, so their <i>a</i> and <i>b</i> values differ from those of the <code>helmlab</code> package. color-space 3.5.0 includes the step.</li>
+      <li>The paper's description of the neutral-correction step differs from the released code; see <a href="https://github.com/Grkmyldz148/helmlab/issues/4">helmlab#4</a>.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="links">
+    <h2 id="links">Links</h2>
+    <ul>
+      <li>Source: <a href="https://github.com/Grkmyldz148/helmlab">github.com/Grkmyldz148/helmlab</a></li>
+      <li>Packages: <a href="https://www.npmjs.com/package/helmlab">helmlab on npm</a>, <a href="https://pypi.org/project/helmlab/">helmlab on PyPI</a>, <a href="https://www.npmjs.com/package/postcss-helmlab">postcss-helmlab on npm</a></li>
+      <li>Paper: <a href="https://arxiv.org/abs/2602.23010">arXiv 2602.23010</a> (v3)</li>
+      <li>Organization: <a href="https://github.com/helmlab-space">github.com/helmlab-space</a></li>
+      <li>Questions and bug reports: open an issue in the <a href="https://github.com/Grkmyldz148/helmlab/issues">helmlab repository</a>.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">Helmlab · Maintained by <a href="https://github.com/Grkmyldz148">Görkem Yıldız</a></div>
+</footer>
+</body>
+</html>
