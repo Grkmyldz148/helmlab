@@ -1,7 +1,7 @@
 {
   "name": "helmlab",
   "version": "1.0.1",
-  "description": "Perceptual color space for UI design \u2014 human-tuned Lab with WCAG contrast, gamut mapping, and palette generation",
+  "description": "Two color spaces: GenSpace for generating colors (gradients, palettes, gamut mapping) and MetricSpace for measuring color differences",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",

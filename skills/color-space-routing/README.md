@@ -22,10 +22,9 @@ automatically whenever a task touches color.
 ## What's inside
 
 - Task → space routing table (gradients, palettes, ΔE, CVD, HDR, CSS, wide gamut)
-- The measured evidence (STRESS on 5 human datasets, ColorBench 90-metric head-to-head)
+- Notes on what the routing rests on, including which figures are withdrawn
 - Copy-paste recipes (CSS, JS, Python)
-- A 9-item pitfall checklist — each entry is a bug we actually hit
+- An 11-item pitfall checklist — each entry is a bug we actually hit
 
-Numbers regenerate from the same pipeline that feeds
-[helmlab.space/benchmark](https://helmlab.space/benchmark/), so the skill and
-the site can't drift apart.
+The skill gives no performance figures. They will be published on one
+evidence page at [helmlab.space](https://helmlab.space).

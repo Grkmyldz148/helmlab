@@ -1,6 +1,6 @@
 # postcss-helmlab
 
-[PostCSS] plugin for [Helmlab] color spaces. Transforms `helmlab()`, `helmlch()`, `helmgen()`, `helmgenlch()` CSS functions into `rgb()`/`rgba()` fallbacks **plus** `color(display-p3 …)` and `color(rec2020 …)` wide-gamut overrides — wrapped in `@supports` queries so the cascade survives modern CSS minifiers (Lightning CSS, cssnano).
+[PostCSS] plugin for [Helmlab] color spaces. It turns the CSS functions `helmlab()`, `helmlch()`, `helmgen()` and `helmgenlch()`, and gradients and `color-mix()` in `helmgen`, into `rgb()`/`rgba()` values, plus `color(display-p3 …)` and `color(rec2020 …)` values wrapped in `@supports` queries.
 
 ```js
 // postcss.config.mjs
@@ -21,14 +21,9 @@ export default { plugins: [helmlab({ outputMode: 'all' })] };
 [PostCSS]: https://postcss.org/
 [Helmlab]: https://github.com/Grkmyldz148/helmlab
 
-## Why?
+## About Helmlab
 
-Helmlab is a data-driven color space family trained on 64,000+ human color perception observations. It provides two spaces:
-
-- **MetricSpace** — 23% lower STRESS than CIEDE2000 on perceptual distance measurement (22.48 vs 29.20 on COMBVD)
-- **GenSpace** — wins 62-9-19 vs OKLab across 90 ColorBench metrics for color generation (incl. 6-1 on independent datasets)
-
-This plugin lets you use Helmlab color spaces in CSS today, without waiting for browser support.
+Helmlab defines color spaces for generating colors and for measuring color differences. The [Helmlab README](https://github.com/Grkmyldz148/helmlab#readme) describes the current definition, Helmlab 2026, and its known limitations. This README gives no performance figures.
 
 ## Installation
 
@@ -49,7 +44,7 @@ module.exports = {
 };
 ```
 
-Or with PostCSS API:
+Or with the PostCSS API:
 
 ```js
 const postcss = require('postcss');
@@ -60,23 +55,25 @@ const result = await postcss([helmlab]).process(css);
 
 ## Syntax
 
+The examples show the output of `outputMode: 'srgb'`. The default mode, `both`, adds a Display P3 version of each rule inside `@supports`.
+
 ### Color functions
 
 ```css
 /* Input */
 .card {
-  color: helmlab(0.78 0.52 -0.20);
+  color: helmlab(0.7221 -0.2468 -0.2378);
+  border-color: helmlch(0.7221 0.3427 223.9deg);
   background: helmgen(0.60 0.22 0.03);
-  border-color: helmlch(0.78 0.56 338.7deg);
   outline-color: helmgenlch(0.60 0.15 30deg);
 }
 
 /* Output */
 .card {
-  color: rgb(255, 76, 119);
-  background: rgb(196, 107, 68);
-  border-color: rgb(255, 67, 131);
-  outline-color: rgb(175, 120, 91);
+  color: rgb(59, 130, 246);
+  border-color: rgb(59, 130, 246);
+  background: rgb(229, 93, 124);
+  outline-color: rgb(205, 119, 109);
 }
 ```
 
@@ -84,15 +81,15 @@ const result = await postcss([helmlab]).process(css);
 
 ```css
 /* Input */
-.overlay { background: helmlab(0.78 0.52 -0.20 / 0.5); }
+.overlay { background: helmlab(0.7221 -0.2468 -0.2378 / 0.5); }
 
 /* Output */
-.overlay { background: rgba(255, 76, 119, 0.5); }
+.overlay { background: rgba(59, 130, 246, 0.5); }
 ```
 
 ### Gradients
 
-Interpolate gradients through Helmlab spaces with perceptually uniform steps:
+A gradient `in helmgen` becomes 10 stops from `gen.gradient()` of the helmlab package: a straight path in GenSpace with steps of about equal CIEDE2000 length.
 
 ```css
 /* Input */
@@ -100,9 +97,9 @@ Interpolate gradients through Helmlab spaces with perceptually uniform steps:
   background: linear-gradient(in helmgen, #e63946, #457b9d);
 }
 
-/* Output — 10 perceptually spaced stops */
+/* Output */
 .gradient {
-  background: linear-gradient(#e63946 0.0%, #c7555e 11.1%, ..., #457b9d 100.0%);
+  background: linear-gradient(#e63946 0.0%, #cd525a 11.1%, ..., #457b9d 100.0%);
 }
 ```
 
@@ -113,23 +110,25 @@ Interpolate gradients through Helmlab spaces with perceptually uniform steps:
 .mix { color: color-mix(in helmgen, #e63946 50%, #457b9d); }
 
 /* Output */
-.mix { color: rgb(147, 93, 111); }
+.mix { color: rgb(162, 105, 119); }
 ```
 
 ## Supported spaces
 
-| Function | Space | Best for |
-|----------|-------|----------|
-| `helmlab(L a b)` | MetricSpace | Perceptual distance, accessibility |
-| `helmlch(L C h)` | MetricSpace (cylindrical) | Hue-based selection |
-| `helmgen(L a b)` | GenSpace | Gradients, palettes |
-| `helmgenlch(L C h)` | GenSpace (cylindrical) | Hue-based generation |
+| Function | Coordinates |
+|----------|-------------|
+| `helmlab(L a b)` | MetricSpace as returned by `hl.metric` in the helmlab package: the neutral-corrected form (`helmlab-metric-neutral`) |
+| `helmlch(L C h)` | The same MetricSpace coordinates in LCh |
+| `helmgen(L a b)` | GenSpace (`helmgen`), the space for gradients and palettes |
+| `helmgenlch(L C h)` | GenSpace in LCh (`helmgenlch`) |
+
+`helmlab()` takes neutral-corrected coordinates. They differ from those of the base form `helmlab-metric`, which Color.js and ColorAide implement; the same triple names different colors in the two forms (see the Helmlab README).
 
 ## Links
 
-- [Helmlab documentation](https://helmlab.space/docs.html)
-- [GitHub](https://github.com/Grkmyldz148/helmlab)
-- [arXiv paper](https://arxiv.org/abs/2602.23010)
+- [Helmlab README](https://github.com/Grkmyldz148/helmlab#readme)
+- [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md)
+- [Paper (arXiv:2602.23010)](https://arxiv.org/abs/2602.23010)
 - [npm: helmlab](https://www.npmjs.com/package/helmlab)
 
 ## License

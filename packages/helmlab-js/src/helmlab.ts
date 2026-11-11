@@ -257,8 +257,8 @@ export class Gen {
   /** Map a GenLab into the requested gamut.
    * `method='chroma'` (default) reduces chroma at constant L and hue —
    * predictable, hue-exact. `method='adaptive'` is the Ottosson-style
-   * projection toward the cusp that trades a little L for more chroma —
-   * better for saturated photographic content. */
+   * projection toward the cusp, which gives up a little L to keep more
+   * chroma. */
   gamutMap(lab: GenLab | Lab, gamut: Gamut = 'srgb', method: GamutMapMethod = 'chroma'): GenLab {
     checkGamut(gamut);
     return brand<GenLab>(gamutMap(this.accept(lab), this.space, gamut, method), 'gen');
@@ -304,10 +304,10 @@ export class Gen {
 
   // ── Generation ──────────────────────────────────────────────────
 
-  /** Perceptually uniform gradient between two colors.
+  /** Gradient between two colors with steps of about equal CIEDE2000 length.
    *
-   * Equal perceptual step sizes on any color pair (GenSpace Lab path,
-   * CIEDE2000 arc-length reparameterization). Step spacing is measured on
+   * The path is a straight line in GenSpace Lab, reparameterized by CIEDE2000
+   * arc length. Step spacing is measured on
    * the sRGB projection of the path; with a wide `gamut` the emitted stops
    * keep the extra chroma the target gamut allows.
    *
@@ -324,9 +324,9 @@ export class Gen {
     return this.pathPoints(lab1, lab2, fractions).map((p) => this.emit(p, gamut));
   }
 
-  /** The color at fraction `t` (0 → a, 1 → b) along the SAME perceptual
-   * arc-length path {@link gradient} uses — `mix(a, b, 0.5)` is the visual
-   * midpoint, not the coordinate average. */
+  /** The color at fraction `t` (0 → a, 1 → b) along the same CIEDE2000
+   * arc-length path {@link gradient} uses — `mix(a, b, 0.5)` is the midpoint
+   * of that path, not the coordinate average. */
   mix(a: string, b: string, t = 0.5, opts: { gamut?: Gamut } = {}): string {
     const gamut = opts.gamut ?? 'srgb';
     checkGamut(gamut);
@@ -383,8 +383,8 @@ export class Gen {
     return result;
   }
 
-  /** Categorical palette: `count` evenly spaced hues at fixed lightness and
-   * chroma (equal perceptual weight per category). */
+  /** Categorical palette: `count` evenly spaced hues at fixed GenSpace
+   * lightness and chroma. */
   hueRing(count = 12, opts: { lightness?: number; chroma?: number; gamut?: Gamut } = {}): string[] {
     const gamut = opts.gamut ?? 'srgb';
     checkGamut(gamut);
@@ -402,9 +402,7 @@ export class Gen {
    *
    * `kind`: complementary [0°, 180°] · analogous [0°, ±30°] · triadic
    * [0°, 120°, 240°] · tetradic [0°, 90°, 180°, 270°] · split_complementary
-   * [0°, 150°, 210°]. Rotations happen in GenSpace LCh at constant L and C —
-   * perceptual lightness and colorfulness stay matched across the set (the
-   * property hue harmonies assume but sRGB HSL rotations don't deliver). */
+   * [0°, 150°, 210°]. Rotations happen in GenSpace LCh at constant L and C. */
   harmonies(base: string, kind: HarmonyKind = 'complementary', opts: { gamut?: Gamut } = {}): string[] {
     const gamut = opts.gamut ?? 'srgb';
     checkGamut(gamut);
@@ -706,13 +704,15 @@ export class Metric {
 
   // ── The four difference metrics ─────────────────────────────────
 
-  /** THE trained perceptual difference between two colors (v21 metric,
-   * COMBVD STRESS 22.48 — 23% better than CIEDE2000's 29.20).
+  /** ΔE helmlab: the MetricSpace color difference between two colors,
+   * computed on base-form coordinates (the neutral correction is removed).
+   * Its parameters were fitted to COMBVD.
    *
-   * Best for near-threshold judgments. Monotonic compression saturates near
-   * ~0.15 for very different colors: rank is preserved but absolute values
-   * plateau — for an unbounded number use {@link euclidean}, for threshold
-   * units use {@link jnd}. */
+   * Monotonic compression levels off near ~0.15 for very different colors:
+   * rank is preserved but absolute values plateau — for an unbounded number
+   * use {@link euclidean}, for threshold units use {@link jnd}. For colors
+   * darker than about L* 10 it is outside its fit data; see the known
+   * limitations in the README. */
   difference(a: string, b: string): number {
     return this.space.distance(this.space.fromXYZ(parseColor(a)), this.space.fromXYZ(parseColor(b)));
   }
@@ -729,11 +729,8 @@ export class Metric {
 
   /** CIEDE2000 ΔE between two colors (CIELAB scale, ~0–100).
    *
-   * The industry-standard formula, self-contained. Recommended for
-   * fixed-catalog nearest-color matching: measurably more stable under tiny
-   * input perturbations than the trained metric (7 vs 16 selection flips per
-   * 100 targets at ±2/255), because {@link difference} is fit for
-   * near-threshold judgments, not suprathreshold ranking.
+   * The formula of ISO/CIE 11664-6, self-contained. It is the default metric
+   * of {@link nearest} for fixed-catalog nearest-color matching.
    * Sanity anchor: `ciede2000('#ff0000', '#00ff00') ≈ 86.6`. */
   ciede2000(a: string, b: string): number {
     const lab1 = this.cielab(a);
@@ -755,7 +752,7 @@ export class Metric {
 
   // ── Lab-level distance (identical contract in both languages) ───
 
-  /** Trained perceptual distance between two MetricLab values.
+  /** ΔE helmlab between two MetricLab values.
    *
    * Identical contract in Python and JS: MetricLab in, distance out (the
    * 0.x Python-XYZ/JS-Lab asymmetry is gone; the XYZ-in variant lives only
@@ -767,7 +764,7 @@ export class Metric {
 
   // ── Confidence / catalog / info ─────────────────────────────────
 
-  /** Perceptual difference plus how much observers will disagree.
+  /** ΔE helmlab plus an estimate of how much observers disagree.
    *
    * EXPERIMENTAL (v2 ordinal model, n=47 pairs — see `core/confidence.ts`
    * for provenance and limits). Returns `de`, `latent`, `disagreement`,
@@ -781,11 +778,10 @@ export class Metric {
     return assessConfidence(de, chroma);
   }
 
-  /** Pick the perceptually nearest color to `target` from `palette`.
+  /** Pick the nearest color to `target` from `palette`.
    *
-   * `metric`: 'ciede2000' (default — most perturbation-stable for catalog
-   * argmax), 'difference' (trained, near-threshold), 'euclidean' (fast
-   * unbounded). Returns the pick plus `runnerUp` and `margin` (relative gap
+   * `metric`: 'ciede2000' (default), 'difference' (ΔE helmlab), 'euclidean'
+   * (uncompressed Euclidean distance in MetricSpace). Returns the pick plus `runnerUp` and `margin` (relative gap
    * to the runner-up — a small margin means a fragile pick). */
   nearest(
     target: string,
@@ -859,11 +855,10 @@ export interface HelmlabOptions {
   abRotateDeg?: number;
 }
 
-/** Two purpose-built color spaces behind three namespaces.
+/** Two color spaces behind three namespaces.
  *
- * `hl.gen` creates colors (GenSpace — ColorBench 62-9-19 vs OKLab),
- * `hl.metric` measures them (MetricSpace — COMBVD STRESS 22.48),
- * `hl.tokens` exports design tokens. See API.md. */
+ * `hl.gen` creates colors (GenSpace), `hl.metric` measures them
+ * (MetricSpace), `hl.tokens` exports design tokens. See API.md. */
 export class Helmlab {
   readonly gen: Gen;
   readonly metric: Metric;

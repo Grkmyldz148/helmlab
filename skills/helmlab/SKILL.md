@@ -5,11 +5,12 @@ description: Correct usage of the helmlab color library (npm + PyPI) — 1.0 nam
 
 # helmlab — correct API usage (1.0)
 
-Perceptual color library, JS (`npm i helmlab`, zero deps) and Python
-(`pip install helmlab`) with **identical outputs** — a permanent parity gate
-verifies the full surface: every string output byte-identical, numeric worst
-~1e-12, hex round-trips bit-exact on a 1728-color grid in both languages.
-JS is camelCase, Python snake_case; same math, same namespaces.
+Color library, JS (`npm i helmlab`, no dependencies) and Python
+(`pip install helmlab`). A parity test checks the JS package against the
+Python package: string outputs are identical, coordinates and differences
+agree to about 1e-12, and iterative searches (cusp, maximum chroma, gamut
+mapping) agree to their tolerance (up to 5e-4). JS is camelCase, Python
+snake_case; same math, same namespaces.
 
 ## The one mental model you need
 
@@ -55,9 +56,9 @@ const lch = hl.gen.toLch(hl.gen.fromHex('#3b82f6')); // [0.5586, 0.2976, 263.1]
 hl.gen.rotateHue('#3b82f6', 120);                    // prefer this over manual LCh math
 
 // Measurement — four clearly-named metrics
-hl.metric.difference('#ff0000', '#00ff00');   // 0.148 — trained (COMBVD-fit), saturates ~0.15
+hl.metric.difference('#ff0000', '#00ff00');   // 0.148 — ΔE helmlab (fitted to COMBVD), levels off near 0.15
 hl.metric.euclidean('#000000', '#ffffff');    // 1.12 — unbounded ΔE76-analogue
-hl.metric.ciede2000('#ff0000', '#00ff00');    // 86.6 — industry standard, best for catalog argmax
+hl.metric.ciede2000('#ff0000', '#00ff00');    // 86.6 — CIEDE2000; default of nearest(); use it below L* ≈ 10
 hl.metric.jnd('#808080', '#828282');          // 0.33 — threshold units (<1 unnoticed, >2 clearly visible)
 hl.metric.confidence('#808080', '#828282');   // { de, pNoticeable: 0.077, reliability: 0.41, reliable: false, extrapolated }
 hl.gen.contrastRatio('#ffffff', '#3b82f6');   // 3.68 (WCAG 2.1) — contrast lives on gen
@@ -108,13 +109,16 @@ hl.tokens.cssVariables(hl.gen.scale('#3b82f6'), '--primary'); // include the -- 
 - **PostCSS**: `npm i postcss-helmlab` → `helmlab()`, `helmlch()`,
   `helmgen()`, `helmgenlch()` CSS functions; since 1.0 the P3/Rec2020
   output uses the TRUE gamut-mapped paths of both spaces.
-- **Color.js** (master): spaces `helmgen`, `helmgenlch`, `helmlab-metric` +
-  deltaE method `"Helmlab"`.
+- **Color.js** 0.7.x: spaces `helmgen`, `helmgenlch`, `helmlab-metric` +
+  deltaE method `"Helmlab"`. Its `helmlab-metric` is the base form, without
+  the neutral correction that `hl.metric` applies, so its a and b differ.
 - Python extras: `pip install 'helmlab[datasets]'`; `py.typed` shipped.
 
 ## When NOT to use helmlab
 
-Near-achromatic gradient mastering and deutan-safe palettes → OKLab is
-measurably better. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
+Near-achromatic gradient mastering and deutan-safe palettes → OKLab.
+Differences between colors darker than about L* 10 → CIEDE2000, not
+`difference()`. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
 Jzazbz/ICtCp. Full routing table: the companion `color-space-routing`
-skill. Docs: helmlab.space/docs · honesty tables: helmlab.space/benchmark
+skill. API: github.com/Grkmyldz148/helmlab/blob/main/API.md · known
+limitations: the helmlab README
