@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "helmlab"
 version = "1.0.1"
-description = "Two color spaces: GenSpace for generation (gradients, palettes, gamut mapping) and MetricSpace, a color-difference metric fitted to the COMBVD visual data"
+description = "Two color spaces: GenSpace for generation (gradients, palettes, gamut mapping) and MetricSpace, a color-difference metric fitted to visual difference data"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

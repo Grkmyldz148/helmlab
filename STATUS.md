@@ -29,7 +29,7 @@ Helmlab 2026 is the output of `helmlab` 1.0.0. Parameter files:
 
 - No performance figures in READMEs, docstrings, type files or skills; link to the evidence page instead.
 - Figures from ColorBench versions before v4 (for example GenSpace vs OKLab win counts) and the figures of the previous helmlab.space are withdrawn. Do not reuse them.
-- MetricSpace was fitted to COMBVD; MacAdam 1974 and He et al. 2022 were used in its fitting or model selection. Results on these datasets are in-sample.
+- MetricSpace was fitted to COMBVD, MacAdam 1974 and Helmlab's own Human Feedback data (weights 0.55, 0.15 and 0.30); He et al. 2022 was used in model selection. Results on these datasets are in-sample.
 - Known limitations are listed in the README.
 
 ## Tests

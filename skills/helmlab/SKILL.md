@@ -56,9 +56,9 @@ const lch = hl.gen.toLch(hl.gen.fromHex('#3b82f6')); // [0.5586, 0.2976, 263.1]
 hl.gen.rotateHue('#3b82f6', 120);                    // prefer this over manual LCh math
 
 // Measurement — four clearly-named metrics
-hl.metric.difference('#ff0000', '#00ff00');   // 0.148 — ΔE helmlab (fitted to COMBVD), levels off near 0.15
+hl.metric.difference('#ff0000', '#00ff00');   // 0.148 — ΔE helmlab (fitted to visual difference data), levels off near 0.15
 hl.metric.euclidean('#000000', '#ffffff');    // 1.12 — unbounded ΔE76-analogue
-hl.metric.ciede2000('#ff0000', '#00ff00');    // 86.6 — CIEDE2000; default of nearest(); use it below L* ≈ 10
+hl.metric.ciede2000('#ff0000', '#00ff00');    // 86.6 — CIEDE2000; default of nearest()
 hl.metric.jnd('#808080', '#828282');          // 0.33 — threshold units (<1 unnoticed, >2 clearly visible)
 hl.metric.confidence('#808080', '#828282');   // { de, pNoticeable: 0.077, reliability: 0.41, reliable: false, extrapolated }
 hl.gen.contrastRatio('#ffffff', '#3b82f6');   // 3.68 (WCAG 2.1) — contrast lives on gen
@@ -117,8 +117,8 @@ hl.tokens.cssVariables(hl.gen.scale('#3b82f6'), '--primary'); // include the -- 
 ## When NOT to use helmlab
 
 Near-achromatic gradient mastering and deutan-safe palettes → OKLab.
-Differences between colors darker than about L* 10 → CIEDE2000, not
-`difference()`. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
+Comparisons across very different lightness levels (near black vs near
+white) → CIEDE2000, not `difference()`. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
 Jzazbz/ICtCp. Full routing table: the companion `color-space-routing`
 skill. API: github.com/Grkmyldz148/helmlab/blob/main/API.md · known
 limitations: the helmlab README

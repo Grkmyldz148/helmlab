@@ -20,9 +20,9 @@ Levels are evenly spaced in GenSpace lightness; level 500 is the exact input.
 ```python
 from helmlab import Helmlab
 hl = Helmlab()
-hl.metric.difference("#ff0000", "#00ff00")   # ΔE helmlab (fitted to COMBVD), levels off near 0.15
+hl.metric.difference("#ff0000", "#00ff00")   # ΔE helmlab (fitted to visual difference data), levels off near 0.15
 hl.metric.euclidean("#ff0000", "#00ff00")    # uncompressed Euclidean distance in MetricSpace
-hl.metric.ciede2000("#ff0000", "#00ff00")    # CIEDE2000; use it for colors darker than about L* 10
+hl.metric.ciede2000("#ff0000", "#00ff00")    # CIEDE2000
 ```
 If you must use a standard: CIEDE2000, correctly implemented (it's easy to get the hue term wrong — use a tested library, verify ΔE00(red, green) ≈ 86.6).
 

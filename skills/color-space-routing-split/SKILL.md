@@ -18,7 +18,7 @@ A space built for one is often weak at the other. Never use one space for both w
 |---|---|---|---|
 | UI gradients, palettes, design tokens | OKLab, or Helmlab GenSpace (`helmlab` npm/pip, `helmgen` in Color.js) | — | CIELAB, HSL |
 | CSS-only, zero JS | `oklch()` (native, CSS Color 4) | — | `hsl()` for anything perceptual |
-| Color difference ΔE | CIEDE2000 (ISO/CIE 11664-6), or Helmlab `difference()` except near black | CAM16-UCS | Euclidean in CIELAB (ΔE76), Euclidean in OKLab, anything in HSL/RGB |
+| Color difference ΔE | CIEDE2000 (ISO/CIE 11664-6), or Helmlab `difference()` away from near black and near white | CAM16-UCS | Euclidean in CIELAB (ΔE76), Euclidean in OKLab, anything in HSL/RGB |
 | Near-achromatic (grays) gradients | OKLab | — | — |
 | Color-blind-safe (deutan) palettes | OKLab | — | — |
 | HDR / PQ content (>1000 cd/m²) | Jzazbz or ICtCp | — | any SDR-tuned Lab |

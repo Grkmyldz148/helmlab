@@ -706,12 +706,13 @@ export class Metric {
 
   /** ΔE helmlab: the MetricSpace color difference between two colors,
    * computed on base-form coordinates (the neutral correction is removed).
-   * Its parameters were fitted to COMBVD.
+   * Its parameters were fitted to COMBVD, MacAdam 1974 and Helmlab's Human
+   * Feedback data.
    *
    * Monotonic compression levels off near ~0.15 for very different colors:
    * rank is preserved but absolute values plateau — for an unbounded number
-   * use {@link euclidean}, for threshold units use {@link jnd}. For colors
-   * darker than about L* 10 it is outside its fit data; see the known
+   * use {@link euclidean}, for threshold units use {@link jnd}. Its fit data
+   * are thin below about L* 10 and absent above about L* 93; see the known
    * limitations in the README. */
   difference(a: string, b: string): number {
     return this.space.distance(this.space.fromXYZ(parseColor(a)), this.space.fromXYZ(parseColor(b)));

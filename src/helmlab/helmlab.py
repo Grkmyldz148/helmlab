@@ -763,13 +763,14 @@ class Metric:
     def difference(self, a: str, b: str) -> float:
         """ΔE helmlab: the MetricSpace color difference between two colors,
         computed on base-form coordinates (the neutral correction is removed).
-        Its parameters were fitted to COMBVD.
+        Its parameters were fitted to COMBVD, MacAdam 1974 and Helmlab's Human
+        Feedback data.
 
         Monotonic compression levels off near ~0.15 for very different
         colors: rank is preserved but absolute values plateau — for an
         unbounded number use :meth:`euclidean`, for threshold units use
-        :meth:`jnd`. For colors darker than about L* 10 it is outside its fit
-        data; see the known limitations in the README.
+        :meth:`jnd`. Its fit data are thin below about L* 10 and absent above
+        about L* 93; see the known limitations in the README.
         """
         return float(self.space.distance(parse_color(a), parse_color(b)))
 

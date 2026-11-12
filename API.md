@@ -121,7 +121,7 @@ complementary `[0, 180]` · analogous `[0, -30, 30]` · triadic `[0, 120, 240]`
 ### Measurement — four clearly-named metrics
 | Python | Range | What it is |
 |---|---|---|
-| `difference(a, b)` | 0…~0.15 (saturates) | **the trained metric** (v21; fit on COMBVD). Intended for small and near-threshold differences; rank preserved, absolute value plateaus for very different colors |
+| `difference(a, b)` | 0…~0.15 (saturates) | ΔE helmlab (v21; fitted to COMBVD, MacAdam 1974 and Helmlab's Human Feedback data). Rank preserved, absolute value plateaus for very different colors; its fit data are thin below about L* 10 and absent above about L* 93 |
 | `euclidean(a, b)` | 0…~1.6 | uncompressed ΔE76-analogue in Metric Lab; unbounded companion |
 | `ciede2000(a, b)` | 0…~100 | industry-standard CIEDE2000 (CIELAB scale); default metric for `nearest` (suprathreshold catalog argmax) |
 | `jnd(a, b)` | 0…∞ | `difference / 0.035633` — difference in **just-noticeable-difference units**. 1.0 = the point where the median observer of the ordinal model rates the pair at least "moderately different" (`tau[1]/mu_scale` from the v2 confidence fit). ≥ ~4.2 JND = the saturation zone; values there mean "far above threshold", not a precise multiple |

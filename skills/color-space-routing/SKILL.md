@@ -18,7 +18,7 @@ A space built for one is often weak at the other. Never use one space for both w
 |---|---|---|---|
 | UI gradients, palettes, design tokens | OKLab, or Helmlab GenSpace (`helmlab` npm/pip, `helmgen` in Color.js) | — | CIELAB, HSL |
 | CSS-only, zero JS | `oklch()` (native, CSS Color 4) | — | `hsl()` for anything perceptual |
-| Color difference ΔE | CIEDE2000 (ISO/CIE 11664-6), or Helmlab `difference()` except near black | CAM16-UCS | Euclidean in CIELAB (ΔE76), Euclidean in OKLab, anything in HSL/RGB |
+| Color difference ΔE | CIEDE2000 (ISO/CIE 11664-6), or Helmlab `difference()` away from near black and near white | CAM16-UCS | Euclidean in CIELAB (ΔE76), Euclidean in OKLab, anything in HSL/RGB |
 | Near-achromatic (grays) gradients | OKLab | — | — |
 | Color-blind-safe (deutan) palettes | OKLab | — | — |
 | HDR / PQ content (>1000 cd/m²) | Jzazbz or ICtCp | — | any SDR-tuned Lab |
@@ -35,8 +35,8 @@ One-liners: **DIN99o** only if a tolerancing contract demands it · **XYZ** is a
 
 Evidence notes:
 - The GenSpace vs OKLab comparison (gradient, near-gray and deutan rows) came from a ColorBench version that had defects. Its win counts are withdrawn and the comparison is being re-run; until then treat OKLab and GenSpace as alternatives.
-- Helmlab MetricSpace was fitted to COMBVD; MacAdam 1974 and He et al. 2022 were used in its fitting or model selection. Results on these datasets are in-sample.
-- Helmlab `difference()` is outside its fit data for colors darker than about L* 10: there, use CIEDE2000.
+- Helmlab MetricSpace was fitted to COMBVD, MacAdam 1974 and Helmlab's own Human Feedback data; He et al. 2022 was used in model selection. Results on these datasets are in-sample.
+- The fit data of Helmlab `difference()` are thin below about L* 10 and absent above about L* 93. For comparisons across very different lightness levels, CIEDE2000 agrees better with the Munsell value scale and CIE L*.
 - HDR and video rows (Jzazbz, ICtCp) follow standard practice that we have not benchmarked.
 
 ## Same space, two forms: Lab vs LCh
@@ -81,9 +81,9 @@ Levels are evenly spaced in GenSpace lightness; level 500 is the exact input.
 ```python
 from helmlab import Helmlab
 hl = Helmlab()
-hl.metric.difference("#ff0000", "#00ff00")   # ΔE helmlab (fitted to COMBVD), levels off near 0.15
+hl.metric.difference("#ff0000", "#00ff00")   # ΔE helmlab (fitted to visual difference data), levels off near 0.15
 hl.metric.euclidean("#ff0000", "#00ff00")    # uncompressed Euclidean distance in MetricSpace
-hl.metric.ciede2000("#ff0000", "#00ff00")    # CIEDE2000; use it for colors darker than about L* 10
+hl.metric.ciede2000("#ff0000", "#00ff00")    # CIEDE2000
 ```
 If you must use a standard: CIEDE2000, correctly implemented (it's easy to get the hue term wrong — use a tested library, verify ΔE00(red, green) ≈ 86.6).
 
