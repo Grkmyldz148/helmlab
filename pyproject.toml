@@ -38,8 +38,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://helmlab.space"
 Documentation = "https://helmlab.space/docs/"
-Repository = "https://github.com/Grkmyldz148/helmlab"
-Issues = "https://github.com/Grkmyldz148/helmlab/issues"
+Repository = "https://github.com/helmlab-space/helmlab"
+Issues = "https://github.com/helmlab-space/helmlab/issues"
 
 [project.optional-dependencies]
 datasets = [

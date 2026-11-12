@@ -4,9 +4,9 @@ Reference code of Helmlab, in JavaScript/TypeScript. Helmlab defines color space
 
 [![npm version](https://img.shields.io/npm/v/helmlab.svg)](https://www.npmjs.com/package/helmlab)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/helmlab)](https://bundlephobia.com/package/helmlab)
-[![license](https://img.shields.io/npm/l/helmlab.svg)](https://github.com/Grkmyldz148/helmlab/blob/main/packages/helmlab-js/LICENSE)
+[![license](https://img.shields.io/npm/l/helmlab.svg)](https://github.com/helmlab-space/helmlab/blob/main/packages/helmlab-js/LICENSE)
 
-[Repository](https://github.com/Grkmyldz148/helmlab) · [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md) · [Changelog](https://github.com/Grkmyldz148/helmlab/blob/main/CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [helmlab.space](https://helmlab.space)
+[Repository](https://github.com/helmlab-space/helmlab) · [API reference](https://github.com/helmlab-space/helmlab/blob/main/API.md) · [Changelog](https://github.com/helmlab-space/helmlab/blob/main/CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [helmlab.space](https://helmlab.space)
 
 - **GenSpace** (`hl.gen`) creates colors: gradients, palettes, scales, gamut mapping, contrast adjustment.
 - **MetricSpace** (`hl.metric`) measures color differences.
@@ -21,7 +21,7 @@ npm install helmlab
 
 ## Helmlab 2026
 
-The current definition, Helmlab 2026, is the output of `helmlab` 1.0.0. Later releases keep these outputs; 1.0.1 has identical outputs, and only its JavaScript speed and documentation changed. The identifiers are `helmgen`, `helmgenlch`, `helmlab-metric` (MetricSpace, base form) and ΔE `helmlab`; see the [repository README](https://github.com/Grkmyldz148/helmlab#readme).
+The current definition, Helmlab 2026, is the output of `helmlab` 1.0.0. Later releases keep these outputs; 1.0.1 has identical outputs, and only its JavaScript speed and documentation changed. The identifiers are `helmgen`, `helmgenlch`, `helmlab-metric` (MetricSpace, base form) and ΔE `helmlab`; see the [repository README](https://github.com/helmlab-space/helmlab#readme).
 
 **`hl.metric` returns the neutral-corrected form** (`helmlab-metric-neutral`), not the base form `helmlab-metric` that Color.js and ColorAide implement. The same (L, a, b) triple names different colors in the two forms: (0.7779, 0, 0) is `#808080` in `hl.metric` and `#759dbf` in the base form. `difference()`, `distance()` and `jnd()` remove the correction before measuring, so ΔE `helmlab` is the same for both.
 
@@ -145,7 +145,7 @@ const base = new MetricSpace(compileParams(getDefaultParams()), { neutralCorrect
 const lab = gen.fromXYZ(srgbToXyz([0.2, 0.5, 0.8]));   // raw Lab, no gamut mapping
 ```
 
-Both constructors also accept custom parameter sets; see the [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md).
+Both constructors also accept custom parameter sets; see the [API reference](https://github.com/helmlab-space/helmlab/blob/main/API.md).
 
 ## Python
 
@@ -164,7 +164,7 @@ These libraries are maintained outside Helmlab:
 ## Known limitations
 
 - **MetricSpace is meant for SDR content** (Y ≤ 1 relative to diffuse white). Above diffuse white L grows quickly (about 1.80 at Y = 3 and 19 at Y = 10), and the neutral-corrected form keeps grays neutral only up to Y = 2 (gray chroma 0.11 at Y = 3, 0.14 from Y ≈ 4). `difference()`, `distance()` and `jnd()` use the base form and do not carry this gray chroma. Above diffuse white, use GenSpace.
-- **`difference()` and `jnd()` near black and near white.** Of the 3,989 color pairs MetricSpace was fitted to, 7 have a color darker than L* 10 and none has a color lighter than L* 92.8. On the 4 near-black, near-neutral pairs among them (COMBVD), ΔE `helmlab` matches the visual differences at L* 6–10 but predicts 1.7–2.5 times the observed difference below L* 2.5; CIEDE2000 predicts 0.4–0.7 times on all four. Across very different lightness levels the two disagree: `#010101` vs `#000000` gives `jnd()` 2.06 and `#ffffff` vs `#f7f7f7` gives 0.82, while CIEDE2000 gives 0.16 and 1.60, closer to the Munsell value scale and CIE L* ([#5](https://github.com/Grkmyldz148/helmlab/issues/5)). `palette()`, `scale()` and `gradient()` run in GenSpace and are not affected.
+- **`difference()` and `jnd()` near black and near white.** Of the 3,989 color pairs MetricSpace was fitted to, 7 have a color darker than L* 10 and none has a color lighter than L* 92.8. On the 4 near-black, near-neutral pairs among them (COMBVD), ΔE `helmlab` matches the visual differences at L* 6–10 but predicts 1.7–2.5 times the observed difference below L* 2.5; CIEDE2000 predicts 0.4–0.7 times on all four. Across very different lightness levels the two disagree: `#010101` vs `#000000` gives `jnd()` 2.06 and `#ffffff` vs `#f7f7f7` gives 0.82, while CIEDE2000 gives 0.16 and 1.60, closer to the Munsell value scale and CIE L* ([#5](https://github.com/helmlab-space/helmlab/issues/5)). `palette()`, `scale()` and `gradient()` run in GenSpace and are not affected.
 - **MetricSpace zero-chroma curve.** L is not continuous on a curve of grayish blues (y ≈ 0.276) where the internal chroma is 0. Inside the sRGB gamut (Y from 0.01 to 0.62) the limits of L differ by up to about 0.2, and a one-color call and a batch call can return different L for the same color.
 - **GenSpace lightness.** The lightness correction is piecewise linear with 19 knots. Its slope jumps by up to 0.42 (at L = 0.15), and the darkest 5% of L is compressed about five times.
 - **GenSpace and negative LMS.** Negative values after M1 are set to 0, so XYZ → Lab → XYZ changes such input: by up to 0.227 for the 566 of 20,000 random XYZ in [−0.05, 1.2]³ that have a negative component.

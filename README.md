@@ -6,7 +6,7 @@ Helmlab defines color spaces for generating colors (gradients, palettes, gamut m
 [![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 
-[helmlab.space](https://helmlab.space) · [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md) · [Changelog](https://github.com/Grkmyldz148/helmlab/blob/main/CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [Organization](https://github.com/helmlab-space)
+[helmlab.space](https://helmlab.space) · [API reference](https://github.com/helmlab-space/helmlab/blob/main/API.md) · [Changelog](https://github.com/helmlab-space/helmlab/blob/main/CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [Organization](https://github.com/helmlab-space)
 
 This README gives no performance figures. They will be published on one evidence page, generated from one file. Each figure there will name its dataset, its size (n), and whether that data was used to fit, tune or design the model.
 
@@ -88,7 +88,7 @@ hl.metric.info("color(display-p3 1 0 0)")                # Display P3 input
 hl.tokens.css_variables(hl.gen.scale("#3b82f6"), "--primary")
 ```
 
-Full surface: [API.md](https://github.com/Grkmyldz148/helmlab/blob/main/API.md). Upgrading from 0.x: the flat `hl.gradient()` / `hl.from_hex()` API was removed in 1.0; every method lives on `hl.gen`, `hl.metric` or `hl.tokens`.
+Full surface: [API.md](https://github.com/helmlab-space/helmlab/blob/main/API.md). Upgrading from 0.x: the flat `hl.gradient()` / `hl.from_hex()` API was removed in 1.0; every method lives on `hl.gen`, `hl.metric` or `hl.tokens`.
 
 ### PostCSS
 
@@ -150,12 +150,12 @@ These libraries are maintained outside Helmlab:
 - **GenSpace inverse.** Iterative (Halley's method). Near gray the round trip changes the color by up to 2.5e-5 × Y; very dark colors (Y below about 1e-35) are moved towards gray. 8-bit hex round trips are lossless (see below).
 - **GenSpace in sRGB.** Small separate in-gamut regions near h ≈ 260°, from the roots of the cubic in the inverse. OKLab has the same kind of regions ([color.js#81](https://github.com/color-js/color.js/issues/81)).
 - **MetricSpace is meant for SDR content** (Y ≤ 1 relative to diffuse white). Above diffuse white L grows quickly (about 1.80 at Y = 3 and 19 at Y = 10), and the neutral-corrected form keeps grays neutral only up to Y = 2 (gray chroma 0.11 at Y = 3, 0.14 from Y ≈ 4). `difference()`, `distance()` and `jnd()` use the base form and do not carry this gray chroma. Above diffuse white, use GenSpace.
-- **`difference()` and `jnd()` near black and near white.** Of the 3,989 color pairs MetricSpace was fitted to, 7 have a color darker than L* 10 and none has a color lighter than L* 92.8. On the 4 near-black, near-neutral pairs among them (COMBVD), ΔE `helmlab` matches the visual differences at L* 6–10 but predicts 1.7–2.5 times the observed difference below L* 2.5; CIEDE2000 predicts 0.4–0.7 times on all four. Across very different lightness levels the two disagree: `#010101` vs `#000000` gives `jnd()` 2.06 and `#ffffff` vs `#f7f7f7` gives 0.82, while CIEDE2000 gives 0.16 and 1.60, closer to the Munsell value scale and CIE L* ([#5](https://github.com/Grkmyldz148/helmlab/issues/5)). `palette()`, `scale()` and `gradient()` run in GenSpace and are not affected.
+- **`difference()` and `jnd()` near black and near white.** Of the 3,989 color pairs MetricSpace was fitted to, 7 have a color darker than L* 10 and none has a color lighter than L* 92.8. On the 4 near-black, near-neutral pairs among them (COMBVD), ΔE `helmlab` matches the visual differences at L* 6–10 but predicts 1.7–2.5 times the observed difference below L* 2.5; CIEDE2000 predicts 0.4–0.7 times on all four. Across very different lightness levels the two disagree: `#010101` vs `#000000` gives `jnd()` 2.06 and `#ffffff` vs `#f7f7f7` gives 0.82, while CIEDE2000 gives 0.16 and 1.60, closer to the Munsell value scale and CIE L* ([#5](https://github.com/helmlab-space/helmlab/issues/5)). `palette()`, `scale()` and `gradient()` run in GenSpace and are not affected.
 - **MetricSpace zero-chroma curve.** L is not continuous on a curve of grayish blues (y ≈ 0.276) where the internal chroma is 0. Inside the sRGB gamut (Y from 0.01 to 0.62) the limits of L differ by up to about 0.2, and a one-color call and a batch call can return different L for the same color.
 - **`color(rec2020 …)` strings.** helmlab encodes and decodes them with the BT.2020 transfer function. CSS Color 4 defines `rec2020` with a 2.4 gamma (BT.1886), and Color.js follows it, so they read helmlab's Rec.2020 values darker: `#808080` comes out near `#6c6c6c`.
 - **`jnd()` and `confidence()`.** `jnd()` divides ΔE `helmlab` by 0.0356, a value taken from a fixed confidence model (47 pairs, one session). `confidence()` uses the same model and is experimental.
 - **Fitting data.** GenSpace was selected on ColorBench v1 win counts. MetricSpace was fitted to COMBVD, MacAdam 1974 and Helmlab's own Human Feedback data (3,552 judgements of 48 color pairs, made on observers' own uncalibrated screens); He et al. 2022 was used in model selection. Results on these datasets are in-sample.
-- **Paper erratum.** The paper describes the neutral correction with 384 gray levels for Y from 0.001 to 2.59. The code uses 255 levels and holds the correction constant above L ≈ 1.341. The code governs ([helmlab#4](https://github.com/Grkmyldz148/helmlab/issues/4)). The paper also calls MacAdam 1974 held-out; the fitting script used it, together with the Human Feedback data (see Fitting data).
+- **Paper erratum.** The paper describes the neutral correction with 384 gray levels for Y from 0.001 to 2.59. The code uses 255 levels and holds the correction constant above L ≈ 1.341. The code governs ([helmlab#4](https://github.com/helmlab-space/helmlab/issues/4)). The paper also calls MacAdam 1974 held-out; the fitting script used it, together with the Human Feedback data (see Fitting data).
 
 ## Python and JavaScript
 
@@ -163,7 +163,7 @@ A parity test (`packages/helmlab-js/tests/parity-1.0.test.ts`) checks the JavaSc
 
 ## Agent skill
 
-[`skills/color-space-routing`](https://github.com/Grkmyldz148/helmlab/tree/main/skills/color-space-routing) is an agent skill (a `SKILL.md` file) for coding assistants: which color space to use for which task, with recipes and a checklist of pitfalls. It is also published in [helmlab-space/color-skills](https://github.com/helmlab-space/color-skills).
+[`skills/color-space-routing`](https://github.com/helmlab-space/helmlab/tree/main/skills/color-space-routing) is an agent skill (a `SKILL.md` file) for coding assistants: which color space to use for which task, with recipes and a checklist of pitfalls. It is also published in [helmlab-space/color-skills](https://github.com/helmlab-space/color-skills).
 
 ## Repository layout
 
@@ -205,10 +205,10 @@ cd packages/helmlab-js && npx vitest run
 
 ## License
 
-Code: MIT ([LICENSE](https://github.com/Grkmyldz148/helmlab/blob/main/LICENSE)). Paper text and figures: CC BY 4.0 ([paper/LICENSE.md](https://github.com/Grkmyldz148/helmlab/blob/main/paper/LICENSE.md)).
+Code: MIT ([LICENSE](https://github.com/helmlab-space/helmlab/blob/main/LICENSE)). Paper text and figures: CC BY 4.0 ([paper/LICENSE.md](https://github.com/helmlab-space/helmlab/blob/main/paper/LICENSE.md)).
 
 ## Contact
 
-Questions and bug reports: [open an issue](https://github.com/Grkmyldz148/helmlab/issues). Maintained by [Görkem Yıldız](https://gorkemyildiz.com).
+Questions and bug reports: [open an issue](https://github.com/helmlab-space/helmlab/issues). Maintained by [Görkem Yıldız](https://gorkemyildiz.com).
 
 How this project is run, including its use of AI tools: [GOVERNANCE.md](https://github.com/helmlab-space/.github/blob/main/GOVERNANCE.md).

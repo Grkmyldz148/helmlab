@@ -1,11 +1,11 @@
 #!/bin/bash
-# Sync skills/ to the public install mirror (Grkmyldz148/color-skills).
+# Sync skills/ to the public install mirror (helmlab-space/color-skills).
 # Run after editing any SKILL.md. (CI auto-sync would need a PAT secret —
 # GITHUB_TOKEN can't push to a different repo.)
 set -e
 cd "$(dirname "$0")"
 TMP=$(mktemp -d)
-git clone -q git@github.com:Grkmyldz148/color-skills.git "$TMP" 2>/dev/null || git clone -q https://github.com/Grkmyldz148/color-skills.git "$TMP"
+git clone -q git@github.com:helmlab-space/color-skills.git "$TMP" 2>/dev/null || git clone -q https://github.com/helmlab-space/color-skills.git "$TMP"
 cp color-space-routing/SKILL.md "$TMP/color-space-routing/"
 cp helmlab/SKILL.md "$TMP/helmlab/"
 cd "$TMP" && git add -A

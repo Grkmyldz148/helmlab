@@ -46,7 +46,7 @@ jobs:
     # npm Trusted Publishing (OIDC): no NPM_TOKEN — npm mints a short-lived
     # credential from the GitHub Actions OIDC token. Requires the trusted
     # publisher to be configured on npmjs.com for the `helmlab` package
-    # (repo Grkmyldz148/helmlab, workflow deploy.yml) and npm CLI >= 11.5.1.
+    # (repo helmlab-space/helmlab, workflow deploy.yml) and npm CLI >= 11.5.1.
     permissions:
       id-token: write
       contents: read
@@ -171,7 +171,7 @@ jobs:
     # PyPI Trusted Publishing (OIDC): no PYPI_TOKEN — pypa/gh-action-pypi-publish
     # exchanges the GitHub OIDC token for a short-lived PyPI credential.
     # Requires the trusted publisher to be configured on pypi.org for `helmlab`
-    # (owner Grkmyldz148, repo helmlab, workflow deploy.yml, no environment).
+    # (owner helmlab-space, repo helmlab, workflow deploy.yml, no environment).
     permissions:
       id-token: write
       contents: read

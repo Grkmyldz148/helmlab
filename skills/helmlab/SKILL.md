@@ -120,5 +120,5 @@ Near-achromatic gradient mastering and deutan-safe palettes → OKLab.
 Comparisons across very different lightness levels (near black vs near
 white) → CIEDE2000, not `difference()`. CSS-only with no JS budget → native `oklch()`. HDR/PQ →
 Jzazbz/ICtCp. Full routing table: the companion `color-space-routing`
-skill. API: github.com/Grkmyldz148/helmlab/blob/main/API.md · known
+skill. API: github.com/helmlab-space/helmlab/blob/main/API.md · known
 limitations: the helmlab README

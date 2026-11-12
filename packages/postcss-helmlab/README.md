@@ -19,11 +19,11 @@ export default { plugins: [helmlab({ outputMode: 'all' })] };
 `both` is the default.
 
 [PostCSS]: https://postcss.org/
-[Helmlab]: https://github.com/Grkmyldz148/helmlab
+[Helmlab]: https://github.com/helmlab-space/helmlab
 
 ## About Helmlab
 
-Helmlab defines color spaces for generating colors and for measuring color differences. The [Helmlab README](https://github.com/Grkmyldz148/helmlab#readme) describes the current definition, Helmlab 2026, and its known limitations. This README gives no performance figures.
+Helmlab defines color spaces for generating colors and for measuring color differences. The [Helmlab README](https://github.com/helmlab-space/helmlab#readme) describes the current definition, Helmlab 2026, and its known limitations. This README gives no performance figures.
 
 ## Installation
 
@@ -126,8 +126,8 @@ A gradient `in helmgen` becomes 10 stops from `gen.gradient()` of the helmlab pa
 
 ## Links
 
-- [Helmlab README](https://github.com/Grkmyldz148/helmlab#readme)
-- [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md)
+- [Helmlab README](https://github.com/helmlab-space/helmlab#readme)
+- [API reference](https://github.com/helmlab-space/helmlab/blob/main/API.md)
 - [Paper (arXiv:2602.23010)](https://arxiv.org/abs/2602.23010)
 - [npm: helmlab](https://www.npmjs.com/package/helmlab)
 
