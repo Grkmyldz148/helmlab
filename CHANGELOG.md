@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.0.2 — 2026-11-12
+
+Documentation release. Outputs are bit-identical to 1.0.1 and 1.0.0.
+
+### Documentation
+
+- The READMEs (repository, npm, PyPI) were rewritten. They carry no performance figures; figures will be published on one evidence page. They describe Helmlab 2026 and its identifiers, say that `hl.metric` returns the neutral-corrected form (`helmlab-metric-neutral`) and not the base form `helmlab-metric`, and list the known limitations, including lightness near black and near white (#5) and the transfer function of `color(rec2020 …)` strings.
+- Docstrings of `difference()`, `ciede2000()`, `distance()`, `confidence()`, `nearest()`, `gradient()`, `mix()`, `hueRing()` / `hue_ring()`, `harmonies()`, `gamutMap()` / `gamut_map()` and the `Helmlab` class no longer carry performance figures or comparative claims. They name the fitting data of MetricSpace: COMBVD, MacAdam 1974 and the Human Feedback data.
+- New package descriptions on npm and PyPI.
+- The Python wheel now contains the license file, and the links in the README also work on PyPI.
+- postcss-helmlab 0.3.1: README only; its example outputs are now those of the published packages.
+
+### Outputs bit-identical to 1.0.1
+
+Compared against npm and PyPI `helmlab` 1.0.1 with zero tolerance:
+
+- all 219,147 outputs of the golden harness in JavaScript (`tools/golden`);
+- the same 219,147 calls in Python;
+- all 16,777,216 8-bit sRGB colors (GenSpace and MetricSpace forward, hex round trip), 262,144 Display P3 and 262,144 Rec.2020 grid points, and gamut cusps at 3,600 hues in each of sRGB, Display P3 and Rec.2020 (JavaScript, `exhaustive.mjs`).
+
+### Note on the 1.0.1 provenance commit
+
+npm `helmlab` 1.0.1 was built from commit a2f3a63. Its tree (bf06a2b) is identical to the tree of tag v1.0.1 (0c72024).
+
 ## 1.0.1 — 2026-11-08
 
 JavaScript performance release. Outputs are bit-identical to 1.0.0. The Python

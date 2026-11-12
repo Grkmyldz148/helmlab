@@ -6,7 +6,7 @@ Helmlab defines color spaces for generating colors (gradients, palettes, gamut m
 [![PyPI version](https://img.shields.io/pypi/v/helmlab.svg)](https://pypi.org/project/helmlab/)
 [![arXiv](https://img.shields.io/badge/arXiv-2602.23010-b31b1b.svg)](https://arxiv.org/abs/2602.23010)
 
-[helmlab.space](https://helmlab.space) · [API reference](API.md) · [Changelog](CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [Organization](https://github.com/helmlab-space)
+[helmlab.space](https://helmlab.space) · [API reference](https://github.com/Grkmyldz148/helmlab/blob/main/API.md) · [Changelog](https://github.com/Grkmyldz148/helmlab/blob/main/CHANGELOG.md) · [Paper](https://arxiv.org/abs/2602.23010) · [Organization](https://github.com/helmlab-space)
 
 This README gives no performance figures. They will be published on one evidence page, generated from one file. Each figure there will name its dataset, its size (n), and whether that data was used to fit, tune or design the model.
 
@@ -88,7 +88,7 @@ hl.metric.info("color(display-p3 1 0 0)")                # Display P3 input
 hl.tokens.css_variables(hl.gen.scale("#3b82f6"), "--primary")
 ```
 
-Full surface: [API.md](API.md). Upgrading from 0.x: the flat `hl.gradient()` / `hl.from_hex()` API was removed in 1.0; every method lives on `hl.gen`, `hl.metric` or `hl.tokens`.
+Full surface: [API.md](https://github.com/Grkmyldz148/helmlab/blob/main/API.md). Upgrading from 0.x: the flat `hl.gradient()` / `hl.from_hex()` API was removed in 1.0; every method lives on `hl.gen`, `hl.metric` or `hl.tokens`.
 
 ### PostCSS
 
@@ -163,7 +163,7 @@ A parity test (`packages/helmlab-js/tests/parity-1.0.test.ts`) checks the JavaSc
 
 ## Agent skill
 
-[`skills/color-space-routing`](skills/color-space-routing/) is an agent skill (a `SKILL.md` file) for coding assistants: which color space to use for which task, with recipes and a checklist of pitfalls. It is also published in [helmlab-space/color-skills](https://github.com/helmlab-space/color-skills).
+[`skills/color-space-routing`](https://github.com/Grkmyldz148/helmlab/tree/main/skills/color-space-routing) is an agent skill (a `SKILL.md` file) for coding assistants: which color space to use for which task, with recipes and a checklist of pitfalls. It is also published in [helmlab-space/color-skills](https://github.com/helmlab-space/color-skills).
 
 ## Repository layout
 
@@ -205,7 +205,7 @@ cd packages/helmlab-js && npx vitest run
 
 ## License
 
-Code: MIT ([LICENSE](LICENSE)). Paper text and figures: CC BY 4.0 ([paper/LICENSE.md](paper/LICENSE.md)).
+Code: MIT ([LICENSE](https://github.com/Grkmyldz148/helmlab/blob/main/LICENSE)). Paper text and figures: CC BY 4.0 ([paper/LICENSE.md](https://github.com/Grkmyldz148/helmlab/blob/main/paper/LICENSE.md)).
 
 ## Contact
 

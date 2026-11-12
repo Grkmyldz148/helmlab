@@ -1,6 +1,6 @@
 {
   "name": "helmlab",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Two color spaces: GenSpace for generating colors (gradients, palettes, gamut mapping) and MetricSpace for measuring color differences",
   "type": "module",
   "sideEffects": false,
