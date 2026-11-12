@@ -135,6 +135,24 @@ jobs:
           json.dump(d, open(p, 'w'), indent=2)
           "
 
+      - name: Wait until the helmlab version is on the registry
+        # publish-npm has finished before this job starts, but the registry can
+        # take minutes to list a new version, and npm install fails until it does
+        # (1.0.2 on 2026-11-12). Poll every 15 s for up to 20 minutes.
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          HL_VERSION=$(python3 -c "import json; print(json.load(open('packages/helmlab-js/package.json'))['version'])")
+          for i in $(seq 1 80); do
+            if npm view "helmlab@$HL_VERSION" version --prefer-online >/dev/null 2>&1; then
+              echo "helmlab $HL_VERSION is on the registry"
+              exit 0
+            fi
+            echo "waiting for helmlab $HL_VERSION ($i/80)"
+            sleep 15
+          done
+          echo "helmlab $HL_VERSION did not appear on the registry within 20 minutes"
+          exit 1
+
       - name: Install build dependencies
         # prepublishOnly runs build.js (esbuild). The dependency rewrite above
         # replaced the file: link, so a plain install now resolves helmlab from
