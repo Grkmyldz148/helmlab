@@ -210,3 +210,5 @@ Code: MIT ([LICENSE](LICENSE)). Paper text and figures: CC BY 4.0 ([paper/LICENS
 ## Contact
 
 Questions and bug reports: [open an issue](https://github.com/Grkmyldz148/helmlab/issues). Maintained by [Görkem Yıldız](https://gorkemyildiz.com).
+
+How this project is run, including its use of AI tools: [GOVERNANCE.md](https://github.com/helmlab-space/.github/blob/main/GOVERNANCE.md).

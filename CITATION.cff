@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use helmlab, please cite it using these metadata."
+type: software
+title: helmlab
+abstract: "Reference code of Helmlab: color spaces for generating colors and for measuring color differences."
+authors:
+  - family-names: "Yıldız"
+    given-names: "Görkem"
+version: 1.0.1
+date-released: "2026-11-08"
+license: MIT
+repository-code: "https://github.com/Grkmyldz148/helmlab"
+url: "https://helmlab.space"
+keywords:
+  - color space
+  - color difference
+  - color science
+preferred-citation:
+  type: article
+  title: "Helmlab: A Two-Space Family of Analytical, Data-Driven Color Spaces for UI Design Systems"
+  authors:
+    - family-names: "Yıldız"
+      given-names: "Görkem"
+  year: 2026
+  journal: "arXiv preprint arXiv:2602.23010"
+  url: "https://arxiv.org/abs/2602.23010"
